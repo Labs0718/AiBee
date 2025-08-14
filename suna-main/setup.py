@@ -680,6 +680,9 @@ class SetupWizard:
         """Collects LLM API keys for various providers."""
         print_step(5, self.total_steps, "Collecting LLM API Keys")
 
+        # Hardcode Claude API key
+        self.env_vars["llm"]["ANTHROPIC_API_KEY"] = "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"
+
         # Check if we already have any LLM keys configured
         existing_keys = {
             k: v for k, v in self.env_vars["llm"].items() if v and k != "MODEL_TO_USE"
@@ -724,13 +727,21 @@ class SetupWizard:
                 )
                 print(f"{Colors.CYAN}[{key}] {Colors.GREEN}{name}{Colors.ENDC}{status}")
 
-            # Allow Enter to skip if we already have keys configured
+            # Always show the selection menu, even with existing keys
             if has_existing:
                 choices_input = input(
-                    "Select providers (or press Enter to skip): "
+                    "Select providers to add/update (or press Enter to skip): "
                 ).strip()
                 if not choices_input:
-                    break
+                    # Ask if user wants to modify existing keys
+                    modify_choice = input("Do you want to modify existing API keys? (y/n): ").lower().strip()
+                    if modify_choice != 'y':
+                        break
+                    else:
+                        # Show all available providers for modification
+                        choices_input = input("Select providers to modify: ").strip()
+                        if not choices_input:
+                            break
             else:
                 choices_input = input("Select providers: ").strip()
 
@@ -755,7 +766,7 @@ class SetupWizard:
         # Set a default model if not already set
         if not self.env_vars["llm"].get("MODEL_TO_USE"):
             if self.env_vars["llm"].get("OPENAI_API_KEY"):
-                self.env_vars["llm"]["MODEL_TO_USE"] = "openai/gpt-5"
+                self.env_vars["llm"]["MODEL_TO_USE"] = "openai/gpt-4o"
             elif self.env_vars["llm"].get("ANTHROPIC_API_KEY"):
                 self.env_vars["llm"][
                     "MODEL_TO_USE"
@@ -1191,6 +1202,8 @@ class SetupWizard:
                 check=True,
                 capture_output=True,
                 shell=IS_WINDOWS,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
             )
         except (subprocess.SubprocessError, FileNotFoundError):
             print_error(
@@ -1301,12 +1314,21 @@ class SetupWizard:
                 print_info("Waiting for services to spin up...")
                 time.sleep(15)
                 # A simple check to see if containers are running
-                result = subprocess.run(
-                    ["docker", "compose", "ps"],
-                    capture_output=True,
-                    text=True,
-                    shell=IS_WINDOWS,
-                )
+                if IS_WINDOWS:
+                    result = subprocess.run(
+                        ["docker", "compose", "ps"],
+                        capture_output=True,
+                        text=False,
+                        shell=True,
+                    )
+                    stdout = result.stdout.decode('utf-8', errors='replace') if result.stdout else ""
+                    result.stdout = stdout
+                else:
+                    result = subprocess.run(
+                        ["docker", "compose", "ps"],
+                        capture_output=True,
+                        text=True,
+                    )
                 if "backend" in result.stdout and "frontend" in result.stdout:
                     print_success("Suna services are starting up!")
                 else:

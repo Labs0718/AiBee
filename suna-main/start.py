@@ -1,10 +1,47 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import subprocess
 import sys
 import platform
 import os
 import json
+
+# Windows 인코딩 문제 해결
+if platform.system() == "Windows":
+    import locale
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    os.environ['PYTHONLEGACYWINDOWSSTDIO'] = '1'
+    # Windows에서 콘솔 출력을 UTF-8로 설정
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8')
+    if hasattr(sys.stderr, 'reconfigure'):
+        sys.stderr.reconfigure(encoding='utf-8')
+
+def run_subprocess_safe(cmd, **kwargs):
+    """Windows에서 안전한 subprocess 실행"""
+    try:
+        if IS_WINDOWS:
+            # Windows에서 안전한 실행을 위한 설정
+            kwargs.update({
+                'encoding': 'utf-8',
+                'errors': 'replace',
+                'shell': True,
+                'creationflags': subprocess.CREATE_NO_WINDOW if hasattr(subprocess, 'CREATE_NO_WINDOW') else 0
+            })
+        return subprocess.run(cmd, **kwargs)
+    except UnicodeDecodeError:
+        # 인코딩 에러 발생시 바이트 모드로 재시도
+        kwargs.pop('encoding', None)
+        kwargs.pop('errors', None)
+        kwargs['text'] = False
+        result = subprocess.run(cmd, **kwargs)
+        # 결과를 안전하게 디코딩
+        if hasattr(result, 'stdout') and result.stdout:
+            result.stdout = result.stdout.decode('utf-8', errors='replace')
+        if hasattr(result, 'stderr') and result.stderr:
+            result.stderr = result.stderr.decode('utf-8', errors='replace')
+        return result
 
 IS_WINDOWS = platform.system() == "Windows"
 PROGRESS_FILE = ".setup_progress"
@@ -43,7 +80,10 @@ def get_setup_method():
 def check_docker_available():
     """Check if Docker is available and running."""
     try:
-        result = subprocess.run(["docker", "version"], capture_output=True, shell=IS_WINDOWS, check=True)
+        if IS_WINDOWS:
+            result = subprocess.run(["docker", "version"], capture_output=True, shell=True, check=True, text=False)
+        else:
+            result = subprocess.run(["docker", "version"], capture_output=True, check=True)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         print(f"{Colors.RED}❌ Docker is not running or not installed.{Colors.ENDC}")
@@ -51,13 +91,29 @@ def check_docker_available():
         return False
 
 def check_docker_compose_up():
-    result = subprocess.run(
-        ["docker", "compose", "ps", "-q"],
-        capture_output=True,
-        text=True,
-        shell=IS_WINDOWS,
-    )
-    return len(result.stdout.strip()) > 0
+    try:
+        # Windows에서 안전한 subprocess 실행
+        if IS_WINDOWS:
+            result = subprocess.run(
+                ["docker", "compose", "ps", "-q"],
+                capture_output=True,
+                text=False,  # 바이트 모드로 실행
+                shell=True
+            )
+            # 수동으로 안전하게 디코딩
+            stdout = result.stdout.decode('utf-8', errors='replace').strip() if result.stdout else ""
+            return len(stdout) > 0
+        else:
+            result = subprocess.run(
+                ["docker", "compose", "ps", "-q"],
+                capture_output=True,
+                text=True,
+                encoding='utf-8'
+            )
+            return len(result.stdout.strip()) > 0
+    except Exception as e:
+        print(f"{Colors.RED}Error checking docker compose status: {e}{Colors.ENDC}")
+        return False
 
 
 def print_manual_instructions():
@@ -67,7 +123,7 @@ def print_manual_instructions():
     print("To start Suna, you need to run these commands in separate terminals:\n")
 
     print(f"{Colors.BOLD}1. Start Infrastructure (in project root):{Colors.ENDC}")
-    print(f"{Colors.CYAN}   docker compose up redis -d{Colors.ENDC}\n")
+    print(f"{Colors.CYAN}   docker compose up redis rabbitmq -d{Colors.ENDC}\n")
 
     print(f"{Colors.BOLD}2. Start Frontend (in a new terminal):{Colors.ENDC}")
     print(f"{Colors.CYAN}   cd frontend && npm run dev{Colors.ENDC}\n")
@@ -106,21 +162,35 @@ def main():
         setup_method = "docker"
 
     if setup_method == "manual":
-        # For manual setup, we only manage infrastructure services (redis)
+        # For manual setup, we only manage infrastructure services (redis, rabbitmq)
         # and show instructions for the rest
         print(f"{Colors.BLUE}{Colors.BOLD}Manual Setup Detected{Colors.ENDC}")
-        print("Managing infrastructure services (Redis)...\n")
+        print("Managing infrastructure services (Redis, RabbitMQ)...\n")
 
         force = "-f" in sys.argv
         if force:
             print("Force awakened. Skipping confirmation.")
 
-        is_infra_up = subprocess.run(
-            ["docker", "compose", "ps", "-q", "redis"],
-            capture_output=True,
-            text=True,
-            shell=IS_WINDOWS,
-        )
+        try:
+            if IS_WINDOWS:
+                is_infra_up = subprocess.run(
+                    ["docker", "compose", "ps", "-q", "redis", "rabbitmq"],
+                    capture_output=True,
+                    text=False,
+                    shell=True
+                )
+                stdout = is_infra_up.stdout.decode('utf-8', errors='replace').strip() if is_infra_up.stdout else ""
+                is_infra_up.stdout = stdout
+            else:
+                is_infra_up = subprocess.run(
+                    ["docker", "compose", "ps", "-q", "redis", "rabbitmq"],
+                    capture_output=True,
+                    text=True,
+                    encoding='utf-8'
+                )
+        except Exception as e:
+            print(f"{Colors.RED}Error checking infrastructure status: {e}{Colors.ENDC}")
+            return
         is_up = len(is_infra_up.stdout.strip()) > 0
 
         if is_up:
@@ -142,14 +212,20 @@ def main():
                     return
 
         if action == "stop":
-            subprocess.run(["docker", "compose", "down"], shell=IS_WINDOWS)
-            print(f"\n{Colors.GREEN}✅ Infrastructure services stopped.{Colors.ENDC}")
+            try:
+                subprocess.run(["docker", "compose", "down"], shell=IS_WINDOWS)
+                print(f"\n{Colors.GREEN}✅ Infrastructure services stopped.{Colors.ENDC}")
+            except Exception as e:
+                print(f"{Colors.RED}Error stopping services: {e}{Colors.ENDC}")
         else:
-            subprocess.run(
-                ["docker", "compose", "up", "redis", "-d"], shell=IS_WINDOWS
-            )
-            print(f"\n{Colors.GREEN}✅ Infrastructure services started.{Colors.ENDC}")
-            print_manual_instructions()
+            try:
+                subprocess.run(
+                    ["docker", "compose", "up", "redis", "rabbitmq", "-d"], shell=IS_WINDOWS
+                )
+                print(f"\n{Colors.GREEN}✅ Infrastructure services started.{Colors.ENDC}")
+                print_manual_instructions()
+            except Exception as e:
+                print(f"{Colors.RED}Error starting services: {e}{Colors.ENDC}")
 
     else:  # docker setup
         print(f"{Colors.BLUE}{Colors.BOLD}Docker Setup Detected{Colors.ENDC}")
@@ -183,12 +259,18 @@ def main():
                     return
 
         if action == "stop":
-            subprocess.run(["docker", "compose", "down"], shell=IS_WINDOWS)
-            print(f"\n{Colors.GREEN}✅ All Suna services stopped.{Colors.ENDC}")
+            try:
+                subprocess.run(["docker", "compose", "down"], shell=IS_WINDOWS)
+                print(f"\n{Colors.GREEN}✅ All Suna services stopped.{Colors.ENDC}")
+            except Exception as e:
+                print(f"{Colors.RED}Error stopping services: {e}{Colors.ENDC}")
         else:
-            subprocess.run(["docker", "compose", "up", "-d"], shell=IS_WINDOWS)
-            print(f"\n{Colors.GREEN}✅ All Suna services started.{Colors.ENDC}")
-            print(f"{Colors.CYAN}🌐 Access Suna at: http://localhost:3000{Colors.ENDC}")
+            try:
+                subprocess.run(["docker", "compose", "up", "-d"], shell=IS_WINDOWS)
+                print(f"\n{Colors.GREEN}✅ All Suna services started.{Colors.ENDC}")
+                print(f"{Colors.CYAN}🌐 Access Suna at: http://localhost:3000{Colors.ENDC}")
+            except Exception as e:
+                print(f"{Colors.RED}Error starting services: {e}{Colors.ENDC}")
 
 
 if __name__ == "__main__":

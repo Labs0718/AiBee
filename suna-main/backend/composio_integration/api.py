@@ -403,8 +403,14 @@ async def get_toolkit_icon(
             }
     
     except Exception as e:
-        logger.error(f"Error getting toolkit icon: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.warning(f"Error getting toolkit icon: {e}")
+        # Composio가 설정되지 않은 경우 기본 응답 반환
+        return {
+            "success": False,
+            "toolkit_slug": toolkit_slug,
+            "icon_url": None,
+            "message": "Composio API key not configured"
+        }
 
 
 @router.post("/tools/list")

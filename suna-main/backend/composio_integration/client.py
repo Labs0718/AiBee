@@ -13,10 +13,15 @@ class ComposioClient:
             if not api_key:
                 api_key = os.getenv("COMPOSIO_API_KEY")
                 if not api_key:
+                    logger.warning("COMPOSIO_API_KEY not found in environment variables")
                     raise ValueError("COMPOSIO_API_KEY is required")
             
             logger.info("Initializing Composio client")
-            cls._instance = Composio(api_key=api_key)
+            try:
+                cls._instance = Composio(api_key=api_key)
+            except Exception as e:
+                logger.error(f"Failed to initialize Composio client: {e}")
+                raise
         
         return cls._instance
     
