@@ -19,6 +19,7 @@ import {
   Sun,
   Moon,
   KeyRound,
+  FileText,
 } from 'lucide-react';
 import { useAccounts } from '@/hooks/use-accounts';
 import NewTeamForm from '@/components/basejump/new-team-form';
@@ -211,29 +212,37 @@ export function NavUserWithTeams({
               {/* Teams Section */}
               {personalAccount && (
                 <>
-                  <DropdownMenuLabel className="text-muted-foreground text-xs">
-                    Personal Account
-                  </DropdownMenuLabel>
-                  <DropdownMenuItem
-                    key={personalAccount.account_id}
-                    onClick={() =>
-                      handleTeamSelect({
-                        name: personalAccount.name,
-                        logo: Command,
-                        plan: 'Personal',
-                        account_id: personalAccount.account_id,
-                        slug: personalAccount.slug,
-                        personal_account: true,
-                      })
-                    }
-                    className="gap-2 p-2"
-                  >
-                    <div className="flex size-6 items-center justify-center rounded-xs border">
-                      <Command className="size-4 shrink-0" />
-                    </div>
-                    {personalAccount.name}
-                    <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
-                  </DropdownMenuItem>
+                                <DropdownMenuLabel className="text-muted-foreground text-xs">
+                Personal Account
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                key={personalAccount.account_id}
+                onClick={() =>
+                  handleTeamSelect({
+                    name: personalAccount.name,
+                    logo: Command,
+                    plan: 'Personal',
+                    account_id: personalAccount.account_id,
+                    slug: personalAccount.slug,
+                    personal_account: true,
+                  })
+                }
+                className="gap-2 p-2"
+              >
+                <div className="flex size-6 items-center justify-center rounded-xs border">
+                  <Command className="size-4 shrink-0" />
+                </div>
+                {personalAccount.name}
+                <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              
+              {/* 마이페이지 링크 */}
+              <DropdownMenuItem asChild>
+                <Link href="/settings/mypage" className="gap-2 p-2">
+                  <User className="h-4 w-4" />
+                  마이페이지
+                </Link>
+              </DropdownMenuItem>
                 </>
               )}
 
@@ -286,6 +295,12 @@ export function NavUserWithTeams({
               {/* User Settings Section */}
               <DropdownMenuGroup>
                 <DropdownMenuItem asChild>
+                  <Link href="/settings/mypage">
+                    <User className="h-4 w-4" />
+                    마이페이지
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/settings/billing">
                     <CreditCard className="h-4 w-4" />
                     Billing
@@ -305,19 +320,30 @@ export function NavUserWithTeams({
                     Local .Env Manager
                   </Link>
                 </DropdownMenuItem>}
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
+                
+                {/* PDF 관리 */}
+                <DropdownMenuItem asChild>
+                  <Link href="/pdf-management">
+                    <FileText className="h-4 w-4" />
+                    PDF 관리
                   </Link>
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
+                
+                {/* 자동화 연결설정 */}
+                <DropdownMenuItem asChild>
+                  <Link href="/automation-settings">
+                    <Settings className="h-4 w-4" />
+                    자동화 연결설정
+                  </Link>
+                </DropdownMenuItem>
+                
+                {/* 테마 설정 */}
                 <DropdownMenuItem
                   onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
                 >
                   <div className="flex items-center gap-2">
-                    <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span>Theme</span>
+                    <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-100" />
+                    <span>테마</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
