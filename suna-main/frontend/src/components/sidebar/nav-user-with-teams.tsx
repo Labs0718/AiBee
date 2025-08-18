@@ -236,13 +236,7 @@ export function NavUserWithTeams({
                 <DropdownMenuShortcut>⌘1</DropdownMenuShortcut>
               </DropdownMenuItem>
               
-              {/* 마이페이지 링크 */}
-              <DropdownMenuItem asChild>
-                <Link href="/settings/mypage" className="gap-2 p-2">
-                  <User className="h-4 w-4" />
-                  마이페이지
-                </Link>
-              </DropdownMenuItem>
+
                 </>
               )}
 
