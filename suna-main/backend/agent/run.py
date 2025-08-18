@@ -498,12 +498,8 @@ class AgentRunner:
                 }
                 break
 
-            latest_message = await self.client.table('messages').select('*').eq('thread_id', self.config.thread_id).in_('type', ['assistant', 'tool', 'user']).order('created_at', desc=True).limit(1).execute()
-            if latest_message.data and len(latest_message.data) > 0:
-                message_type = latest_message.data[0].get('type')
-                if message_type == 'assistant':
-                    continue_execution = False
-                    break
+            # Remove problematic termination logic that stops agent after any assistant message
+            # This was causing the agent to stop prematurely instead of continuing with tool usage
 
             temporary_message = await message_manager.build_temporary_message()
             max_tokens = self.get_max_tokens()

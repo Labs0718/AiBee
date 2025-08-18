@@ -192,13 +192,15 @@ def prepare_params(
             params["model_id"] = "arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0"
             logger.debug(f"Auto-set model_id for Claude 3.7 Sonnet: {params['model_id']}")
 
-    fallback_model = get_openrouter_fallback(model_name)
-    if fallback_model:
-        params["fallbacks"] = [{
-            "model": fallback_model,
-            "messages": messages,
-        }]
-        logger.debug(f"Added OpenRouter fallback for model: {model_name} to {fallback_model}")
+    # Temporarily disable OpenRouter fallback to force direct Anthropic API usage
+    # This prevents credit exhaustion issues when using direct Anthropic models
+    # fallback_model = get_openrouter_fallback(model_name)
+    # if fallback_model:
+    #     params["fallbacks"] = [{
+    #         "model": fallback_model,
+    #         "messages": messages,
+    #     }]
+    #     logger.debug(f"Added OpenRouter fallback for model: {model_name} to {fallback_model}")
 
     # Apply Anthropic prompt caching (minimal implementation)
     # Check model name *after* potential modifications (like adding bedrock/ prefix)
