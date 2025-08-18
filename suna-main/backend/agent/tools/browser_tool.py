@@ -249,7 +249,8 @@ class BrowserTool(SandboxToolsBase):
                     # Only include data that's useful for the agent's decision making
                     clean_result = {
                         "success": result.get("success", True),
-                        "message": result.get("message", "Stagehand action completed successfully")
+                        "message": result.get("message", "Stagehand action completed successfully"),
+                        "message_id": added_message.data[0]["message_id"] if added_message.data else None
                     }
 
                     # Include only data that actually comes from browserApi.ts

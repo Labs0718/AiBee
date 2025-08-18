@@ -38,6 +38,16 @@ export function BrowserToolView({
   // Try to extract data using the new parser first
   const assistantToolData = extractToolData(assistantContent);
   const toolToolData = extractToolData(toolContent);
+  
+  // Debug logging
+  console.log('BrowserToolView Debug:', {
+    name,
+    assistantContent,
+    toolContent,
+    assistantToolData,
+    toolToolData,
+    messages: messages.length
+  });
 
   let url: string | null = null;
 
@@ -63,6 +73,12 @@ export function BrowserToolView({
   // Add loading states for images
   const [imageLoading, setImageLoading] = React.useState(true);
   const [imageError, setImageError] = React.useState(false);
+  
+  // Force re-render when messages change to update screenshot
+  const [forceUpdate, setForceUpdate] = React.useState(0);
+  React.useEffect(() => {
+    setForceUpdate(prev => prev + 1);
+  }, [messages]);
 
   try {
     const topLevelParsed = safeJsonParse<{ content?: any }>(toolContent, {});
@@ -131,6 +147,7 @@ export function BrowserToolView({
   } catch (error) {
   }
 
+  // First try to find browser state by specific message ID
   if (!screenshotUrl && !screenshotBase64 && browserStateMessageId && messages.length > 0) {
     const browserStateMessage = messages.find(
       (msg) =>
@@ -144,6 +161,60 @@ export function BrowserToolView({
         image_url?: string;
       }>(
         browserStateMessage.content,
+        {},
+      );
+      screenshotBase64 = browserStateContent?.screenshot_base64 || null;
+      screenshotUrl = browserStateContent?.image_url || null;
+    }
+  }
+
+  // If still no screenshot found, try to find the nearest browser_state message 
+  // by looking at messages around the current tool call timestamp
+  if (!screenshotUrl && !screenshotBase64 && messages.length > 0) {
+    // Find all browser_state messages
+    const browserStateMessages = messages.filter(
+      (msg) => (msg.type as string) === 'browser_state'
+    ).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    
+    console.log('Browser state search:', {
+      totalMessages: messages.length,
+      browserStateMessages: browserStateMessages.length,
+      browserStateMessageId,
+      toolTimestamp,
+      assistantTimestamp
+    });
+
+    // Find the tool call timestamp to match with nearby browser state
+    const toolCallTime = toolTimestamp ? new Date(toolTimestamp).getTime() : 
+                        assistantTimestamp ? new Date(assistantTimestamp).getTime() : null;
+
+    if (toolCallTime && browserStateMessages.length > 0) {
+      // Find the browser state message closest to this tool call
+      const closestMessage = browserStateMessages.reduce((closest, current) => {
+        const currentTime = new Date(current.created_at).getTime();
+        const closestTime = new Date(closest.created_at).getTime();
+        
+        return Math.abs(currentTime - toolCallTime) < Math.abs(closestTime - toolCallTime) 
+          ? current : closest;
+      });
+
+      const browserStateContent = safeJsonParse<{
+        screenshot_base64?: string;
+        image_url?: string;
+      }>(
+        closestMessage.content,
+        {},
+      );
+      screenshotBase64 = browserStateContent?.screenshot_base64 || null;
+      screenshotUrl = browserStateContent?.image_url || null;
+    } else if (browserStateMessages.length > 0) {
+      // Fallback: use the most recent browser state message
+      const latestBrowserState = browserStateMessages[browserStateMessages.length - 1];
+      const browserStateContent = safeJsonParse<{
+        screenshot_base64?: string;
+        image_url?: string;
+      }>(
+        latestBrowserState.content,
         {},
       );
       screenshotBase64 = browserStateContent?.screenshot_base64 || null;
@@ -244,7 +315,7 @@ export function BrowserToolView({
           )}
           <Card className={`overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
             <img
-              src={`data:image/jpeg;base64,${screenshotBase64}`}
+              src={`data:image/png;base64,${screenshotBase64}`}
               alt="Browser Screenshot"
               className="max-w-full max-h-full object-contain"
               onLoad={handleImageLoad}
@@ -309,98 +380,56 @@ export function BrowserToolView({
 
       <CardContent className="p-0 flex-1 overflow-hidden relative" style={{ height: 'calc(100vh - 150px)', minHeight: '600px' }}>
         <div className="flex-1 flex h-full items-stretch bg-white dark:bg-black">
-          {isLastToolCall ? (
-            isRunning && vncIframe ? (
-              <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-                <div className="relative w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-                  {vncIframe}
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge className="bg-blue-500/90 text-white border-none shadow-lg animate-pulse">
-                      <CircleDashed className="h-3 w-3 animate-spin" />
-                      {operation} in progress
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ) : (screenshotUrl || screenshotBase64) ? (
-              renderScreenshot()
-            ) : vncIframe ? (
-              // Use the memoized iframe
-              <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
+          {/* Show live browser view if running and is last tool call */}
+          {isRunning && isLastToolCall && vncIframe ? (
+            <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
+              <div className="relative w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
                 {vncIframe}
-              </div>
-            ) : (
-              <div className="p-8 flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-700 dark:text-zinc-400">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-purple-100 to-purple-50 shadow-inner dark:from-purple-800/40 dark:to-purple-900/60">
-                  <MonitorPlay className="h-10 w-10 text-purple-400 dark:text-purple-600" />
+                <div className="absolute top-4 right-4 z-10">
+                  <Badge className="bg-blue-500/90 text-white border-none shadow-lg animate-pulse">
+                    <CircleDashed className="h-3 w-3 animate-spin" />
+                    {operation} in progress
+                  </Badge>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
-                  Browser preview not available
-                </h3>
-                {url && (
-                  <div className="mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md transition-shadow"
-                      asChild
-                    >
-                      <a href={url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-3.5 w-3.5 mr-2" />
-                        Visit URL
-                      </a>
-                    </Button>
-                  </div>
-                )}
               </div>
-            )
-          ) :
-            (screenshotUrl || screenshotBase64) ? (
-              <div className="flex items-center justify-center w-full h-full overflow-auto relative p-4">
-                {imageLoading && (
-                  <ImageLoader />
-                )}
-                <Card className={`p-0 overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
-                  {screenshotUrl ? (
-                    <img
-                      src={screenshotUrl}
-                      alt="Browser Screenshot"
-                      className="max-w-full max-h-full object-contain"
-                      onLoad={handleImageLoad}
-                      onError={handleImageError}
-                    />
-                  ) : (
-                    <img
-                      src={`data:image/jpeg;base64,${screenshotBase64}`}
-                      alt="Browser Screenshot"
-                      className="max-w-full max-h-full object-contain"
-                      onLoad={handleImageLoad}
-                      onError={handleImageError}
-                    />
-                  )}
-                </Card>
-                {imageError && !imageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-                    <div className="text-center text-zinc-500 dark:text-zinc-400">
-                      <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-                      <p>Failed to load screenshot</p>
-                    </div>
-                  </div>
-                )}
+            </div>
+          ) : (screenshotUrl || screenshotBase64) ? (
+            /* Show screenshot for all browser actions */
+            renderScreenshot()
+          ) : vncIframe && isLastToolCall ? (
+            /* Show live browser view for last tool call if no screenshot */
+            <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
+              {vncIframe}
+            </div>
+          ) : (
+            /* Fallback: no browser state available */
+            <div className="p-8 h-full flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-700 dark:text-zinc-400">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-zinc-100 to-zinc-50 shadow-inner dark:from-zinc-800/40 dark:to-zinc-900/60">
+                <MonitorPlay className="h-10 w-10 text-zinc-400 dark:text-zinc-600" />
               </div>
-            ) : (
-              <div className="p-8 h-full flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-700 dark:text-zinc-400">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-zinc-100 to-zinc-50 shadow-inner dark:from-zinc-800/40 dark:to-zinc-900/60">
-                  <MonitorPlay className="h-10 w-10 text-zinc-400 dark:text-zinc-600" />
+              <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
+                No Browser State Available
+              </h3>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Browser state image not found for this action
+              </p>
+              {url && (
+                <div className="mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 shadow-sm hover:shadow-md transition-shadow"
+                    asChild
+                  >
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                      Visit URL
+                    </a>
+                  </Button>
                 </div>
-                <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
-                  No Browser State Available
-                </h3>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Browser state image not found for this action
-                </p>
-              </div>
-            )}
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
 

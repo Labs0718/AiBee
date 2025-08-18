@@ -338,15 +338,34 @@ class MessageManager:
                         temp_message_content_list.append({
                             "type": "image_url",
                             "image_url": {
-                                "url": screenshot_url,
-                                "format": "image/jpeg"
+                                "url": screenshot_url
                             }
                         })
                     elif screenshot_base64:
+                        # Detect actual image format from base64 data
+                        import base64
+                        try:
+                            # Decode first few bytes to detect image format
+                            image_data = base64.b64decode(screenshot_base64[:100])
+                            if image_data.startswith(b'\xff\xd8\xff'):
+                                media_type = "image/jpeg"
+                            elif image_data.startswith(b'\x89PNG'):
+                                media_type = "image/png"
+                            elif image_data.startswith(b'GIF'):
+                                media_type = "image/gif"
+                            elif image_data.startswith(b'WEBP'):
+                                media_type = "image/webp"
+                            else:
+                                # Default to PNG as it's most common for screenshots
+                                media_type = "image/png"
+                        except:
+                            # If detection fails, default to PNG
+                            media_type = "image/png"
+                            
                         temp_message_content_list.append({
                             "type": "image_url",
                             "image_url": {
-                                "url": f"data:image/jpeg;base64,{screenshot_base64}",
+                                "url": f"data:{media_type};base64,{screenshot_base64}",
                             }
                         })
 
@@ -605,7 +624,9 @@ class AgentRunner:
                             generation.end(output=full_response, status_message="error_detected", level="ERROR")
                         break
                         
-                    if agent_should_terminate or last_tool_call in ['ask', 'complete', 'web-browser-takeover']:
+                    # Only terminate on explicit completion tools, not on browser tools
+                    # Browser tools need to continue execution for multi-step workflows
+                    if agent_should_terminate or last_tool_call in ['ask', 'complete']:
                         if generation:
                             generation.end(output=full_response, status_message="agent_stopped")
                         continue_execution = False
