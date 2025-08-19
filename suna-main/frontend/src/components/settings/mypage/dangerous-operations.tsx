@@ -1,22 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { AccountDeletionDialog } from './account-deletion-dialog';
 
 export const DangerousOperations = () => {
+  const [isAccountDeletionDialogOpen, setIsAccountDeletionDialogOpen] = useState(false);
+
   return (
     <Card className="border-2 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
       <CardHeader>
@@ -46,40 +38,25 @@ export const DangerousOperations = () => {
                   계정을 삭제하면 모든 데이터가 영구적으로 삭제되며, 이 작업은 되돌릴 수 없습니다.
                 </p>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    className="ml-4 bg-red-600 hover:bg-red-700 text-white"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    계정 삭제
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle className="text-xl text-red-800 dark:text-red-200">
-                      계정을 정말 삭제하시겠습니까?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription className="text-red-700 dark:text-red-300">
-                      이 작업은 되돌릴 수 없습니다. 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>취소</AlertDialogCancel>
-                    <AlertDialogAction 
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      계정 삭제
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                className="ml-4 bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => setIsAccountDeletionDialogOpen(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                계정 삭제
+              </Button>
             </div>
           </div>
         </div>
       </CardContent>
+      
+      {/* 계정 삭제 다이얼로그 */}
+      <AccountDeletionDialog
+        open={isAccountDeletionDialogOpen}
+        onOpenChange={setIsAccountDeletionDialogOpen}
+      />
     </Card>
   );
 };
