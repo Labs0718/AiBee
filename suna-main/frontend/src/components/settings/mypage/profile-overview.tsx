@@ -1,15 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Mail, Lock, Calendar, User, Building, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthProvider';
+import { PasswordChangeDialog } from './password-change-dialog';
+import { DepartmentChangeDialog } from './department-change-dialog';
 
 export const ProfileOverview = () => {
   const { user } = useAuth();
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -59,7 +63,11 @@ export const ProfileOverview = () => {
                   className="pl-10 bg-muted/50"
                 />
               </div>
-              <Button variant="secondary" size="sm">
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => setIsPasswordDialogOpen(true)}
+              >
                 변경
               </Button>
             </div>
@@ -94,13 +102,22 @@ export const ProfileOverview = () => {
           {/* 부서 */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">부서</label>
-            <div className="relative">
-              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={user?.user_metadata?.department || '부서 미지정'}
-                readOnly
-                className="pl-10 bg-muted/50"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={user?.user_metadata?.department || '부서 미지정'}
+                  readOnly
+                  className="pl-10 bg-muted/50"
+                />
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => setIsDepartmentDialogOpen(true)}
+              >
+                변경
+              </Button>
             </div>
           </div>
 
@@ -114,6 +131,18 @@ export const ProfileOverview = () => {
           </div>
         </div>
       </CardContent>
+      
+      {/* 비밀번호 변경 다이얼로그 */}
+      <PasswordChangeDialog 
+        open={isPasswordDialogOpen} 
+        onOpenChange={setIsPasswordDialogOpen} 
+      />
+      
+      {/* 부서 변경 다이얼로그 */}
+      <DepartmentChangeDialog
+        open={isDepartmentDialogOpen}
+        onOpenChange={setIsDepartmentDialogOpen}
+      />
     </Card>
   );
 };
