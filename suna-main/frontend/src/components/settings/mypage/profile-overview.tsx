@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Mail, Lock, Calendar, User, Building, Shield } from 'lucide-react';
+import { Mail, Lock, Calendar, User, Building, Shield, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +44,11 @@ export const ProfileOverview = () => {
                   className="pl-10 bg-muted/50"
                 />
               </div>
-              <Badge variant="secondary" className="px-3 py-2">
+              <Badge 
+                variant="outline" 
+                className="px-3 py-2 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 transition-colors"
+              >
+                <CheckCircle className="h-3 w-3 mr-1" />
                 인증됨
               </Badge>
             </div>
@@ -64,9 +68,10 @@ export const ProfileOverview = () => {
                 />
               </div>
               <Button 
-                variant="secondary" 
+                variant="outline" 
                 size="sm"
                 onClick={() => setIsPasswordDialogOpen(true)}
+                className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
               >
                 변경
               </Button>
@@ -112,9 +117,10 @@ export const ProfileOverview = () => {
                 />
               </div>
               <Button 
-                variant="secondary" 
+                variant="outline" 
                 size="sm"
                 onClick={() => setIsDepartmentDialogOpen(true)}
+                className="border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
               >
                 변경
               </Button>
