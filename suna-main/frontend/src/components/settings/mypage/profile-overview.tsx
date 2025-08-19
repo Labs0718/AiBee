@@ -9,11 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/components/AuthProvider';
 import { PasswordChangeDialog } from './password-change-dialog';
 import { DepartmentChangeDialog } from './department-change-dialog';
+import { UsernameChangeDialog } from './username-change-dialog';
 
 export const ProfileOverview = () => {
   const { user } = useAuth();
   const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
   const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
+  const [isUsernameDialogOpen, setIsUsernameDialogOpen] = useState(false);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -94,13 +96,23 @@ export const ProfileOverview = () => {
           {/* 사용자 이름 */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">사용자 이름</label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={user?.user_metadata?.full_name || '이름 미설정'}
-                readOnly
-                className="pl-10 bg-muted/50"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={user?.user_metadata?.full_name || '이름 미설정'}
+                  readOnly
+                  className="pl-10 bg-muted/50"
+                />
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsUsernameDialogOpen(true)}
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
+              >
+                변경
+              </Button>
             </div>
           </div>
 
@@ -148,6 +160,12 @@ export const ProfileOverview = () => {
       <DepartmentChangeDialog
         open={isDepartmentDialogOpen}
         onOpenChange={setIsDepartmentDialogOpen}
+      />
+      
+      {/* 사용자 이름 변경 다이얼로그 */}
+      <UsernameChangeDialog
+        open={isUsernameDialogOpen}
+        onOpenChange={setIsUsernameDialogOpen}
       />
     </Card>
   );
