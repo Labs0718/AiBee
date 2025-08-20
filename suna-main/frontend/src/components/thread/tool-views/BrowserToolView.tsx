@@ -198,10 +198,16 @@ export function BrowserToolView({
       ).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
       
       if (browserStateMessages.length > 0) {
-        // For running actions, use latest; for completed actions, use index-based
-        const targetMessage = isRunning && currentIndex === totalCalls - 1 
-          ? browserStateMessages[browserStateMessages.length - 1]
-          : browserStateMessages[Math.min(currentIndex, browserStateMessages.length - 1)];
+        // Always use the exact index to match the current action
+        let targetMessage;
+        
+        if (isRunning && currentIndex === totalCalls - 1) {
+          // For the currently running action, use the latest screenshot
+          targetMessage = browserStateMessages[browserStateMessages.length - 1];
+        } else {
+          // For completed or previous actions, use the exact index
+          targetMessage = browserStateMessages[currentIndex] || browserStateMessages[browserStateMessages.length - 1];
+        }
         
         if (targetMessage) {
           const browserStateContent = safeJsonParse<{
@@ -214,8 +220,10 @@ export function BrowserToolView({
           
           console.log('Found browser state for action:', { 
             currentIndex, 
+            totalCalls,
+            browserStateMessages: browserStateMessages.length,
             found: !!(screenshotUrl || screenshotBase64),
-            strategy: isRunning && currentIndex === totalCalls - 1 ? 'latest' : 'indexed'
+            strategy: isRunning && currentIndex === totalCalls - 1 ? 'latest' : 'exact-index'
           });
         }
       }
