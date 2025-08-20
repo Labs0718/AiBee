@@ -84,19 +84,19 @@ MODELS = {
     #     },
     #     "tier_availability": ["paid"]
     # },
-    "openai/gpt-5": {
-        "aliases": ["gpt-5"],
+    "openai/gpt-4-turbo": {
+        "aliases": ["gpt-4-turbo"],
         "pricing": {
-            "input_cost_per_million_tokens": 1.25,
-            "output_cost_per_million_tokens": 10.00
+            "input_cost_per_million_tokens": 10.00,
+            "output_cost_per_million_tokens": 30.00
         },
         "tier_availability": ["paid"]
     },
-    "openai/gpt-5-mini": {
-        "aliases": ["gpt-5-mini"],
+    "openai/gpt-4-mini": {
+        "aliases": ["gpt-4-mini"],
         "pricing": {
-            "input_cost_per_million_tokens": 0.25,
-            "output_cost_per_million_tokens": 2.00
+            "input_cost_per_million_tokens": 0.15,
+            "output_cost_per_million_tokens": 0.60
         },
         "tier_availability": ["paid"]
     },
@@ -123,7 +123,65 @@ MODELS = {
             "output_cost_per_million_tokens": 15.00
         },
         "tier_availability": ["paid"]
-    },   
+    },
+    
+    # Ollama local models (free)
+    "ollama/deepseek-r1:32b": {
+        "aliases": ["deepseek-r1:32b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/llama3.1:8b": {
+        "aliases": ["llama3.1:8b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/llama3.1:70b": {
+        "aliases": ["llama3.1:70b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/qwen2.5:7b": {
+        "aliases": ["qwen2.5:7b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/qwen2.5:14b": {
+        "aliases": ["qwen2.5:14b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/phi3:mini": {
+        "aliases": ["phi3:mini"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
+    "ollama/gemma2:9b": {
+        "aliases": ["gemma2:9b"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
 }
 
 # Derived structures (auto-generated from MODELS)

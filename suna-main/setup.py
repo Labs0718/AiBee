@@ -680,8 +680,7 @@ class SetupWizard:
         """Collects LLM API keys for various providers."""
         print_step(5, self.total_steps, "Collecting LLM API Keys")
 
-        # Hardcode Claude API key
-        self.env_vars["llm"]["ANTHROPIC_API_KEY"] = "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"
+        # Default to providing API keys for convenience, but let user configure them
 
         # Check if we already have any LLM keys configured
         existing_keys = {
@@ -763,9 +762,12 @@ class SetupWizard:
                 )
                 self.env_vars["llm"][key] = api_key
 
-        # Set a default model if not already set
+        # Set a default model if not already set - prefer local/free models
         if not self.env_vars["llm"].get("MODEL_TO_USE"):
-            if self.env_vars["llm"].get("OPENAI_API_KEY"):
+            # Prioritize local Ollama model for free usage, fallback to cloud models
+            if True:  # Always default to Ollama for cost-free operation
+                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/llama3.1:8b"
+            elif self.env_vars["llm"].get("OPENAI_API_KEY"):
                 self.env_vars["llm"]["MODEL_TO_USE"] = "openai/gpt-4o"
             elif self.env_vars["llm"].get("ANTHROPIC_API_KEY"):
                 self.env_vars["llm"][
@@ -779,6 +781,9 @@ class SetupWizard:
                 self.env_vars["llm"][
                     "MODEL_TO_USE"
                 ] = "openrouter/google/gemini-2.5-pro"
+            else:
+                # Final fallback to Ollama
+                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/llama3.1:8b"
 
         print_success(
             f"LLM keys saved. Default model: {self.env_vars['llm'].get('MODEL_TO_USE', 'Not set')}"
@@ -1124,6 +1129,7 @@ class SetupWizard:
             "REDIS_HOST": redis_host,
             "REDIS_PORT": "6379",
             **self.env_vars["llm"],
+            "OLLAMA_HOST": "http://localhost:11435",  # Custom Ollama host port to avoid conflicts
             **self.env_vars["search"],
             **self.env_vars["rapidapi"],
             **self.env_vars.get("cron", {}),

@@ -276,6 +276,12 @@ def prepare_params(
         logger.debug(f"Preparing xAI parameters for model: {model_name}")
         # xAI models support standard parameters, no special handling needed beyond reasoning_effort
 
+    # Add Ollama-specific parameters
+    if model_name.startswith("ollama/") and not api_base:
+        ollama_host = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        params["api_base"] = ollama_host
+        logger.debug(f"Auto-set Ollama api_base to: {ollama_host}")
+
     return params
 
 async def make_llm_api_call(

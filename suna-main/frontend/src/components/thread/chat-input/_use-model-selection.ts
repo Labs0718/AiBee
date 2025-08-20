@@ -7,9 +7,8 @@ import { useAvailableModels } from '@/hooks/react-query/subscriptions/use-model'
 
 export const STORAGE_KEY_MODEL = 'suna-preferred-model-v3';
 export const STORAGE_KEY_CUSTOM_MODELS = 'customModels';
-export const DEFAULT_PREMIUM_MODEL_ID = 'claude-sonnet-4';
+export const DEFAULT_PREMIUM_MODEL_ID = 'ollama/deepseek-r1:32b';
 // export const DEFAULT_FREE_MODEL_ID = 'moonshotai/kimi-k2';
-export const DEFAULT_FREE_MODEL_ID = 'claude-sonnet-4';
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
 
@@ -30,6 +29,50 @@ export interface CustomModel {
 
 // SINGLE SOURCE OF TRUTH for all model data - aligned with backend constants
 export const MODELS = {
+  // Local Ollama models (completely free)
+  'ollama/deepseek-r1:32b': { 
+    tier: 'free',
+    priority: 115, 
+    recommended: true,
+    lowQuality: false
+  },
+  'ollama/llama3.1:8b': { 
+    tier: 'free',
+    priority: 110, 
+    recommended: false,
+    lowQuality: false
+  },
+  'ollama/llama3.1:70b': { 
+    tier: 'free',
+    priority: 105, 
+    recommended: false,
+    lowQuality: false
+  },
+  'ollama/qwen2.5:7b': { 
+    tier: 'free',
+    priority: 95, 
+    recommended: false,
+    lowQuality: false
+  },
+  'ollama/qwen2.5:14b': { 
+    tier: 'free',
+    priority: 112, 
+    recommended: true,
+    lowQuality: false
+  },
+  'ollama/phi3:mini': { 
+    tier: 'free',
+    priority: 85, 
+    recommended: false,
+    lowQuality: false
+  },
+  'ollama/gemma2:9b': { 
+    tier: 'free',
+    priority: 90, 
+    recommended: false,
+    lowQuality: false
+  },
+
   // Free tier models (available to all users)
   'claude-sonnet-4': { 
     tier: 'free',
@@ -82,13 +125,13 @@ export const MODELS = {
     recommended: false,
     lowQuality: false
   },
-  'gpt-5': { 
+  'gpt-4-turbo': { 
     tier: 'premium', 
     priority: 99,
     recommended: false,
     lowQuality: false
   },
-  'gpt-5-mini': { 
+  'gpt-4-mini': { 
     tier: 'premium', 
     priority: 98,
     recommended: false,
@@ -221,15 +264,38 @@ export const useModelSelection = () => {
         
         // Format the display label
         let cleanLabel = displayName;
-        if (cleanLabel.includes('/')) {
-          cleanLabel = cleanLabel.split('/').pop() || cleanLabel;
+        
+        // Add local/ prefix for Ollama models
+        if (shortName.startsWith('ollama/')) {
+          cleanLabel = `local/${cleanLabel}`;
         }
         
-        cleanLabel = cleanLabel
-          .replace(/-/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
+        if (cleanLabel.includes('/')) {
+          const parts = cleanLabel.split('/');
+          if (parts[0] === 'local') {
+            // Keep local/ prefix and format the rest
+            cleanLabel = `local/${parts.slice(1).join('/').split('/').pop() || cleanLabel}`;
+          } else {
+            cleanLabel = cleanLabel.split('/').pop() || cleanLabel;
+          }
+        }
+        
+        // Format the part after local/ if it exists
+        if (cleanLabel.startsWith('local/')) {
+          const localPart = cleanLabel.replace('local/', '');
+          const formattedLocal = localPart
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          cleanLabel = `local/${formattedLocal}`;
+        } else {
+          cleanLabel = cleanLabel
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+        }
         
         // Get model data from our central MODELS constant
         const modelData = MODELS[shortName] || {};
