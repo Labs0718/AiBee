@@ -21,6 +21,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ImageLoader } from './shared/ImageLoader';
 
+// Global cache for browser screenshots - persists across component re-renders
+const globalBrowserCache = new Map<string, {
+  url: string | null;
+  base64: string | null;
+  timestamp: number;
+}>();
+
 export function BrowserToolView({
   name = 'browser-operation',
   assistantContent,
@@ -71,6 +78,9 @@ export function BrowserToolView({
   const isLastToolCall = currentIndex === totalCalls - 1;
   const isCurrentAction = isRunning && (isLastToolCall || currentIndex >= totalCalls - 1);
 
+  // Create unique cache key for this specific browser action
+  const cacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}`;
+
   let browserStateMessageId: string | undefined;
   let screenshotUrl: string | null = null;
   let screenshotBase64: string | null = null;
@@ -78,268 +88,151 @@ export function BrowserToolView({
   // Add loading states for images
   const [imageLoading, setImageLoading] = React.useState(true);
   const [imageError, setImageError] = React.useState(false);
-  
-  // Create a unique identifier for this specific browser action instance
-  const actionId = React.useMemo(() => {
-    return `${name}-${currentIndex}-${toolTimestamp || assistantTimestamp || Date.now()}`;
-  }, [name, currentIndex, toolTimestamp, assistantTimestamp]);
 
-  // Force re-render when messages change to update screenshot
-  const [forceUpdate, setForceUpdate] = React.useState(0);
-  const [lastMessageCount, setLastMessageCount] = React.useState(0);
-  const [cachedScreenshotData, setCachedScreenshotData] = React.useState<{
-    url: string | null;
-    base64: string | null;
-    actionId: string;
-  }>({ url: null, base64: null, actionId: '' });
-  
-  React.useEffect(() => {
-    const hasNewMessages = messages.length !== lastMessageCount;
-    
-    if (hasNewMessages) {
-      setForceUpdate(prev => prev + 1);
-      setLastMessageCount(messages.length);
-      
-      // Force component update for browser state changes
-      if (name.includes('browser')) {
-        console.log('Browser state updated, forcing re-render', {
-          hasNewMessages,
-          currentIndex,
-          actionId
-        });
+  // Check cache first
+  const cachedData = globalBrowserCache.get(cacheKey);
+  if (cachedData) {
+    screenshotUrl = cachedData.url;
+    screenshotBase64 = cachedData.base64;
+    console.log(`Using cached screenshot for action ${currentIndex}:`, { 
+      hasUrl: !!screenshotUrl, 
+      hasBase64: !!screenshotBase64,
+      cacheKey 
+    });
+  }
+
+  // Only search for new data if not in cache
+  if (!cachedData) {
+    try {
+      const topLevelParsed = safeJsonParse<{ content?: any }>(toolContent, {});
+      const innerContentString = topLevelParsed?.content || toolContent;
+      if (innerContentString && typeof innerContentString === 'string') {
+        const toolResultMatch = innerContentString.match(/ToolResult\([^)]*output='([\s\S]*?)'(?:\s*,|\s*\))/);
+        if (toolResultMatch) {
+          const outputString = toolResultMatch[1];
+          try {
+            const cleanedOutput = outputString.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\u([0-9a-fA-F]{4})/g, (_match, grp) => String.fromCharCode(parseInt(grp, 16)));
+            const outputJson = JSON.parse(cleanedOutput);
+
+            if (outputJson.image_url) {
+              screenshotUrl = outputJson.image_url;
+            }
+            if (outputJson.message_id) {
+              browserStateMessageId = outputJson.message_id;
+            }
+          } catch (parseError) {
+          }
+        }
+
+        if (!screenshotUrl) {
+          const imageUrlMatch = innerContentString.match(/"image_url":\s*"([^"]+)"/);
+          if (imageUrlMatch) {
+            screenshotUrl = imageUrlMatch[1];
+          }
+        }
+
+        if (!browserStateMessageId) {
+          const messageIdMatch = innerContentString.match(/"message_id":\s*"([^"]+)"/);
+          if (messageIdMatch) {
+            browserStateMessageId = messageIdMatch[1];
+          }
+        }
+
+        if (!browserStateMessageId && !screenshotUrl) {
+          const outputMatch = innerContentString.match(/\boutput='(.*?)'(?=\s*\))/);
+          const outputString = outputMatch ? outputMatch[1] : null;
+
+          if (outputString) {
+            const unescapedOutput = outputString
+              .replace(/\\n/g, '\n')
+              .replace(/\\"/g, '"');
+
+            const finalParsedOutput = safeJsonParse<{ message_id?: string; image_url?: string }>(
+              unescapedOutput,
+              {},
+            );
+            browserStateMessageId = finalParsedOutput?.message_id;
+            screenshotUrl = finalParsedOutput?.image_url || null;
+          }
+        }
+      } else if (innerContentString && typeof innerContentString === "object") {
+        screenshotUrl = (() => {
+          if (!innerContentString) return null;
+          if (!("tool_execution" in innerContentString)) return null;
+          if (!("result" in innerContentString.tool_execution)) return null;
+          if (!("output" in innerContentString.tool_execution.result)) return null;
+          if (!("image_url" in innerContentString.tool_execution.result.output)) return null;
+          if (typeof innerContentString.tool_execution.result.output.image_url !== "string") return null;
+          return innerContentString.tool_execution.result.output.image_url;
+        })()
+      }
+
+    } catch (error) {
+    }
+
+    // First try to find browser state by specific message ID
+    if (!screenshotUrl && !screenshotBase64 && browserStateMessageId && messages.length > 0) {
+      const browserStateMessage = messages.find(
+        (msg) =>
+          (msg.type as string) === 'browser_state' &&
+          msg.message_id === browserStateMessageId,
+      );
+
+      if (browserStateMessage) {
+        const browserStateContent = safeJsonParse<{
+          screenshot_base64?: string;
+          image_url?: string;
+        }>(
+          browserStateMessage.content,
+          {},
+        );
+        screenshotBase64 = browserStateContent?.screenshot_base64 || null;
+        screenshotUrl = browserStateContent?.image_url || null;
       }
     }
-  }, [messages, lastMessageCount, name, currentIndex, actionId]);
 
-  // Cache screenshot data specifically for this action to prevent cross-contamination
-  React.useEffect(() => {
-    if ((screenshotUrl || screenshotBase64) && actionId !== cachedScreenshotData.actionId) {
-      setCachedScreenshotData({
+    // Find browser state by index if no direct match
+    if (!screenshotUrl && !screenshotBase64 && messages.length > 0) {
+      const browserStateMessages = messages.filter(
+        (msg) => (msg.type as string) === 'browser_state'
+      ).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      
+      if (browserStateMessages.length > 0) {
+        // For running actions, use latest; for completed actions, use index-based
+        const targetMessage = isRunning && currentIndex === totalCalls - 1 
+          ? browserStateMessages[browserStateMessages.length - 1]
+          : browserStateMessages[Math.min(currentIndex, browserStateMessages.length - 1)];
+        
+        if (targetMessage) {
+          const browserStateContent = safeJsonParse<{
+            screenshot_base64?: string;
+            image_url?: string;
+          }>(targetMessage.content, {});
+          
+          screenshotBase64 = browserStateContent?.screenshot_base64 || null;
+          screenshotUrl = browserStateContent?.image_url || null;
+          
+          console.log('Found browser state for action:', { 
+            currentIndex, 
+            found: !!(screenshotUrl || screenshotBase64),
+            strategy: isRunning && currentIndex === totalCalls - 1 ? 'latest' : 'indexed'
+          });
+        }
+      }
+    }
+
+    // Cache the result for this specific action
+    if (screenshotUrl || screenshotBase64) {
+      globalBrowserCache.set(cacheKey, {
         url: screenshotUrl,
         base64: screenshotBase64,
-        actionId: actionId
+        timestamp: Date.now()
       });
-      console.log(`Cached screenshot for action ${actionId}:`, {
-        hasUrl: !!screenshotUrl,
-        hasBase64: !!screenshotBase64
+      console.log(`Cached screenshot for action ${currentIndex}:`, { 
+        hasUrl: !!screenshotUrl, 
+        hasBase64: !!screenshotBase64,
+        cacheKey 
       });
-    }
-  }, [screenshotUrl, screenshotBase64, actionId, cachedScreenshotData.actionId]);
-
-  // Always auto scroll to latest browser action
-  React.useEffect(() => {
-    // Always scroll to the latest browser action when it's running or when new actions are added
-    if (name.includes('browser') && (isRunning || currentIndex === totalCalls - 1)) {
-      console.log(`Auto-scrolling to latest browser action: ${currentIndex + 1}/${totalCalls}`);
-      
-      // Small delay to ensure DOM is updated
-      setTimeout(() => {
-        const allBrowserActions = document.querySelectorAll('[data-tool-type="browser"]');
-        const latestAction = allBrowserActions[allBrowserActions.length - 1];
-        
-        if (latestAction) {
-          latestAction.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center'
-          });
-          console.log(`Scrolled to latest browser action (${allBrowserActions.length} total)`);
-        }
-      }, 300);
-    }
-  }, [name, totalCalls, isRunning, screenshotUrl, screenshotBase64]);
-
-  try {
-    const topLevelParsed = safeJsonParse<{ content?: any }>(toolContent, {});
-    const innerContentString = topLevelParsed?.content || toolContent;
-    if (innerContentString && typeof innerContentString === 'string') {
-      const toolResultMatch = innerContentString.match(/ToolResult\([^)]*output='([\s\S]*?)'(?:\s*,|\s*\))/);
-      if (toolResultMatch) {
-        const outputString = toolResultMatch[1];
-        try {
-          const cleanedOutput = outputString.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\u([0-9a-fA-F]{4})/g, (_match, grp) => String.fromCharCode(parseInt(grp, 16)));
-          const outputJson = JSON.parse(cleanedOutput);
-
-          if (outputJson.image_url) {
-            screenshotUrl = outputJson.image_url;
-          }
-          if (outputJson.message_id) {
-            browserStateMessageId = outputJson.message_id;
-          }
-        } catch (parseError) {
-        }
-      }
-
-      if (!screenshotUrl) {
-        const imageUrlMatch = innerContentString.match(/"image_url":\s*"([^"]+)"/);
-        if (imageUrlMatch) {
-          screenshotUrl = imageUrlMatch[1];
-        }
-      }
-
-      if (!browserStateMessageId) {
-        const messageIdMatch = innerContentString.match(/"message_id":\s*"([^"]+)"/);
-        if (messageIdMatch) {
-          browserStateMessageId = messageIdMatch[1];
-        }
-      }
-
-      if (!browserStateMessageId && !screenshotUrl) {
-        const outputMatch = innerContentString.match(/\boutput='(.*?)'(?=\s*\))/);
-        const outputString = outputMatch ? outputMatch[1] : null;
-
-        if (outputString) {
-          const unescapedOutput = outputString
-            .replace(/\\n/g, '\n')
-            .replace(/\\"/g, '"');
-
-          const finalParsedOutput = safeJsonParse<{ message_id?: string; image_url?: string }>(
-            unescapedOutput,
-            {},
-          );
-          browserStateMessageId = finalParsedOutput?.message_id;
-          screenshotUrl = finalParsedOutput?.image_url || null;
-        }
-      }
-    } else if (innerContentString && typeof innerContentString === "object") {
-      screenshotUrl = (() => {
-        if (!innerContentString) return null;
-        if (!("tool_execution" in innerContentString)) return null;
-        if (!("result" in innerContentString.tool_execution)) return null;
-        if (!("output" in innerContentString.tool_execution.result)) return null;
-        if (!("image_url" in innerContentString.tool_execution.result.output)) return null;
-        if (typeof innerContentString.tool_execution.result.output.image_url !== "string") return null;
-        return innerContentString.tool_execution.result.output.image_url;
-      })()
-    }
-
-  } catch (error) {
-  }
-
-  // First try to find browser state by specific message ID
-  if (!screenshotUrl && !screenshotBase64 && browserStateMessageId && messages.length > 0) {
-    const browserStateMessage = messages.find(
-      (msg) =>
-        (msg.type as string) === 'browser_state' &&
-        msg.message_id === browserStateMessageId,
-    );
-
-    if (browserStateMessage) {
-      const browserStateContent = safeJsonParse<{
-        screenshot_base64?: string;
-        image_url?: string;
-      }>(
-        browserStateMessage.content,
-        {},
-      );
-      screenshotBase64 = browserStateContent?.screenshot_base64 || null;
-      screenshotUrl = browserStateContent?.image_url || null;
-    }
-  }
-
-  // Find the correct browser_state message for this specific tool call
-  if (!screenshotUrl && !screenshotBase64 && messages.length > 0) {
-    // Find all browser_state messages in chronological order
-    const browserStateMessages = messages.filter(
-      (msg) => (msg.type as string) === 'browser_state'
-    ).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-    
-    console.log('Browser state search:', {
-      totalMessages: messages.length,
-      browserStateMessages: browserStateMessages.length,
-      currentIndex,
-      totalCalls,
-      toolTimestamp,
-      assistantTimestamp,
-      isRunning,
-      isLastToolCall: currentIndex === totalCalls - 1
-    });
-
-    let targetMessage = null;
-
-    // Strategy 1: For running actions, always use the latest browser state
-    if (isRunning && currentIndex === totalCalls - 1 && browserStateMessages.length > 0) {
-      targetMessage = browserStateMessages[browserStateMessages.length - 1];
-      console.log('Using latest browser state for running action');
-    }
-    // Strategy 2: For completed actions, use strict index-based matching with validation
-    else if (currentIndex < browserStateMessages.length) {
-      // Ensure we get a unique browser state for this specific action
-      const candidateMessage = browserStateMessages[currentIndex];
-      
-      // Additional validation: check if this message was created after our tool call
-      const toolCallTime = toolTimestamp ? new Date(toolTimestamp).getTime() : 
-                          assistantTimestamp ? new Date(assistantTimestamp).getTime() : null;
-      const messageTime = new Date(candidateMessage.created_at).getTime();
-      
-      // Only use this message if it was created after our tool call (with some tolerance)
-      if (!toolCallTime || messageTime >= toolCallTime - 1000) {
-        targetMessage = candidateMessage;
-        console.log('Using indexed browser state for completed action:', { 
-          currentIndex, 
-          toolCallTime, 
-          messageTime, 
-          valid: true 
-        });
-      } else {
-        console.log('Skipping indexed browser state due to timing mismatch:', { 
-          currentIndex, 
-          toolCallTime, 
-          messageTime, 
-          valid: false 
-        });
-      }
-    }
-    // Strategy 3: Timestamp-based matching as fallback
-    else if (!targetMessage && (toolTimestamp || assistantTimestamp)) {
-      const toolCallTime = toolTimestamp ? new Date(toolTimestamp).getTime() : 
-                          assistantTimestamp ? new Date(assistantTimestamp).getTime() : null;
-
-      if (toolCallTime && browserStateMessages.length > 0) {
-        // Find browser state message created after this tool call
-        const afterToolCall = browserStateMessages.filter(msg => 
-          new Date(msg.created_at).getTime() > toolCallTime
-        );
-        
-        if (afterToolCall.length > 0) {
-          // Use the first browser state created after this tool call
-          targetMessage = afterToolCall[0];
-          console.log('Using first browser state after tool call');
-        } else {
-          // If no states after tool call, find the closest one before
-          targetMessage = browserStateMessages.reduce((closest, current) => {
-            const currentTime = new Date(current.created_at).getTime();
-            const closestTime = new Date(closest.created_at).getTime();
-            
-            return Math.abs(currentTime - toolCallTime) < Math.abs(closestTime - toolCallTime) 
-              ? current : closest;
-          });
-          console.log('Using closest browser state by timestamp');
-        }
-      }
-    }
-    
-    // Extract screenshot from the selected message
-    if (targetMessage) {
-      const browserStateContent = safeJsonParse<{
-        screenshot_base64?: string;
-        image_url?: string;
-      }>(
-        targetMessage.content,
-        {},
-      );
-      screenshotBase64 = browserStateContent?.screenshot_base64 || null;
-      screenshotUrl = browserStateContent?.image_url || null;
-      
-      console.log('Browser state match result:', { 
-        found: !!(screenshotUrl || screenshotBase64),
-        messageId: targetMessage.message_id,
-        timestamp: targetMessage.created_at,
-        currentIndex,
-        strategy: isRunning && currentIndex === totalCalls - 1 ? 'latest' : 
-                 currentIndex < browserStateMessages.length ? 'indexed' : 'timestamp'
-      });
-    } else {
-      console.log('No suitable browser state message found');
     }
   }
 
@@ -388,34 +281,6 @@ export function BrowserToolView({
     }
   }, [screenshotUrl, screenshotBase64]);
 
-  // Maintain scroll position when content updates (only for non-running actions)
-  const [scrollPosition, setScrollPosition] = React.useState(0);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [shouldMaintainScroll, setShouldMaintainScroll] = React.useState(true);
-  
-  React.useEffect(() => {
-    const container = containerRef.current;
-    // Only restore scroll position if we're not auto-scrolling and action is not running
-    if (container && scrollPosition > 0 && shouldMaintainScroll && !isRunning) {
-      container.scrollTop = scrollPosition;
-    }
-  }, [forceUpdate, scrollPosition, shouldMaintainScroll, isRunning]);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    // Only save scroll position if we're not in an auto-scroll action
-    if (!isRunning) {
-      setScrollPosition(e.currentTarget.scrollTop);
-      setShouldMaintainScroll(true);
-    }
-  };
-
-  // Disable scroll maintenance during running actions
-  React.useEffect(() => {
-    if (isRunning) {
-      setShouldMaintainScroll(false);
-    }
-  }, [isRunning]);
-
   const handleImageLoad = () => {
     setImageLoading(false);
     setImageError(false);
@@ -427,7 +292,6 @@ export function BrowserToolView({
   };
 
   const renderScreenshot = () => {
-
     if (screenshotUrl) {
       return (
         <div className="flex items-center justify-center w-full h-full min-h-[600px] relative p-4" style={{ minHeight: '600px' }}>
@@ -437,7 +301,7 @@ export function BrowserToolView({
           <Card className={`p-0 overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
             <img
               src={screenshotUrl}
-              alt="Browser Screenshot"
+              alt={`Browser Screenshot - Action ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain"
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -462,7 +326,7 @@ export function BrowserToolView({
           <Card className={`overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
             <img
               src={`data:image/png;base64,${screenshotBase64}`}
-              alt="Browser Screenshot"
+              alt={`Browser Screenshot - Action ${currentIndex + 1}`}
               className="max-w-full max-h-full object-contain"
               onLoad={handleImageLoad}
               onError={handleImageError}
@@ -484,10 +348,10 @@ export function BrowserToolView({
 
   return (
     <Card 
-      key={actionId}
+      key={cacheKey}
       data-tool-type="browser"
       data-current-index={currentIndex}
-      data-action-id={actionId}
+      data-cache-key={cacheKey}
       className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
         <div className="flex flex-row items-center justify-between">
@@ -530,10 +394,8 @@ export function BrowserToolView({
       </CardHeader>
 
       <CardContent 
-        ref={containerRef}
         className="p-0 flex-1 overflow-hidden relative" 
         style={{ height: 'calc(100vh - 150px)', minHeight: '600px' }}
-        onScroll={handleScroll}
       >
         <div className="flex-1 flex h-full items-stretch bg-white dark:bg-black">
           {/* Show live browser view if running and is current action */}
@@ -549,65 +411,9 @@ export function BrowserToolView({
                 </div>
               </div>
             </div>
-          ) : (cachedScreenshotData.url || cachedScreenshotData.base64 || screenshotUrl || screenshotBase64) ? (
-            /* Show screenshot for all browser actions - use cached data if available */
-            (() => {
-              const finalScreenshotUrl = cachedScreenshotData.url || screenshotUrl;
-              const finalScreenshotBase64 = cachedScreenshotData.base64 || screenshotBase64;
-              
-              if (finalScreenshotUrl) {
-                return (
-                  <div className="flex items-center justify-center w-full h-full min-h-[600px] relative p-4" style={{ minHeight: '600px' }}>
-                    {imageLoading && (
-                      <ImageLoader />
-                    )}
-                    <Card className={`p-0 overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
-                      <img
-                        src={finalScreenshotUrl}
-                        alt={`Browser Screenshot - Action ${currentIndex + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                      />
-                    </Card>
-                    {imageError && !imageLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-                        <div className="text-center text-zinc-500 dark:text-zinc-400">
-                          <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-                          <p>Failed to load screenshot</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              } else if (finalScreenshotBase64) {
-                return (
-                  <div className="flex items-center justify-center w-full h-full min-h-[600px] relative p-4" style={{ minHeight: '600px' }}>
-                    {imageLoading && (
-                      <ImageLoader />
-                    )}
-                    <Card className={`overflow-hidden border ${imageLoading ? 'hidden' : 'block'}`}>
-                      <img
-                        src={`data:image/png;base64,${finalScreenshotBase64}`}
-                        alt={`Browser Screenshot - Action ${currentIndex + 1}`}
-                        className="max-w-full max-h-full object-contain"
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                      />
-                    </Card>
-                    {imageError && !imageLoading && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
-                        <div className="text-center text-zinc-500 dark:text-zinc-400">
-                          <AlertTriangle className="h-8 w-8 mx-auto mb-2" />
-                          <p>Failed to load screenshot</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-              return null;
-            })()
+          ) : (screenshotUrl || screenshotBase64) ? (
+            /* Show cached screenshot for this specific action */
+            renderScreenshot()
           ) : vncIframe && (isLastToolCall || isCurrentAction) ? (
             /* Show live browser view for recent actions if no screenshot */
             <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
