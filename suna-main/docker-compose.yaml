@@ -54,6 +54,8 @@ services:
         condition: service_healthy
       worker:
         condition: service_started
+      browser-sandbox:
+        condition: service_healthy
 
   worker:
     image: ghcr.io/suna-ai/suna-backend:latest
