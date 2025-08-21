@@ -766,7 +766,7 @@ class SetupWizard:
         if not self.env_vars["llm"].get("MODEL_TO_USE"):
             # Prioritize local Ollama model for free usage, fallback to cloud models
             if True:  # Always default to Ollama for cost-free operation
-                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/llama3.1:8b"
+                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/deepseek-r1:32b"
             elif self.env_vars["llm"].get("OPENAI_API_KEY"):
                 self.env_vars["llm"]["MODEL_TO_USE"] = "openai/gpt-4o"
             elif self.env_vars["llm"].get("ANTHROPIC_API_KEY"):
@@ -783,7 +783,7 @@ class SetupWizard:
                 ] = "openrouter/google/gemini-2.5-pro"
             else:
                 # Final fallback to Ollama
-                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/llama3.1:8b"
+                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/deepseek-r1:32b"
 
         print_success(
             f"LLM keys saved. Default model: {self.env_vars['llm'].get('MODEL_TO_USE', 'Not set')}"

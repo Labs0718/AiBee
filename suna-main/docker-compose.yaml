@@ -48,7 +48,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - OLLAMA_HOST=http://host.docker.internal:11435
-      - MODEL_TO_USE=ollama/llama3.1:8b
+      - MODEL_TO_USE=ollama/deepseek-r1:32b
     depends_on:
       redis:
         condition: service_healthy
@@ -76,7 +76,7 @@ services:
       - RABBITMQ_HOST=rabbitmq
       - RABBITMQ_PORT=5672
       - OLLAMA_HOST=http://host.docker.internal:11435
-      - MODEL_TO_USE=ollama/llama3.1:8b
+      - MODEL_TO_USE=ollama/deepseek-r1:32b
     depends_on:
       redis:
         condition: service_healthy
