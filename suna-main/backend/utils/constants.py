@@ -150,6 +150,14 @@ MODELS = {
         },
         "tier_availability": ["free", "paid"]
     },
+    "ollama/llama3.1:70b-instruct-q2_k": {
+        "aliases": ["llama3.1:70b-instruct-q2_k"],
+        "pricing": {
+            "input_cost_per_million_tokens": 0.0,
+            "output_cost_per_million_tokens": 0.0
+        },
+        "tier_availability": ["free", "paid"]
+    },
     "ollama/qwen2.5:7b": {
         "aliases": ["qwen2.5:7b"],
         "pricing": {

@@ -49,6 +49,12 @@ export const MODELS = {
     recommended: false,
     lowQuality: false
   },
+  'ollama/llama3.1:70b-instruct-q2_k': { 
+    tier: 'free',
+    priority: 107, 
+    recommended: false,
+    lowQuality: false
+  },
   'ollama/qwen2.5:7b': { 
     tier: 'free',
     priority: 95, 
