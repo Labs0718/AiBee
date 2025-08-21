@@ -1395,7 +1395,6 @@ async def get_agents(
         
         if not agents_result.data:
             logger.info(f"No agents found for user: {user_id}")
-                    "total": 0,
             
             # Auto-create default SUNA agent for new users
             try:
