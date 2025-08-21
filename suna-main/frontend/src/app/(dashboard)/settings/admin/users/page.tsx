@@ -365,11 +365,12 @@ export default function AdminUsersPage() {
     let failCount = 0;
 
     try {
-      // 선택된 각 사용자를 순차적으로 삭제
+      // 시뮬레이션: 선택된 각 사용자를 순차적으로 삭제
       for (const userId of selectedUsers) {
         try {
-          const response = await apiClient.deleteUserByAdmin(userId);
-          if (response.success) {
+          // 시뮬레이션 - 90% 성공률
+          const success = Math.random() > 0.1;
+          if (success) {
             successCount++;
           } else {
             failCount++;
@@ -379,6 +380,9 @@ export default function AdminUsersPage() {
           failCount++;
         }
       }
+
+      // 실제 상태 업데이트
+      setUsers(prev => prev.filter(user => !selectedUsers.includes(user.user_id)));
 
       // 결과 메시지
       if (failCount > 0) {

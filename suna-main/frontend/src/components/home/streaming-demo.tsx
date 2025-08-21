@@ -1726,4 +1726,4 @@ function TypingText({ text, speed = 15 }: { text: string; speed?: number }) {
   }, [text, speed]);
 
   return <span>{displayText}</span>;
-}
+}export default StreamingDemo;
