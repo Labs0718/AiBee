@@ -44,18 +44,6 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
     if (password.length < 8) {
       errors.push('비밀번호는 최소 8자 이상이어야 합니다.');
     }
-    if (!/[A-Z]/.test(password)) {
-      errors.push('대문자를 하나 이상 포함해야 합니다.');
-    }
-    if (!/[a-z]/.test(password)) {
-      errors.push('소문자를 하나 이상 포함해야 합니다.');
-    }
-    if (!/[0-9]/.test(password)) {
-      errors.push('숫자를 하나 이상 포함해야 합니다.');
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      errors.push('특수문자를 하나 이상 포함해야 합니다.');
-    }
     
     return errors;
   };
@@ -310,7 +298,6 @@ export const PasswordChangeDialog: React.FC<PasswordChangeDialogProps> = ({
             <p className="text-xs font-medium mb-2">비밀번호 요구사항:</p>
             <ul className="text-xs text-muted-foreground space-y-1">
               <li>• 최소 8자 이상</li>
-              <li>• 대문자, 소문자, 숫자, 특수문자 각 1개 이상 포함</li>
             </ul>
           </div>
         </div>

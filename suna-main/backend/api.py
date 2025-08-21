@@ -164,9 +164,14 @@ api_router.include_router(feature_flags_api.router)
 api_router.include_router(api_keys_api.router)
 api_router.include_router(account_deletion_api.router)
 
+from services import user_profile_api
+api_router.include_router(user_profile_api.router)
+
 from mcp_module import api as mcp_api
 from credentials import api as credentials_api
 from templates import api as template_api
+from pipedream import api as pipedream_api
+from composio_integration import api as composio_api
 
 api_router.include_router(mcp_api.router)
 api_router.include_router(credentials_api.router, prefix="/secure-mcp")
