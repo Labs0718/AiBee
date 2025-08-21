@@ -20,6 +20,7 @@ import {
   Moon,
   KeyRound,
   FileText,
+  Shield,
 } from 'lucide-react';
 import { useAccounts } from '@/hooks/use-accounts';
 import NewTeamForm from '@/components/basejump/new-team-form';
@@ -328,6 +329,14 @@ export function NavUserWithTeams({
                   <Link href="/automation-settings">
                     <Settings className="h-4 w-4" />
                     자동화 연결설정
+                  </Link>
+                </DropdownMenuItem>
+                
+                {/* 관리자 메뉴 - 임시로 모든 사용자에게 보이도록 설정 */}
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/admin/users">
+                    <Shield className="h-4 w-4" />
+                    회원관리
                   </Link>
                 </DropdownMenuItem>
                 

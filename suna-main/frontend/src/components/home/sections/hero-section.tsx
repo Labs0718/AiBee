@@ -320,11 +320,14 @@ export function HeroSection() {
           </Link> */}
           <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 pt-8 sm:pt-12 max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance text-center px-2">
-              <span className="text-primary">Build, manage and train your </span>
-              <span className="text-secondary">AI Workforce.</span>
+              <span className="text-primary">Create, Deploy and Manage your </span>
+              <span className="text-secondary">AI Workers.</span>
             </h1>
+            <h2 className="text-lg md:text-xl lg:text-2xl text-center text-gray-600 font-medium px-2 mt-2">
+              AI를 활용하여 업무를 자동화하고 효율성을 극대화하세요
+            </h2>
             <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight max-w-2xl px-2">
-            Kortix – the simplest way to migrate from human to AI.
+            The most efficient way to automate your workflow with AI.
             </p>
           </div>
 
