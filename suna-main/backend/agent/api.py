@@ -1395,18 +1395,54 @@ async def get_agents(
         
         if not agents_result.data:
             logger.info(f"No agents found for user: {user_id}")
-            return {
-                "agents": [],
-                "pagination": {
-                    "page": page,
-                    "limit": limit,
                     "total": 0,
-                    "pages": 0
+            
+            # Auto-create default SUNA agent for new users
+            try:
+                from services.user_onboarding import create_default_suna_agent
+                success = await create_default_suna_agent(user_id)
+                if success:
+                    logger.info(f"Created default SUNA agent for user: {user_id}")
+                    # Re-fetch agents after creating default
+                    agents_result = await query.execute()
+                    total_count = agents_result.count if agents_result.count is not None else 0
+                    if agents_result.data:
+                        agents_data = agents_result.data
+                    else:
+                        return {
+                            "agents": [],
+                            "pagination": {
+                                "page": page,
+                                "limit": limit,
+                                "total": 0,
+                                "pages": 0
+                            }
+                        }
+                else:
+                    return {
+                        "agents": [],
+                        "pagination": {
+                            "page": page,
+                            "limit": limit,
+                            "total": 0,
+                            "pages": 0
+                        }
+                    }
+            except Exception as e:
+                logger.error(f"Failed to create default agent for user {user_id}: {str(e)}")
+                return {
+                    "agents": [],
+                    "pagination": {
+                        "page": page,
+                        "limit": limit,
+                        "total": 0,
+                        "pages": 0
+                    }
                 }
-            }
+        else:
+            agents_data = agents_result.data
         
         # Post-process for tool filtering and tools_count sorting
-        agents_data = agents_result.data
         
         # First, fetch version data for all agents to ensure we have correct tool info
         # Do this in a single batched query instead of per-agent service calls
