@@ -65,6 +65,7 @@
     "cmdk": "^0.2.1",
     "cobe": "^0.6.3",
     "color-bits": "^1.1.0",
+    "colorthief": "^2.6.0",
     "comment-json": "^4.2.5",
     "date-fns": "^3.6.0",
     "diff": "^7.0.0",

@@ -167,7 +167,7 @@ export default function ThreadPage({
 
   const memoizedProject = useMemo(() => project, [project?.id, project?.sandbox?.vnc_preview, project?.sandbox?.pass]);
 
-  useVncPreloader(memoizedProject);
+  useVncPreloader(memoizedProject?.sandbox);
 
 
   const handleProjectRenamed = useCallback((newName: string) => {
