@@ -198,6 +198,9 @@ api_router.include_router(admin_api.router)
 from composio_integration import api as composio_api
 api_router.include_router(composio_api.router)
 
+from departments import api as departments_api
+api_router.include_router(departments_api.router)
+
 @api_router.get("/health")
 async def health_check():
     logger.info("Health check endpoint called")

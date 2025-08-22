@@ -68,10 +68,20 @@ export async function signUp(prevState: any, formData: FormData) {
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
+  const name = formData.get('name') as string;
+  const department = formData.get('department') as string;
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
   if (!email || !email.includes('@')) {
     return { message: 'Please enter a valid email address' };
+  }
+
+  if (!name || name.trim().length < 2) {
+    return { message: 'Please enter your name (at least 2 characters)' };
+  }
+
+  if (!department) {
+    return { message: 'Please select your department' };
   }
 
   if (!password || password.length < 6) {
@@ -89,6 +99,10 @@ export async function signUp(prevState: any, formData: FormData) {
     password,
     options: {
       emailRedirectTo: `${origin}/auth/callback?returnUrl=${returnUrl}`,
+      data: {
+        name: name.trim(),
+        dept_name: department,
+      },
     },
   });
 
@@ -96,15 +110,30 @@ export async function signUp(prevState: any, formData: FormData) {
     return { message: error.message || 'Could not create account' };
   }
 
-  const userName = email.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
   const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (signInData && signInData.user) {
-    sendWelcomeEmail(email, userName);
+    // Insert user profile data into public.user_profiles table
+    const { data: deptData } = await supabase
+      .from('departments')
+      .select('id')
+      .eq('name', department)
+      .single();
+
+    if (deptData) {
+      await supabase
+        .from('user_profiles')
+        .insert({
+          id: signInData.user.id,
+          name: name.trim(),
+          department_id: deptData.id,
+        });
+    }
+
+    sendWelcomeEmail(email, name.trim());
   }
 
   if (signInError) {

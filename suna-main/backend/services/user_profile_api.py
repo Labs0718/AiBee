@@ -8,7 +8,7 @@ from services.supabase import DBConnection
 from utils.auth_utils import get_current_user_id_from_jwt
 import jwt
 from fastapi import Request
-from utils.logger import structlog
+import structlog
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
@@ -60,31 +60,28 @@ async def get_user_profile(
         
         client = await db.client
         
-        # Get account data from basejump.accounts using the correct schema
-        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
+        # Get user profile from public.user_profiles table
+        profile_result = await client.from_('user_profiles').select('''
+            name,
+            departments!user_profiles_department_id_fkey(name)
+        ''').eq('id', user_id).single().execute()
         
-        # If no account found, create a minimal profile with JWT data
-        if not account_result.data:
-            result_data = {
-                'id': user_id,
-                'email': email or '',
-                'display_name': None,
-                'name': None,
-                'department_name': None,
-                'created_at': datetime.now().isoformat(),
-                'is_admin': False
-            }
-        else:
-            account_data = account_result.data[0]
-            result_data = {
-                'id': user_id,
-                'email': email or '',  # Use email from JWT
-                'display_name': account_data.get('display_name'),
-                'name': account_data.get('name'),
-                'department_name': None,  # Not in basejump.accounts table based on schema
-                'created_at': account_data.get('created_at'),
-                'is_admin': False  # Not in basejump.accounts table based on schema
-            }
+        # Get account data from basejump.accounts as fallback
+        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
+        account_data = account_result.data[0] if account_result.data else None
+        
+        # Extract profile data
+        profile_data = profile_result.data if profile_result.data else None
+        
+        result_data = {
+            'id': user_id,
+            'email': email,
+            'display_name': account_data.get('name') if account_data else None,
+            'name': profile_data.get('name') if profile_data else (account_data.get('name') if account_data else None),
+            'department_name': profile_data.get('departments', {}).get('name') if profile_data and profile_data.get('departments') else None,
+            'created_at': account_data.get('created_at') if account_data else datetime.now().isoformat(),
+            'is_admin': False  # Default to False, can be enhanced later
+        }
         
         profile = UserProfileResponse(
             id=str(result_data['id']),

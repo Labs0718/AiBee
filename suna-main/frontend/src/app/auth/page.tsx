@@ -20,6 +20,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useAuthMethodTracking } from '@/lib/stores/auth-tracking';
 import { toast } from 'sonner';
 import { useFeatureFlag } from '@/lib/feature-flags';
+import { useDepartmentNames } from '@/hooks/use-departments';
 
 import {
   Dialog,
@@ -42,8 +43,11 @@ function LoginContent() {
   const returnUrl = searchParams.get('returnUrl');
   const message = searchParams.get('message');
   const { enabled: customAgentsEnabled } = useFeatureFlag("custom_agents");
-
+  
   const isSignUp = mode === 'signup';
+  const { data: departmentNames = [], isLoading: departmentsLoading } = useDepartmentNames({
+    enabled: isSignUp
+  });
   const isMobile = useMediaQuery('(max-width: 768px)');
   const [mounted, setMounted] = useState(false);
 
@@ -315,6 +319,34 @@ function LoginContent() {
                 className="h-10 rounded-lg"
                 required
               />
+              {isSignUp && (
+                <div className="flex gap-3">
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="이름"
+                    className="h-10 rounded-lg flex-1"
+                    required
+                  />
+                  <select
+                    id="department"
+                    name="department"
+                    className="h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
+                    disabled={departmentsLoading}
+                    required
+                  >
+                    <option value="">
+                      {departmentsLoading ? '부서 로딩중...' : '부서 선택'}
+                    </option>
+                    {departmentNames.map((departmentName) => (
+                      <option key={departmentName} value={departmentName}>
+                        {departmentName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <Input
                 id="password"
                 name="password"
