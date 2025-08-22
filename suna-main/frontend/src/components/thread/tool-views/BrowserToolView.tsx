@@ -47,14 +47,7 @@ export function BrowserToolView({
   const toolToolData = extractToolData(toolContent);
   
   // Debug logging
-  console.log('BrowserToolView Debug:', {
-    name,
-    assistantContent,
-    toolContent,
-    assistantToolData,
-    toolToolData,
-    messages: messages.length
-  });
+  // Debug logging removed
 
   let url: string | null = null;
 
@@ -78,8 +71,15 @@ export function BrowserToolView({
   const isLastToolCall = currentIndex === totalCalls - 1;
   const isCurrentAction = isRunning && (isLastToolCall || currentIndex >= totalCalls - 1);
 
-  // Create unique cache key for this specific browser action
-  const cacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}`;
+  // Get latest browser_state message timestamp for cache invalidation
+  const latestBrowserStateTimestamp = React.useMemo(() => {
+    const browserStateMessages = messages.filter(msg => msg.type === 'browser_state');
+    if (browserStateMessages.length === 0) return null;
+    return Math.max(...browserStateMessages.map(msg => new Date(msg.created_at).getTime()));
+  }, [messages]);
+
+  // Create unique cache key including latest browser state timestamp
+  const cacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}-${latestBrowserStateTimestamp}`;
 
   let browserStateMessageId: string | undefined;
   let screenshotUrl: string | null = null;
@@ -101,7 +101,7 @@ export function BrowserToolView({
     });
   }
 
-  // Only search for new data if not in cache
+  // Search for new data if not in cache OR if we have new browser_state messages
   if (!cachedData) {
     try {
       const topLevelParsed = safeJsonParse<{ content?: any }>(toolContent, {});
@@ -274,22 +274,7 @@ export function BrowserToolView({
     }
   }
 
-  const vncPreviewUrl = project?.sandbox?.vnc_preview
-    ? `${project.sandbox.vnc_preview}/vnc_lite.html?password=${project?.sandbox?.pass}&autoconnect=true&scale=local&width=1024&height=768`
-    : undefined;
-
-  const vncIframe = useMemo(() => {
-    if (!vncPreviewUrl) return null;
-
-    return (
-      <iframe
-        src={vncPreviewUrl}
-        title="Browser preview"
-        className="w-full h-full border-0 min-h-[600px]"
-        style={{ width: '100%', height: '100%', minHeight: '600px' }}
-      />
-    );
-  }, [vncPreviewUrl]);
+  // Remove VNC iframe - this will be handled by Browser tab
 
   const [progress, setProgress] = React.useState(100);
 
@@ -435,49 +420,21 @@ export function BrowserToolView({
         className="p-0 flex-1 overflow-hidden relative" 
         style={{ height: 'calc(100vh - 150px)', minHeight: '600px' }}
       >
-        <div className="flex-1 flex h-full items-stretch bg-white dark:bg-black">
-          {/* Show live browser view if running and is current action */}
-          {isCurrentAction && vncIframe ? (
-            <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-              <div className="relative w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-                {vncIframe}
-                <div className="absolute top-4 right-4 z-10">
-                  <Badge className="bg-blue-500/90 text-white border-none shadow-lg animate-pulse">
-                    <CircleDashed className="h-3 w-3 animate-spin" />
-                    {operation} in progress
-                  </Badge>
-                </div>
-              </div>
-            </div>
-          ) : (screenshotUrl || screenshotBase64) ? (
-            /* Show cached screenshot for this specific action */
+        <div className="flex-1 flex h-full items-center overflow-scroll bg-white dark:bg-black">
+          {(screenshotUrl || screenshotBase64) ? (
             renderScreenshot()
-          ) : vncIframe && (isLastToolCall || isCurrentAction) ? (
-            /* Show live browser view for recent actions if no screenshot */
-            <div className="flex flex-col items-center justify-center w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-              <div className="relative w-full h-full min-h-[600px]" style={{ minHeight: '600px' }}>
-                {vncIframe}
-                {!isRunning && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <Badge className="bg-green-500/90 text-white border-none shadow-lg">
-                      <CheckCircle className="h-3 w-3" />
-                      Live browser view
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </div>
           ) : (
-            /* Fallback: no browser state available */
-            <div className="p-8 h-full flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-700 dark:text-zinc-400">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-zinc-100 to-zinc-50 shadow-inner dark:from-zinc-800/40 dark:to-zinc-900/60">
-                <MonitorPlay className="h-10 w-10 text-zinc-400 dark:text-zinc-600" />
+            <div className="p-8 flex flex-col items-center justify-center w-full bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900 text-zinc-700 dark:text-zinc-400 min-h-600">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-purple-100 to-purple-50 shadow-inner dark:from-purple-800/40 dark:to-purple-900/60">
+                <MonitorPlay className="h-10 w-10 text-purple-400 dark:text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
-                No Browser State Available
+                {isRunning ? 'Browser action in progress' : 'Browser action completed'}
               </h3>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Browser state image not found for this action
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4 text-center">
+                {isRunning 
+                  ? 'Switch to the Browser tab to see the live browser view.'
+                  : 'Screenshot will appear here when available.'}
               </p>
               {url && (
                 <div className="mt-4">
