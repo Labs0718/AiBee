@@ -131,7 +131,7 @@ def load_existing_env_vars():
             "OPENROUTER_API_KEY": backend_env.get("OPENROUTER_API_KEY", ""),
             "MORPH_API_KEY": backend_env.get("MORPH_API_KEY", ""),
             "GEMINI_API_KEY": backend_env.get("GEMINI_API_KEY", ""),
-            "MODEL_TO_USE": backend_env.get("MODEL_TO_USE", ""),
+
         },
         "search": {
             "TAVILY_API_KEY": backend_env.get("TAVILY_API_KEY", ""),
@@ -308,7 +308,7 @@ class SetupWizard:
         llm_keys = [
             k
             for k in self.env_vars["llm"]
-            if k != "MODEL_TO_USE" and self.env_vars["llm"][k] and k != "MORPH_API_KEY"
+            if self.env_vars["llm"][k] and k != "MORPH_API_KEY"
         ]
         if llm_keys:
             providers = [k.split("_")[0].capitalize() for k in llm_keys]
@@ -669,8 +669,8 @@ class SetupWizard:
             f"Visit {Colors.GREEN}https://app.daytona.io/dashboard/snapshots{Colors.ENDC}{Colors.CYAN} to create a snapshot."
         )
         print_info("Create a snapshot with these exact settings:")
-        print_info(f"   - Name:\t\t{Colors.GREEN}kortix/suna:0.1.3.1{Colors.ENDC}")
-        print_info(f"   - Snapshot name:\t{Colors.GREEN}kortix/suna:0.1.3.1{Colors.ENDC}")
+        print_info(f"   - Name:\t\t{Colors.GREEN}kortix/suna:0.1.3.11{Colors.ENDC}")
+        print_info(f"   - Snapshot name:\t{Colors.GREEN}kortix/suna:0.1.3.11{Colors.ENDC}")
         print_info(
             f"   - Entrypoint:\t{Colors.GREEN}/usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf{Colors.ENDC}"
         )
@@ -680,11 +680,9 @@ class SetupWizard:
         """Collects LLM API keys for various providers."""
         print_step(5, self.total_steps, "Collecting LLM API Keys")
 
-        # Default to providing API keys for convenience, but let user configure them
-
         # Check if we already have any LLM keys configured
         existing_keys = {
-            k: v for k, v in self.env_vars["llm"].items() if v and k != "MODEL_TO_USE"
+            k: v for k, v in self.env_vars["llm"].items() if v
         }
         has_existing = bool(existing_keys)
 
@@ -708,7 +706,7 @@ class SetupWizard:
         while not any(
             k
             for k in self.env_vars["llm"]
-            if k != "MODEL_TO_USE" and self.env_vars["llm"][k]
+            if self.env_vars["llm"][k]
         ):
             providers = {
                 "1": ("OpenAI", "OPENAI_API_KEY"),
@@ -726,21 +724,13 @@ class SetupWizard:
                 )
                 print(f"{Colors.CYAN}[{key}] {Colors.GREEN}{name}{Colors.ENDC}{status}")
 
-            # Always show the selection menu, even with existing keys
+            # Allow Enter to skip if we already have keys configured
             if has_existing:
                 choices_input = input(
-                    "Select providers to add/update (or press Enter to skip): "
+                    "Select providers (or press Enter to skip): "
                 ).strip()
                 if not choices_input:
-                    # Ask if user wants to modify existing keys
-                    modify_choice = input("Do you want to modify existing API keys? (y/n): ").lower().strip()
-                    if modify_choice != 'y':
-                        break
-                    else:
-                        # Show all available providers for modification
-                        choices_input = input("Select providers to modify: ").strip()
-                        if not choices_input:
-                            break
+                    break
             else:
                 choices_input = input("Select providers: ").strip()
 
@@ -762,32 +752,7 @@ class SetupWizard:
                 )
                 self.env_vars["llm"][key] = api_key
 
-        # Set a default model if not already set - prefer local/free models
-        if not self.env_vars["llm"].get("MODEL_TO_USE"):
-            # Prioritize local Ollama model for free usage, fallback to cloud models
-            if True:  # Always default to Ollama for cost-free operation
-                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/deepseek-r1:32b"
-            elif self.env_vars["llm"].get("OPENAI_API_KEY"):
-                self.env_vars["llm"]["MODEL_TO_USE"] = "openai/gpt-4o"
-            elif self.env_vars["llm"].get("ANTHROPIC_API_KEY"):
-                self.env_vars["llm"][
-                    "MODEL_TO_USE"
-                ] = "anthropic/claude-sonnet-4-20250514"
-            elif self.env_vars["llm"].get("GEMINI_API_KEY"):
-                self.env_vars["llm"][
-                    "MODEL_TO_USE"
-                ] = "gemini/gemini-2.5-pro"
-            elif self.env_vars["llm"].get("OPENROUTER_API_KEY"):
-                self.env_vars["llm"][
-                    "MODEL_TO_USE"
-                ] = "openrouter/google/gemini-2.5-pro"
-            else:
-                # Final fallback to Ollama
-                self.env_vars["llm"]["MODEL_TO_USE"] = "ollama/deepseek-r1:32b"
-
-        print_success(
-            f"LLM keys saved. Default model: {self.env_vars['llm'].get('MODEL_TO_USE', 'Not set')}"
-        )
+        print_success("LLM keys saved.")
 
     def collect_morph_api_key(self):
         """Collects the optional MorphLLM API key for code editing."""
@@ -1129,7 +1094,6 @@ class SetupWizard:
             "REDIS_HOST": redis_host,
             "REDIS_PORT": "6379",
             **self.env_vars["llm"],
-            "OLLAMA_HOST": "http://localhost:11435",  # Custom Ollama host port to avoid conflicts
             **self.env_vars["search"],
             **self.env_vars["rapidapi"],
             **self.env_vars.get("cron", {}),
@@ -1208,8 +1172,6 @@ class SetupWizard:
                 check=True,
                 capture_output=True,
                 shell=IS_WINDOWS,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
             )
         except (subprocess.SubprocessError, FileNotFoundError):
             print_error(
@@ -1320,21 +1282,12 @@ class SetupWizard:
                 print_info("Waiting for services to spin up...")
                 time.sleep(15)
                 # A simple check to see if containers are running
-                if IS_WINDOWS:
-                    result = subprocess.run(
-                        ["docker", "compose", "ps"],
-                        capture_output=True,
-                        text=False,
-                        shell=True,
-                    )
-                    stdout = result.stdout.decode('utf-8', errors='replace') if result.stdout else ""
-                    result.stdout = stdout
-                else:
-                    result = subprocess.run(
-                        ["docker", "compose", "ps"],
-                        capture_output=True,
-                        text=True,
-                    )
+                result = subprocess.run(
+                    ["docker", "compose", "ps"],
+                    capture_output=True,
+                    text=True,
+                    shell=IS_WINDOWS,
+                )
                 if "backend" in result.stdout and "frontend" in result.stdout:
                     print_success("Suna services are starting up!")
                 else:
@@ -1354,9 +1307,8 @@ class SetupWizard:
         """Shows final instructions to the user."""
         print(f"\n{Colors.GREEN}{Colors.BOLD}✨ Suna Setup Complete! ✨{Colors.ENDC}\n")
 
-        default_model = self.env_vars.get("llm", {}).get("MODEL_TO_USE", "N/A")
         print_info(
-            f"Suna is configured to use {Colors.GREEN}{default_model}{Colors.ENDC} as the default LLM."
+            f"Suna is configured with your LLM API keys and ready to use."
         )
         print_info(
             f"Delete the {Colors.RED}.setup_progress{Colors.ENDC} file to reset the setup."
