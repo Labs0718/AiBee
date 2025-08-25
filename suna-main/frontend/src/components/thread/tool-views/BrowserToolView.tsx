@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import {
   Globe,
   MonitorPlay,
@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ImageLoader } from './shared/ImageLoader';
+import { useBrowserStatus } from '@/hooks/useBrowserStatus';
 
 // Global cache for browser screenshots - persists across component re-renders
 const globalBrowserCache = new Map<string, {
@@ -78,16 +79,47 @@ export function BrowserToolView({
     return Math.max(...browserStateMessages.map(msg => new Date(msg.created_at).getTime()));
   }, [messages]);
 
-  // Create unique cache key including latest browser state timestamp
-  const cacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}-${latestBrowserStateTimestamp}`;
+  // Add loading states for images
+  const [imageLoading, setImageLoading] = React.useState(true);
+  const [imageError, setImageError] = React.useState(false);
+  const [forceRefresh, setForceRefresh] = useState(0);
+
+  // Create unique cache key including latest browser state timestamp and force refresh counter
+  const cacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}-${latestBrowserStateTimestamp}-${forceRefresh}`;
 
   let browserStateMessageId: string | undefined;
   let screenshotUrl: string | null = null;
   let screenshotBase64: string | null = null;
 
-  // Add loading states for images
-  const [imageLoading, setImageLoading] = React.useState(true);
-  const [imageError, setImageError] = React.useState(false);
+  // Real-time browser status monitoring
+  const { data: browserStatus, isLoading: browserStatusLoading } = useBrowserStatus(
+    project?.id,
+    undefined, // threadId if available
+    isCurrentAction && isRunning
+  );
+
+  // Real-time cache invalidation for browser screenshots
+  useEffect(() => {
+    if (isCurrentAction && isRunning) {
+      const interval = setInterval(() => {
+        // Force cache invalidation for current action
+        const oldCacheKey = `${currentIndex}-${toolTimestamp || assistantTimestamp || 'default'}-${latestBrowserStateTimestamp}`;
+        globalBrowserCache.delete(oldCacheKey);
+        
+        // Also clear any related cache entries
+        for (const key of globalBrowserCache.keys()) {
+          if (key.startsWith(`${currentIndex}-`)) {
+            globalBrowserCache.delete(key);
+          }
+        }
+        
+        // Force re-render
+        setForceRefresh(prev => prev + 1);
+      }, 1500); // Refresh every 1.5 seconds for active actions
+
+      return () => clearInterval(interval);
+    }
+  }, [isCurrentAction, isRunning, currentIndex, toolTimestamp, assistantTimestamp, latestBrowserStateTimestamp]);
 
   // Check cache first
   const cachedData = globalBrowserCache.get(cacheKey);

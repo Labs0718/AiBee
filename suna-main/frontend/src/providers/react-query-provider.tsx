@@ -22,8 +22,9 @@ export function ReactQueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 20 * 1000,
-            gcTime: 5 * 60 * 1000,
+            staleTime: 0,
+            gcTime: 1 * 60 * 1000,
+            refetchInterval: 2000,
             retry: (failureCount, error: any) => {
               if (error?.status >= 400 && error?.status < 500) return false;
               if (error?.status === 404) return false;
@@ -32,6 +33,7 @@ export function ReactQueryProvider({
             refetchOnMount: true,
             refetchOnWindowFocus: true,
             refetchOnReconnect: 'always',
+            refetchIntervalInBackground: true,
           },
           mutations: {
             retry: (failureCount, error: any) => {

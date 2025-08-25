@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+import time
 from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter, Form, Depends, Request
@@ -388,4 +389,90 @@ async def ensure_project_sandbox_active(
         }
     except Exception as e:
         logger.error(f"Error ensuring sandbox is active for project {project_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/browser/health")
+async def check_browser_health():
+    """
+    Check the health status of the browser sandbox container.
+    Returns the status of the browser sandbox and its services.
+    """
+    try:
+        import requests
+        from urllib.parse import urljoin
+        
+        # Check if browser sandbox is accessible via the configured ports
+        browser_services = [
+            {"name": "VNC", "url": "http://localhost:5901", "port": 5901},
+            {"name": "noVNC", "url": "http://localhost:6080", "port": 6080}, 
+            {"name": "Stagehand API", "url": "http://localhost:8004/api", "port": 8004},
+            {"name": "HTTP Proxy", "url": "http://localhost:8080", "port": 8080},
+            {"name": "Chrome DevTools", "url": "http://localhost:9222", "port": 9222}
+        ]
+        
+        health_status = {
+            "browser_sandbox_healthy": True,
+            "services": {},
+            "timestamp": int(time.time() * 1000)
+        }
+        
+        for service in browser_services:
+            try:
+                response = requests.get(service["url"], timeout=2)
+                health_status["services"][service["name"]] = {
+                    "healthy": response.status_code < 500,
+                    "status_code": response.status_code,
+                    "port": service["port"]
+                }
+            except requests.exceptions.RequestException:
+                health_status["services"][service["name"]] = {
+                    "healthy": False,
+                    "status_code": None,
+                    "port": service["port"],
+                    "error": "Connection failed"
+                }
+                health_status["browser_sandbox_healthy"] = False
+        
+        return health_status
+        
+    except Exception as e:
+        logger.error(f"Error checking browser health: {str(e)}")
+        return {
+            "browser_sandbox_healthy": False,
+            "error": str(e),
+            "timestamp": int(time.time() * 1000)
+        }
+
+@router.get("/browser/screenshot")
+async def get_browser_screenshot():
+    """
+    Get the current browser screenshot from the sandbox.
+    Returns the latest screenshot if available.
+    """
+    try:
+        import requests
+        
+        # Try to get screenshot from Stagehand API
+        screenshot_url = "http://localhost:8004/api/screenshot"
+        
+        response = requests.get(screenshot_url, timeout=5)
+        
+        if response.status_code == 200:
+            return Response(
+                content=response.content,
+                media_type="image/png",
+                headers={
+                    "Cache-Control": "no-cache, no-store, must-revalidate",
+                    "Pragma": "no-cache",
+                    "Expires": "0"
+                }
+            )
+        else:
+            raise HTTPException(status_code=503, detail="Screenshot service unavailable")
+            
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error getting browser screenshot: {str(e)}")
+        raise HTTPException(status_code=503, detail="Browser screenshot service unavailable")
+    except Exception as e:
+        logger.error(f"Unexpected error getting browser screenshot: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
