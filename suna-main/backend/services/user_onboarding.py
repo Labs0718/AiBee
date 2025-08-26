@@ -28,7 +28,7 @@ async def create_default_suna_agent(user_id: str) -> bool:
         
         # Default configuration
         default_config = {
-            "system_prompt": "You are Suna, an advanced AI assistant designed to help users with a wide variety of tasks. You have access to powerful tools and can assist with coding, research, analysis, and much more. Be helpful, accurate, and efficient in your responses.",
+            "system_prompt": "You are AiBee, an advanced AI assistant designed to help users with a wide variety of tasks. You have access to powerful tools and can assist with coding, research, analysis, and much more. Be helpful, accurate, and efficient in your responses.",
             "tools": {
                 "mcp": [],
                 "agentpress": {
@@ -57,7 +57,7 @@ async def create_default_suna_agent(user_id: str) -> bool:
         agent_result = await client.table('agents').insert({
             "agent_id": new_agent_id,
             "account_id": user_id,
-            "name": "Suna",
+            "name": "AiBee",
             "description": "Your intelligent AI assistant",
             "is_default": True,
             "avatar": "🤖",
@@ -85,7 +85,7 @@ async def create_default_suna_agent(user_id: str) -> bool:
             "updated_at": datetime.now().isoformat(),
             "created_by": user_id,
             "config": default_config,
-            "change_description": "Initial default Suna agent version"
+            "change_description": "Initial default AiBee agent version"
         }).execute()
         
         if not version_result.data:
