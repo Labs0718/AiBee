@@ -30,16 +30,16 @@ class Colors:
 
 # --- UI Helpers ---
 def print_banner():
-    """Prints the Suna setup banner."""
+    """Prints the AiBee setup banner."""
     print(
         f"""
 {Colors.BLUE}{Colors.BOLD}
-   ███████╗██╗   ██╗███╗   ██╗ █████╗ 
-   ██╔════╝██║   ██║████╗  ██║██╔══██╗
-   ███████╗██║   ██║██╔██╗ ██║███████║
-   ╚════██║██║   ██║██║╚██╗██║██╔══██║
-   ███████║╚██████╔╝██║ ╚████║██║  ██║
-   ╚══════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝
+    █████╗ ██╗██████╗ ███████╗███████╗
+   ██╔══██╗██║██╔══██╗██╔════╝██╔════╝
+   ███████║██║██████╔╝█████╗  █████╗  
+   ██╔══██║██║██╔══██╗██╔══╝  ██╔══╝  
+   ██║  ██║██║██████╔╝███████╗███████╗
+   ╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝╚══════╝
                                       
    Installation Wizard
 {Colors.ENDC}
@@ -388,7 +388,7 @@ class SetupWizard:
         """Runs the setup wizard."""
         print_banner()
         print(
-            "This wizard will guide you through setting up Suna, an open-source generalist AI Worker.\n"
+            "\n"
         )
 
         # Show current configuration status

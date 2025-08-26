@@ -388,7 +388,7 @@ class SetupWizard:
         """Runs the setup wizard."""
         print_banner()
         print(
-            "This wizard will guide you through setting up Suna, an open-source generalist AI Worker.\n"
+            "\n"
         )
 
         # Show current configuration status
