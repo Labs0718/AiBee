@@ -55,6 +55,7 @@ export function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
+  const templateType = searchParams.get('template');
   const { data: accounts } = useAccounts();
   const personalAccount = accounts?.find((account) => account.personal_account);
   const chatInputRef = useRef<ChatInputHandles>(null);
@@ -104,7 +105,13 @@ export function DashboardContent() {
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
     
-  }, [searchParams, selectedAgentId, router, setSelectedAgent]);
+    // 연차사용 템플릿일 때 미리 텍스트 입력
+    if (templateType === 'annual-leave' && !inputValue) {
+      setInputValue(`연차 사용일(예: 5월5일) : 
+연차사용종류(예: 오전반차, 연차 등) : `);
+    }
+    
+  }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue]);
 
   useEffect(() => {
     if (threadQuery.data && initiatedThreadId) {
@@ -140,8 +147,69 @@ export function DashboardContent() {
       const files = chatInputRef.current?.getPendingFiles() || [];
       localStorage.removeItem(PENDING_PROMPT_KEY);
 
+      // 템플릿에 따라 자동 프롬프트 추가
+      let finalMessage = message;
+      if (templateType === 'annual-leave') {
+        const ANNUAL_LEAVE_PROMPT = `
+아래는 작업메뉴얼 입니다.
+
+1. https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : ejlee01 패스워드 : sxr932672@ 로그인 완료된 화면에서 사용자 명 확인 후, https://gw.goability.co.kr/attend/Views/Common/pop/eaPop.do?processId=ATTProc18&form_id=18&form_tp=ATTProc18&doc_width=900 해당 링크 접속
+
+2. 처음에 창 열리면 "결재 특이사항" 창때문에 내용이 안보이니까 꺽쇠? 클릭해서 닫아줘. "제목"입력칸이 보이도록 잘 닫아졌는지 "꼭" 확인후 다음단계 진행해.
+
+3. “제목”： 연차 휴가 신청합니다. 입력
+
+4. “일정등록” 옆에 “선택” 드롭다운 클릭 > 2번 단계에서 확인한 사용자명에 맞게 "개인캘린더.사용자명" 클릭
+
+5. "근태구분" 오른쪽에 "선택" 드롭다운 클릭 > 사용자가 요청한 거에 맞춰서 알맞는 구분 클릭
+
+6. "신청일자": 사용자가 요청한 날짜로 설정해야함. 
+ - 신정일자 선택방법 : 
+   예) 2025-08-25  랑 2025-08-25 이런식으로 있을건데,  각 날짜 오른쪽에 보면 "달력아이콘"이있음. 달력아이콘 **클릭**
+	각각 알맞는 날짜로 선택하기 : 첫번째 날짜는 연차 시작날짜고, 두번째 날짜는 연차 종료 날짜임.
+ 	**너가 가끔 실수로 8월인데 7월 날짜로 선택할 때 있음. 사용자가 말한  월, 일자가 맞는지 한번 더 확인한 뒤 적용필수. **
+
+ * 8월5일 오전 반차일 경우: 08월05일,08월05일로 선택
+ * 8월5일 연차일 경우: 08월5일,08월05일로 선택
+ * 8월5일, 8월6일 연차일 경우: 08월05일, 08월06일로 선택
+
+7. "비고" 오른쪽 빈 칸에 "개인사유" 입력
+
+8. "내역추가" 버튼 클릭
+ - 내역추가 버튼 클릭 잘안되니까: 아래 구조 참고해서 "내역추가" 버튼 클릭 시도해서 아래 표 새로 생성되는지 확인해야함.
+<button style="height:75px;width:75px;line-height:18px;" onclick="javascript:addAnnualLeave()" data-role="button" class="k-button" role="button" aria-disabled="false" tabindex="0">…</button>
+
+9. "결재상신" 클릭
+
+10. 오른쪽 위에 "상신" 버튼 클릭
+
+10-1. 결재상신 버튼 누르고 난뒤부터는 브라우저 접근 차단되니까, 브라우저 서비스 아예 종료 후=> 새로 브라우저 서비스 다시 실행해서 깔끔하게 새로 시작
+
+11. https://gw.goability.co.kr/gw/userMain.do 접속
+
+12. 상단에 "전자결재" 클릭
+
+13. 좌측에 "결재문서" 클릭
+
+14. 열린 상신함... 미결함.. 전결함.... 등등 중에서  "미결함" 클릭
+
+15. 제목에 "연차 휴가 신청합니다." 우리가 작성한 문서임 : "연차 휴가 신청합니다." 클릭
+
+16. "휴가 (취소) 신청서" 열렸는지 확인
+
+17. 스크롤 내려서 "사용 신청" 오른쪽에 "체크박스" 클릭
+
+18. 상단에 "결재" 클릭
+
+19. "승인" 클릭`;
+        
+        finalMessage = `${message}
+
+${ANNUAL_LEAVE_PROMPT}`;
+      }
+
       const formData = new FormData();
-      formData.append('prompt', message);
+      formData.append('prompt', finalMessage);
 
       // Add selected agent if one is chosen
       if (selectedAgentId) {
