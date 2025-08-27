@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2, Calendar } from 'lucide-react';
+import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2, Calendar, Plane } from 'lucide-react';
 
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
@@ -292,8 +292,21 @@ export function SidebarLeft({
                         asChild
                       >
                         <Link href="/dashboard?template=annual-leave" onClick={() => isMobile && setOpenMobile(false)}>
-                          <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <Plane className="h-3 w-3 mr-1 flex-shrink-0" />
                           <span>그룹웨어 연차사용</span>
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        className={cn('pl-3 touch-manipulation', {
+                          'bg-accent text-accent-foreground font-medium': pathname === '/dashboard' && searchParams.get('template') === 'resource-booking',
+                        })} 
+                        asChild
+                      >
+                        <Link href="/dashboard?template=resource-booking" onClick={() => isMobile && setOpenMobile(false)}>
+                          <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                          <span>그룹웨어 자원예약</span>
                         </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
