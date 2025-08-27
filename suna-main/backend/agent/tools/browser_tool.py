@@ -365,7 +365,7 @@ class BrowserTool(SandboxToolsBase):
         </invoke>
         </function_calls>
         ''')
-    async def browser_act(self, action: str, variables: dict = None, iframes: bool = False) -> ToolResult:
+    async def browser_act(self, action: str, variables: dict = None, iframes: bool = True) -> ToolResult:
         """Perform any browser action using Stagehand."""
         logger.info(f"Browser acting: {action} (variables={'***' if variables else None}, iframes={iframes})")
         params = {"action": action, "iframes": iframes, "variables": variables}
@@ -407,7 +407,7 @@ class BrowserTool(SandboxToolsBase):
         </invoke>
         </function_calls>
         ''')
-    async def browser_extract_content(self, instruction: str, selector: str = None, iframes: bool = False) -> ToolResult:
+    async def browser_extract_content(self, instruction: str, selector: str = None, iframes: bool = True) -> ToolResult:
         """Extract structured content from the current page using Stagehand."""
         logger.info(f"Browser extracting: {instruction} (selector={selector}, iframes={iframes})")
         params = {"instruction": instruction, "iframes": iframes, "selector": selector}

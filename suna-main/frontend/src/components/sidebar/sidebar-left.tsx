@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2 } from 'lucide-react';
+import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2, FolderOpen, FileText, Calendar } from 'lucide-react';
 
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
@@ -40,7 +40,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useFeatureFlags } from '@/lib/feature-flags';
 import posthog from 'posthog-js';
 // Floating mobile menu button component
@@ -87,6 +87,7 @@ export function SidebarLeft({
   });
 
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { flags, loading: flagsLoading } = useFeatureFlags(['custom_agents', 'agent_marketplace']);
   const customAgentsEnabled = flags.custom_agents;
@@ -260,6 +261,63 @@ export function SidebarLeft({
               </SidebarMenuButton>
             </Link>
           )}
+          
+          {/* AiBee Browser Automation Folder */}
+          <SidebarMenu>
+            <Collapsible
+              defaultOpen={true}
+              className="group/automation"
+            >
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    tooltip="AiBee Browser Automation"
+                    onClick={() => {
+                      if (state === 'collapsed') {
+                        setOpen(true);
+                      }
+                    }}
+                  >
+                    <FolderOpen className="h-4 w-4 mr-1" />
+                    <span>AiBee 브라우저 자동화</span>
+                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/automation:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        className="pl-3 touch-manipulation" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Create expense report automation chat
+                          router.push('/dashboard?preset=expense-automation');
+                          if (isMobile) setOpenMobile(false);
+                        }}
+                      >
+                        <FileText className="h-3 w-3 mr-2" />
+                        <span>지출결의서 자동화</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton 
+                        className="pl-3 touch-manipulation"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Create vacation request automation chat
+                          router.push('/dashboard?preset=vacation-automation');
+                          if (isMobile) setOpenMobile(false);
+                        }}
+                      >
+                        <Calendar className="h-3 w-3 mr-2" />
+                        <span>연차신청 자동화</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </SidebarMenuItem>
+            </Collapsible>
+          </SidebarMenu>
         </SidebarGroup>
         <NavAgents />
       </SidebarContent>
