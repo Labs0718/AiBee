@@ -962,7 +962,6 @@ async def generate_and_update_project_name(project_id: str, prompt: str):
 @router.post("/agent/initiate", response_model=InitiateAgentResponse)
 async def initiate_agent_with_files(
     prompt: str = Form(...),
-    display_prompt: Optional[str] = Form(None),  # Optional display prompt for UI
     model_name: Optional[str] = Form(None),  # Default to None to use config.MODEL_TO_USE
     enable_thinking: Optional[bool] = Form(False),
     reasoning_effort: Optional[str] = Form("low"),
@@ -1269,10 +1268,8 @@ async def initiate_agent_with_files(
                 for failed_file in failed_uploads: message_content += f"- {failed_file}\n"
 
         # 5. Add initial user message to thread
-        # Use display_prompt for UI if provided, otherwise use actual prompt
-        display_content = display_prompt if display_prompt else prompt
         message_id = str(uuid.uuid4())
-        message_payload = {"role": "user", "content": display_content}
+        message_payload = {"role": "user", "content": message_content}
         await client.table('messages').insert({
             "message_id": message_id, "thread_id": thread_id, "type": "user",
             "is_llm_message": True, "content": json.dumps(message_payload),
