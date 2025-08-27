@@ -105,15 +105,24 @@ export function DashboardContent() {
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
     
-    // 템플릿에 따라 미리 텍스트 입력
-    if (templateType === 'annual-leave' && !inputValue) {
-      setInputValue(`연차 사용일(예: 5월5일) : 
-연차사용종류(예: 오전반차, 연차 등) : `);
-    } else if (templateType === 'resource-booking' && !inputValue) {
-      setInputValue(`- 예약명(예: AI 커뮤니티 Zoom) : 
+    // 템플릿에 따라 미리 텍스트 입력 (템플릿 변경시 즉시 업데이트)
+    if (templateType === 'annual-leave') {
+      const annualLeaveTemplate = `연차 사용일(예: 5월5일) : 
+연차사용종류(예: 오전반차, 연차 등) : `;
+      if (inputValue !== annualLeaveTemplate) {
+        setInputValue(annualLeaveTemplate);
+      }
+    } else if (templateType === 'resource-booking') {
+      const resourceBookingTemplate = `- 예약명(예: AI 커뮤니티 Zoom) : 
 - 종일 여부(Ex : 예/아니오) :
 - 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
-- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : `);
+- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : `;
+      if (inputValue !== resourceBookingTemplate) {
+        setInputValue(resourceBookingTemplate);
+      }
+    } else if (templateType === null && (inputValue.includes('연차 사용일') || inputValue.includes('예약명'))) {
+      // 일반 페이지로 돌아갔을 때 템플릿 텍스트 제거
+      setInputValue('');
     }
     
   }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue]);
@@ -217,8 +226,8 @@ ${ANNUAL_LEAVE_PROMPT}`;
 
 1. https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : ejlee01 패스워드 : sxr932672@ 로그인 완료된 화면에서 사용자 명 확인 후, 상단에 "일정"클릭
 2. 좌측에 "자원관리" 클릭
-3. 좌측에 "자원캘린더" 클릭
-4. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인: 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시~ n시 는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
+3. 좌측에 "자원캘린더" 클릭 : 너 클릭안할때 있으니까 꼭 클릭해서 상단에 "일정 > 일정관리 > 내 일정 전체보기" 가 => "일정 > 자원관리 > 자원캘린더"로 바뀌었는지 확인 후 다음단계 진행해야함.
+4. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인해야함(**보기만하지말고, 클릭해서 몇시까지 유지되는지 확인하기**): 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시~ n시 는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
 4-1. 4번에서 예약할 날짜, 시간 다른사람과 안겹치는지 확인 끝났다면: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist?goFromDate=2025-08-27&goEndDate=2025-08-27 링크 접속
  - 여기서 goFromDate=2025-08-27&goEndDate=2025-08-27의 경우, goFromDate는 사용자가 요청한 예약시작날짜에 맞게, goEndDate는 사용자가 요청한 예약종료 날짜에 맞게 수정해서 링크 접속하면 됨. 
  Ex) 8월28일로 예약했다면 둘 다 2025-08-28로 해서 링크 접속하기
