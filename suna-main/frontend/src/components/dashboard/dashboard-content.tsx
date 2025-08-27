@@ -56,6 +56,7 @@ export function DashboardContent() {
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const templateType = searchParams.get('template');
+  const [hasUserModified, setHasUserModified] = useState(false);
   const { data: accounts } = useAccounts();
   const personalAccount = accounts?.find((account) => account.personal_account);
   const chatInputRef = useRef<ChatInputHandles>(null);
@@ -105,14 +106,14 @@ export function DashboardContent() {
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
     
-    // 템플릿에 따라 미리 텍스트 입력 (템플릿 변경시 즉시 업데이트)
-    if (templateType === 'annual-leave') {
+    // 템플릿에 따라 미리 텍스트 입력 (사용자가 수정하지 않았을 때만)
+    if (templateType === 'annual-leave' && !hasUserModified) {
       const annualLeaveTemplate = `연차 사용일(예: 5월5일) : 
 연차사용종류(예: 오전반차, 연차 등) : `;
       if (inputValue !== annualLeaveTemplate) {
         setInputValue(annualLeaveTemplate);
       }
-    } else if (templateType === 'resource-booking') {
+    } else if (templateType === 'resource-booking' && !hasUserModified) {
       const resourceBookingTemplate = `- 예약명(예: AI 커뮤니티 Zoom) : 
 - 종일 여부(Ex : 예/아니오) :
 - 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
@@ -123,9 +124,15 @@ export function DashboardContent() {
     } else if (templateType === null && (inputValue.includes('연차 사용일') || inputValue.includes('예약명'))) {
       // 일반 페이지로 돌아갔을 때 템플릿 텍스트 제거
       setInputValue('');
+      setHasUserModified(false);
     }
     
-  }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue]);
+  }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue, hasUserModified]);
+
+  // 템플릿 타입이 변경되면 hasUserModified 리셋
+  useEffect(() => {
+    setHasUserModified(false);
+  }, [templateType]);
 
   useEffect(() => {
     if (threadQuery.data && initiatedThreadId) {
@@ -349,7 +356,10 @@ ${RESOURCE_BOOKING_PROMPT}`;
                 loading={isSubmitting}
                 placeholder="Describe what you need help with..."
                 value={inputValue}
-                onChange={setInputValue}
+                onChange={(value) => {
+                  setInputValue(value);
+                  setHasUserModified(true);
+                }}
                 hideAttachments={false}
                 selectedAgentId={selectedAgentId}
                 onAgentSelect={setSelectedAgent}
