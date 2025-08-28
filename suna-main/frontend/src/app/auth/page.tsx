@@ -311,14 +311,19 @@ function LoginContent() {
               </div>
             </div>
             <form className="space-y-3">
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Email address"
-                className="h-10 rounded-lg"
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="text"
+                  placeholder="사용자명"
+                  className="h-10 rounded-lg pr-32"
+                  required
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">
+                  @goability.co.kr
+                </div>
+              </div>
               {isSignUp && (
                 <div className="flex gap-3">
                   <Input
@@ -332,7 +337,7 @@ function LoginContent() {
                   <select
                     id="department"
                     name="department"
-                    className="h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1 max-h-48 overflow-y-auto"
+                    className="h-10 rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 flex-1"
                     style={{
                       appearance: 'none',
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
@@ -343,7 +348,6 @@ function LoginContent() {
                     }}
                     disabled={departmentsLoading}
                     required
-                    size={departmentNames.length > 8 ? 8 : departmentNames.length + 1}
                   >
                     <option value="">
                       {departmentsLoading ? '부서 로딩중...' : '부서 선택'}

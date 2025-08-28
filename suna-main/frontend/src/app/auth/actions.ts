@@ -36,12 +36,15 @@ async function sendWelcomeEmail(email: string, name?: string) {
 }
 
 export async function signIn(prevState: any, formData: FormData) {
-  const email = formData.get('email') as string;
+  const emailInput = formData.get('email') as string;
   const password = formData.get('password') as string;
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
-  if (!email || !email.includes('@')) {
-    return { message: 'Please enter a valid email address' };
+  // Construct full email address
+  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+
+  if (!emailInput) {
+    return { message: 'Please enter your username' };
   }
 
   if (!password || password.length < 6) {
@@ -65,15 +68,18 @@ export async function signIn(prevState: any, formData: FormData) {
 
 export async function signUp(prevState: any, formData: FormData) {
   const origin = formData.get('origin') as string;
-  const email = formData.get('email') as string;
+  const emailInput = formData.get('email') as string;
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
   const name = formData.get('name') as string;
   const department = formData.get('department') as string;
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
-  if (!email || !email.includes('@')) {
-    return { message: 'Please enter a valid email address' };
+  // Construct full email address
+  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+
+  if (!emailInput) {
+    return { message: 'Please enter your username' };
   }
 
   if (!name || name.trim().length < 2) {
@@ -148,11 +154,14 @@ export async function signUp(prevState: any, formData: FormData) {
 }
 
 export async function forgotPassword(prevState: any, formData: FormData) {
-  const email = formData.get('email') as string;
+  const emailInput = formData.get('email') as string;
   const origin = formData.get('origin') as string;
 
-  if (!email || !email.includes('@')) {
-    return { message: 'Please enter a valid email address' };
+  // Construct full email address
+  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+
+  if (!emailInput) {
+    return { message: 'Please enter your username' };
   }
 
   const supabase = await createClient();

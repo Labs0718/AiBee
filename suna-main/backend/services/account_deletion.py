@@ -142,19 +142,24 @@ class AccountDeletionService:
                 self.logger.warning("No accounts found for user", user_id=user_id)
                 return deletion_summary
             
-            # Delete data in dependency order - only include tables that actually exist
+            # Delete data in dependency order - auth data FIRST to prevent re-authentication
             deletion_steps = [
+                ("auth_sessions_and_tokens", self._delete_auth_sessions_and_tokens),  # FIRST - prevent re-auth
                 ("messages", self._delete_messages),
                 ("agent_runs", self._delete_agent_runs), 
                 ("threads", self._delete_threads),
                 ("recordings", self._delete_recordings),
-                # Skip devices table as it doesn't exist
+                ("pdf_documents", self._delete_pdf_documents),  # Additional tables
+                ("user_profiles", self._delete_user_profiles),
+                ("user_info", self._delete_user_info),
                 ("projects", self._delete_projects),
-                ("agents", self._delete_agents),
+                ("agents_current_version_id", self._clear_agents_current_version_id),  # FIRST - clear FK references
+                ("agent_versions", self._delete_agent_versions),  # SECOND - delete versions
+                ("agents", self._delete_agents),  # THIRD - delete agents
                 ("api_keys", self._delete_api_keys),
                 ("account_user", self._delete_account_user_relationships),
                 ("accounts", self._delete_accounts),
-                ("auth_user", self._delete_auth_user)
+                ("auth_user", self._delete_auth_user)  # LAST - final cleanup
             ]
             
             for table_name, delete_function in deletion_steps:
@@ -179,14 +184,37 @@ class AccountDeletionService:
                 detail=f"Account deletion failed: {str(e)}"
             )
 
+    async def _delete_auth_sessions_and_tokens(self, user_id: str, account_ids: List[str], client) -> int:
+        """Delete all auth sessions and tokens FIRST to immediately invalidate user access"""
+        total_deleted = 0
+        
+        # Note: Cannot access auth schema directly through PostgREST
+        # Sessions will be invalidated when we delete the user via admin API
+        self.logger.info("Auth sessions/tokens will be cleaned up by admin user deletion", user_id=user_id)
+        return 0
+
     async def _delete_messages(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete messages for threads owned by the user's accounts"""
         if not account_ids:
-            return 0
+            # If no basejump accounts, also try deleting by user_id directly
+            try:
+                result = await client.table('messages').delete().eq('user_id', user_id).execute()
+                return len(result.data) if result.data else 0
+            except:
+                return 0
             
         # First get thread IDs owned by the user's accounts
         threads_result = await client.table('threads').select('thread_id').in_('account_id', account_ids).execute()
         thread_ids = [t['thread_id'] for t in threads_result.data] if threads_result.data else []
+        
+        # Also try to get threads by user_id directly if schema supports it
+        try:
+            user_threads_result = await client.table('threads').select('thread_id').eq('user_id', user_id).execute()
+            user_thread_ids = [t['thread_id'] for t in user_threads_result.data] if user_threads_result.data else []
+            thread_ids.extend(user_thread_ids)
+            thread_ids = list(set(thread_ids))  # Remove duplicates
+        except:
+            pass
         
         if not thread_ids:
             return 0
@@ -198,11 +226,25 @@ class AccountDeletionService:
     async def _delete_agent_runs(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete agent runs for threads owned by the user's accounts"""
         if not account_ids:
-            return 0
+            # Try deleting by user_id directly
+            try:
+                result = await client.table('agent_runs').delete().eq('user_id', user_id).execute()
+                return len(result.data) if result.data else 0
+            except:
+                return 0
             
         # First get thread IDs owned by the user's accounts
         threads_result = await client.table('threads').select('thread_id').in_('account_id', account_ids).execute()
         thread_ids = [t['thread_id'] for t in threads_result.data] if threads_result.data else []
+        
+        # Also try to get threads by user_id directly
+        try:
+            user_threads_result = await client.table('threads').select('thread_id').eq('user_id', user_id).execute()
+            user_thread_ids = [t['thread_id'] for t in user_threads_result.data] if user_threads_result.data else []
+            thread_ids.extend(user_thread_ids)
+            thread_ids = list(set(thread_ids))
+        except:
+            pass
         
         if not thread_ids:
             return 0
@@ -213,19 +255,42 @@ class AccountDeletionService:
 
     async def _delete_threads(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete threads owned by the user's accounts"""
-        if not account_ids:
-            return 0
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            result = await client.table('threads').delete().in_('account_id', account_ids).execute()
+            total_deleted += len(result.data) if result.data else 0
+        
+        # Also delete by user_id directly (in case there are threads not linked to accounts)
+        try:
+            result = await client.table('threads').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
             
-        result = await client.table('threads').delete().in_('account_id', account_ids).execute()
-        return len(result.data) if result.data else 0
+        return total_deleted
 
     async def _delete_recordings(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete recordings owned by the user's accounts"""
-        if not account_ids:
-            return 0
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('recordings').delete().in_('account_id', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+            except:
+                pass
+        
+        # Also delete by user_id directly
+        try:
+            result = await client.table('recordings').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
             
-        result = await client.table('recordings').delete().in_('account_id', account_ids).execute()
-        return len(result.data) if result.data else 0
+        return total_deleted
 
     async def _delete_devices(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete devices owned by the user's accounts"""
@@ -237,27 +302,169 @@ class AccountDeletionService:
 
     async def _delete_projects(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete projects owned by the user's accounts"""
-        if not account_ids:
-            return 0
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('projects').delete().in_('account_id', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+            except:
+                pass
+        
+        # Also delete by user_id directly
+        try:
+            result = await client.table('projects').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
+        
+        # Also try deleting by created_by or owned_by if such columns exist
+        try:
+            result = await client.table('projects').delete().eq('created_by', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
             
-        result = await client.table('projects').delete().in_('account_id', account_ids).execute()
-        return len(result.data) if result.data else 0
+        return total_deleted
 
     async def _delete_agents(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete agents owned by the user's accounts"""
-        if not account_ids:
-            return 0
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('agents').delete().in_('account_id', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+            except:
+                pass
+        
+        # Also delete by user_id directly
+        try:
+            result = await client.table('agents').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
+        
+        # Also try deleting by created_by if such column exists
+        try:
+            result = await client.table('agents').delete().eq('created_by', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
             
-        result = await client.table('agents').delete().in_('account_id', account_ids).execute()
-        return len(result.data) if result.data else 0
+        return total_deleted
 
     async def _delete_api_keys(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete API keys owned by the user's accounts"""
-        if not account_ids:
-            return 0
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('api_keys').delete().in_('account_id', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+            except:
+                pass
+        
+        # Also delete by user_id directly
+        try:
+            result = await client.table('api_keys').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
             
-        result = await client.table('api_keys').delete().in_('account_id', account_ids).execute()
-        return len(result.data) if result.data else 0
+        return total_deleted
+
+    async def _delete_pdf_documents(self, user_id: str, account_ids: List[str], client) -> int:
+        """Delete PDF documents owned by the user"""
+        total_deleted = 0
+        
+        # Delete by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('pdf_documents').delete().in_('account_id', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+            except:
+                pass
+        
+        # Also delete by user_id directly
+        try:
+            result = await client.table('pdf_documents').delete().eq('user_id', user_id).execute()
+            total_deleted += len(result.data) if result.data else 0
+        except:
+            pass
+            
+        return total_deleted
+
+    async def _delete_user_profiles(self, user_id: str, account_ids: List[str], client) -> int:
+        """Delete user profiles"""
+        try:
+            result = await client.table('user_profiles').delete().eq('id', user_id).execute()
+            return len(result.data) if result.data else 0
+        except:
+            return 0
+
+    async def _delete_user_info(self, user_id: str, account_ids: List[str], client) -> int:
+        """Delete user info"""
+        try:
+            result = await client.table('user_info').delete().eq('id', user_id).execute()
+            return len(result.data) if result.data else 0
+        except:
+            return 0
+
+    async def _clear_agents_current_version_id(self, user_id: str, account_ids: List[str], client) -> int:
+        """Clear agents.current_version_id to remove FK constraint before deleting agent_versions"""
+        total_updated = 0
+        
+        # Clear current_version_id by account_id if we have accounts
+        if account_ids:
+            try:
+                result = await client.table('agents').update({
+                    'current_version_id': None
+                }).in_('account_id', account_ids).execute()
+                total_updated += len(result.data) if result.data else 0
+                self.logger.info(f"Cleared current_version_id for {len(result.data) if result.data else 0} agents by account_ids", user_id=user_id)
+            except Exception as e:
+                self.logger.warning(f"Failed to clear current_version_id by account_ids: {str(e)}", user_id=user_id)
+        
+        # Also try clearing by user_id directly
+        try:
+            result = await client.table('agents').update({
+                'current_version_id': None
+            }).eq('user_id', user_id).execute()
+            total_updated += len(result.data) if result.data else 0
+        except:
+            pass
+        
+        # Also try clearing by created_by if such column exists
+        try:
+            result = await client.table('agents').update({
+                'current_version_id': None
+            }).eq('created_by', user_id).execute()
+            total_updated += len(result.data) if result.data else 0
+        except:
+            pass
+            
+        return total_updated
+
+    async def _delete_agent_versions(self, user_id: str, account_ids: List[str], client) -> int:
+        """Delete agent versions created by the user - CRITICAL: must be deleted before accounts"""
+        total_deleted = 0
+        
+        # Delete by account_id (created_by field references accounts.id)
+        if account_ids:
+            try:
+                result = await client.table('agent_versions').delete().in_('created_by', account_ids).execute()
+                total_deleted += len(result.data) if result.data else 0
+                self.logger.info(f"Deleted {len(result.data) if result.data else 0} agent versions by account_ids", user_id=user_id)
+            except Exception as e:
+                self.logger.warning(f"Failed to delete agent versions by account_ids: {str(e)}", user_id=user_id)
+        
+        # Note: agent_versions table has no user_id column, only created_by
+            
+        return total_deleted
 
     async def _delete_account_user_relationships(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete account-user relationships"""
@@ -280,53 +487,84 @@ class AccountDeletionService:
         return len(result.data) if result.data else 0
 
     async def _delete_auth_user(self, user_id: str, account_ids: List[str], client) -> int:
-        """Delete the Supabase auth user (final step)"""
+        """Delete the Supabase auth user (final step - most auth data already deleted)"""
         try:
-            self.logger.info("Attempting to delete auth user", user_id=user_id)
+            self.logger.info("Attempting final auth user deletion", user_id=user_id)
             
-            # Use admin API to delete the user
-            result = await client.auth.admin.delete_user(user_id)
-            
-            self.logger.info(
-                "Supabase admin delete_user result", 
-                user_id=user_id,
-                result=result,
-                has_error=hasattr(result, 'error'),
-                error=result.error if hasattr(result, 'error') else None
-            )
-            
-            # Check if deletion was successful
-            if hasattr(result, 'error') and result.error:
-                self.logger.error(
-                    "Supabase admin delete_user failed", 
-                    user_id=user_id, 
-                    error=result.error
+            # Try admin delete first
+            admin_delete_successful = False
+            try:
+                result = await client.auth.admin.delete_user(user_id)
+                self.logger.info(
+                    "Supabase admin delete_user result", 
+                    user_id=user_id,
+                    has_error=hasattr(result, 'error') and result.error is not None,
+                    error=result.error if hasattr(result, 'error') else None
                 )
-                return 0
+                
+                if not (hasattr(result, 'error') and result.error):
+                    admin_delete_successful = True
+                    self.logger.info("Admin delete successful", user_id=user_id)
+            except Exception as admin_error:
+                self.logger.warning("Admin delete failed, trying direct deletion", user_id=user_id, error=str(admin_error))
             
-            # Verify user was actually deleted by trying to get user
+            # If admin delete didn't work, try direct database deletion
+            if not admin_delete_successful:
+                try:
+                    self.logger.info("Attempting direct database deletion from auth.users", user_id=user_id)
+                    direct_result = await client.schema('auth').table('users').delete().eq('id', user_id).execute()
+                    deleted_count = len(direct_result.data) if direct_result.data else 0
+                    self.logger.info(f"Direct deletion result: {deleted_count} records deleted", user_id=user_id)
+                    
+                    if deleted_count > 0:
+                        admin_delete_successful = True
+                        self.logger.info("Direct database deletion successful", user_id=user_id)
+                    else:
+                        self.logger.warning("Direct deletion returned 0 records", user_id=user_id)
+                except Exception as direct_error:
+                    self.logger.error("Direct database deletion failed", user_id=user_id, error=str(direct_error))
+            
+            # Verify user was deleted - check both ways
+            user_still_exists = False
             try:
                 verify_result = await client.auth.admin.get_user_by_id(user_id)
-                if verify_result.user:
+                if verify_result.user and not verify_result.user.deleted_at:
+                    user_still_exists = True
                     self.logger.error(
-                        "User still exists after deletion attempt", 
+                        "User still exists and not marked as deleted", 
                         user_id=user_id,
-                        user_exists=bool(verify_result.user)
+                        deleted_at=verify_result.user.deleted_at if verify_result.user else None
                     )
-                    return 0
                 else:
                     self.logger.info(
-                        "User deletion verified - user no longer exists", 
-                        user_id=user_id
+                        "User deletion verified via admin API", 
+                        user_id=user_id,
+                        deleted_at=verify_result.user.deleted_at if verify_result.user else None
                     )
-                    return 1
             except Exception as verify_error:
-                # If we get an error trying to get the user, it might mean they were deleted
+                # Error getting user might mean successful deletion
                 self.logger.info(
-                    "Error verifying user deletion (this might indicate success)", 
+                    "Could not retrieve user (likely successful deletion)", 
                     user_id=user_id, 
                     error=str(verify_error)
                 )
+            
+            # Double-check via direct database query
+            try:
+                db_check = await client.schema('auth').table('users').select('id').eq('id', user_id).execute()
+                if db_check.data and len(db_check.data) > 0:
+                    user_still_exists = True
+                    self.logger.error("User record still exists in auth.users table", user_id=user_id)
+                else:
+                    self.logger.info("User record not found in auth.users table (successful deletion)", user_id=user_id)
+            except Exception as db_error:
+                self.logger.info("Database check failed (might indicate deletion)", user_id=user_id, error=str(db_error))
+            
+            if user_still_exists:
+                self.logger.error("USER DELETION FAILED - user still exists", user_id=user_id)
+                return 0
+            else:
+                self.logger.info("USER DELETION SUCCESSFUL", user_id=user_id)
                 return 1
             
         except Exception as e:

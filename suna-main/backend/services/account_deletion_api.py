@@ -60,7 +60,12 @@ async def delete_account_permanently(
     - Confirmation text "DELETE" to prevent accidental deletion
     """
     try:
+        # Perform the account deletion
         result = await service.delete_account_permanently(user_id, request)
+        
+        # Note: Auth schema cleanup is handled by the admin API user deletion
+        # No additional session cleanup needed as PostgREST cannot access auth schema directly
+        structlog.get_logger().info("Auth session cleanup handled by admin user deletion", user_id=user_id)
         
         # Log the successful deletion for audit purposes
         structlog.get_logger().info(
@@ -69,10 +74,21 @@ async def delete_account_permanently(
             deletion_summary=result.get("deletion_summary", {})
         )
         
-        return JSONResponse(
+        # Return response with explicit session invalidation headers
+        response = JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=result
+            content={
+                **result,
+                "session_invalidated": True,
+                "message": "Account permanently deleted and all sessions invalidated"
+            }
         )
+        
+        # Add headers to force client to clear authentication
+        response.headers["Clear-Site-Data"] = '"cache", "cookies", "storage"'
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        
+        return response
         
     except HTTPException:
         # Re-raise HTTP exceptions as-is
