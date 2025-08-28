@@ -62,10 +62,13 @@ async def get_user_profile(
         
         # Get user account from basejump.accounts
         account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).single().execute()
-        
         account_data = account_result.data if account_result.data else None
         
-        if not account_data:
+        # Get user profile data from user_profiles table
+        profile_result = await client.from_('user_profiles').select('name, department_id').eq('id', user_id).single().execute()
+        profile_data = profile_result.data if profile_result.data else None
+        
+        if not account_data and not profile_data:
             raise HTTPException(
                 status_code=404,
                 detail="User account not found"
@@ -81,25 +84,31 @@ async def get_user_profile(
             # Fallback to JWT email if available
             user_email = email
         
-        # Get department name from department_id if it exists
+        # Get department name from department_id if it exists (prioritize user_profiles data)
         department_name = None
-        if account_data.get('department_id'):
+        department_id = profile_data.get('department_id') if profile_data else account_data.get('department_id') if account_data else None
+        
+        if department_id:
             try:
-                dept_result = await client.from_('departments').select('name').eq('id', account_data['department_id']).single().execute()
+                dept_result = await client.from_('departments').select('name').eq('id', department_id).single().execute()
                 if dept_result.data:
                     department_name = dept_result.data.get('name')
             except Exception as e:
                 # Department lookup failed, continue without department name
                 pass
         
+        # Prioritize data from user_profiles table over accounts table
+        user_name = profile_data.get('name') if profile_data else account_data.get('name') if account_data else None
+        display_name = account_data.get('display_name') if account_data else user_name
+        
         result_data = {
             'id': user_id,
             'email': user_email or email or 'unknown@example.com',
-            'display_name': account_data.get('display_name', account_data.get('name')),
-            'name': account_data.get('name'),
+            'display_name': display_name,
+            'name': user_name,
             'department_name': department_name,
-            'created_at': account_data.get('created_at', datetime.now().isoformat()),
-            'role': account_data.get('role', 'user')
+            'created_at': account_data.get('created_at', datetime.now().isoformat()) if account_data else datetime.now().isoformat(),
+            'role': account_data.get('role', 'user') if account_data else 'user'
         }
         
         profile = UserProfileResponse(
