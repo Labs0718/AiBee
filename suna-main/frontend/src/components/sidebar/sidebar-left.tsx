@@ -80,6 +80,7 @@ export function SidebarLeft({
     name: string;
     email: string;
     avatar: string;
+    department_name?: string;
   }>({
     name: 'Loading...',
     email: 'loading@example.com',
@@ -107,15 +108,53 @@ export function SidebarLeft({
       const { data } = await supabase.auth.getUser();
 
       if (data.user) {
-        setUser({
-          name:
-            data.user.user_metadata?.full_name ||
-            data.user.user_metadata?.name ||
-            data.user.email?.split('@')[0] ||
-            'User',
-          email: data.user.email || '',
-          avatar: data.user.user_metadata?.avatar_url || '',
-        });
+        // Get access token for API call
+        const { data: session } = await supabase.auth.getSession();
+        const accessToken = session.session?.access_token;
+
+        if (accessToken) {
+          // Fetch user profile from backend API
+          try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/profile`, {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (response.ok) {
+              const profile = await response.json();
+              setUser({
+                name: profile.name || profile.display_name || data.user.email?.split('@')[0] || 'User',
+                email: profile.email || data.user.email || '',
+                avatar: data.user.user_metadata?.avatar_url || '',
+                department_name: profile.department_name,
+              });
+            } else {
+              // Fallback to user metadata if API call fails
+              setUser({
+                name:
+                  data.user.user_metadata?.full_name ||
+                  data.user.user_metadata?.name ||
+                  data.user.email?.split('@')[0] ||
+                  'User',
+                email: data.user.email || '',
+                avatar: data.user.user_metadata?.avatar_url || '',
+              });
+            }
+          } catch (error) {
+            // Fallback to user metadata if API call fails
+            setUser({
+              name:
+                data.user.user_metadata?.full_name ||
+                data.user.user_metadata?.name ||
+                data.user.email?.split('@')[0] ||
+                'User',
+              email: data.user.email || '',
+              avatar: data.user.user_metadata?.avatar_url || '',
+            });
+          }
+        }
       }
     };
 

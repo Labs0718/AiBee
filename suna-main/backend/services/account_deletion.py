@@ -92,15 +92,30 @@ class AccountDeletionService:
         try:
             client = await self.db.client
             
-            # Get account information
+            # Get account information - check both account_user relationships and direct ownership
             account_result = await client.schema('basejump').table('account_user').select(
                 'account_id, account_role'
             ).eq('user_id', user_id).execute()
             
+            # Also check for accounts where user is primary owner
+            direct_accounts_result = await client.schema('basejump').table('accounts').select('id').eq('primary_owner_user_id', user_id).execute()
+            
+            # Combine both sources
+            account_ids_from_relations = [acc["account_id"] for acc in account_result.data] if account_result.data else []
+            account_ids_from_ownership = [acc["id"] for acc in direct_accounts_result.data] if direct_accounts_result.data else []
+            
+            # Merge and deduplicate
+            all_account_ids = list(set(account_ids_from_relations + account_ids_from_ownership))
+            
+            # Create accounts list with consistent structure
+            accounts = [{"account_id": account_id} for account_id in all_account_ids]
+            
             account_info = {
                 "user_id": user_id,
-                "accounts": account_result.data if account_result.data else []
+                "accounts": accounts
             }
+            
+            self.logger.info(f"Found {len(accounts)} accounts for deletion: {all_account_ids}", user_id=user_id)
             
             return account_info
             
@@ -279,12 +294,22 @@ class AccountDeletionService:
         try:
             client = await self.db.client
             
-            # Get account information
+            # Get account information - check both account_user relationships and direct ownership
             account_result = await client.schema('basejump').table('account_user').select(
                 'account_id, account_role'
             ).eq('user_id', user_id).execute()
             
-            account_ids = [acc["account_id"] for acc in account_result.data] if account_result.data else []
+            # Also check for accounts where user is primary owner
+            direct_accounts_result = await client.schema('basejump').table('accounts').select('id').eq('primary_owner_user_id', user_id).execute()
+            
+            # Combine both sources
+            account_ids_from_relations = [acc["account_id"] for acc in account_result.data] if account_result.data else []
+            account_ids_from_ownership = [acc["id"] for acc in direct_accounts_result.data] if direct_accounts_result.data else []
+            
+            # Merge and deduplicate
+            account_ids = list(set(account_ids_from_relations + account_ids_from_ownership))
+            
+            self.logger.info(f"Found {len(account_ids)} accounts for user {user_id}: {account_ids}")
             
             if not account_ids:
                 return {"data_summary": {}, "total_records": 0}
