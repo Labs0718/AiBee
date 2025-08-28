@@ -61,12 +61,12 @@ async def get_user_profile(
         client = await db.client
         
         # Get user account from basejump.accounts
-        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).single().execute()
-        account_data = account_result.data if account_result.data else None
+        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
+        account_data = account_result.data[0] if account_result.data else None
         
         # Get user profile data from user_profiles table
-        profile_result = await client.from_('user_profiles').select('name, department_id').eq('id', user_id).single().execute()
-        profile_data = profile_result.data if profile_result.data else None
+        profile_result = await client.from_('user_profiles').select('name, department_id').eq('id', user_id).execute()
+        profile_data = profile_result.data[0] if profile_result.data else None
         
         if not account_data and not profile_data:
             raise HTTPException(
@@ -77,9 +77,9 @@ async def get_user_profile(
         # Get user email from auth.users table
         user_email = None
         try:
-            auth_user_result = await client.schema('auth').table('users').select('email').eq('id', user_id).single().execute()
+            auth_user_result = await client.schema('auth').table('users').select('email').eq('id', user_id).execute()
             if auth_user_result.data:
-                user_email = auth_user_result.data.get('email')
+                user_email = auth_user_result.data[0].get('email')
         except Exception as e:
             # Fallback to JWT email if available
             user_email = email
@@ -90,9 +90,9 @@ async def get_user_profile(
         
         if department_id:
             try:
-                dept_result = await client.from_('departments').select('name').eq('id', department_id).single().execute()
+                dept_result = await client.from_('departments').select('name').eq('id', department_id).execute()
                 if dept_result.data:
-                    department_name = dept_result.data.get('name')
+                    department_name = dept_result.data[0].get('name')
             except Exception as e:
                 # Department lookup failed, continue without department name
                 pass
