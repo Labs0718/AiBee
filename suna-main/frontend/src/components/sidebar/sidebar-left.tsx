@@ -115,7 +115,7 @@ export function SidebarLeft({
         if (accessToken) {
           // Fetch user profile from backend API
           try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/profile`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/profile`, {
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ export function SidebarLeft({
             if (response.ok) {
               const profile = await response.json();
               setUser({
-                name: profile.name || profile.display_name || data.user.email?.split('@')[0] || 'User',
+                name: profile.display_name || profile.name || data.user.email?.split('@')[0] || 'User',
                 email: profile.email || data.user.email || '',
                 avatar: data.user.user_metadata?.avatar_url || '',
                 department_name: profile.department_name,

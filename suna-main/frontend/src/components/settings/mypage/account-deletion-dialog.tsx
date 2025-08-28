@@ -126,6 +126,8 @@ export const AccountDeletionDialog: React.FC<AccountDeletionDialogProps> = ({
       // 비밀번호 검증 성공, 백엔드 API 호출
       const { data: { session } } = await supabase.auth.getSession();
       
+      console.log('Making account deletion request to backend...');
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/account/delete-permanently`, {
         method: 'POST',
         headers: {
@@ -138,6 +140,8 @@ export const AccountDeletionDialog: React.FC<AccountDeletionDialogProps> = ({
         }),
       });
 
+      console.log('Backend response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || 'Account deletion failed');
@@ -149,7 +153,13 @@ export const AccountDeletionDialog: React.FC<AccountDeletionDialogProps> = ({
         duration: 5000,
       });
 
-      // 로그아웃 및 리디렉션
+      // Supabase 로그아웃 후 리디렉션
+      try {
+        await supabase.auth.signOut();
+      } catch (logoutError) {
+        console.error('Logout error:', logoutError);
+      }
+      
       setTimeout(() => {
         window.location.href = '/auth';
       }, 2000);

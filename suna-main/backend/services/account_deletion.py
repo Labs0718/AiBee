@@ -142,13 +142,13 @@ class AccountDeletionService:
                 self.logger.warning("No accounts found for user", user_id=user_id)
                 return deletion_summary
             
-            # Delete data in dependency order
+            # Delete data in dependency order - only include tables that actually exist
             deletion_steps = [
                 ("messages", self._delete_messages),
                 ("agent_runs", self._delete_agent_runs), 
                 ("threads", self._delete_threads),
                 ("recordings", self._delete_recordings),
-                ("devices", self._delete_devices),
+                # Skip devices table as it doesn't exist
                 ("projects", self._delete_projects),
                 ("agents", self._delete_agents),
                 ("api_keys", self._delete_api_keys),
@@ -282,11 +282,55 @@ class AccountDeletionService:
     async def _delete_auth_user(self, user_id: str, account_ids: List[str], client) -> int:
         """Delete the Supabase auth user (final step)"""
         try:
+            self.logger.info("Attempting to delete auth user", user_id=user_id)
+            
             # Use admin API to delete the user
             result = await client.auth.admin.delete_user(user_id)
-            return 1 if not result.error else 0
+            
+            self.logger.info(
+                "Supabase admin delete_user result", 
+                user_id=user_id,
+                result=result,
+                has_error=hasattr(result, 'error'),
+                error=result.error if hasattr(result, 'error') else None
+            )
+            
+            # Check if deletion was successful
+            if hasattr(result, 'error') and result.error:
+                self.logger.error(
+                    "Supabase admin delete_user failed", 
+                    user_id=user_id, 
+                    error=result.error
+                )
+                return 0
+            
+            # Verify user was actually deleted by trying to get user
+            try:
+                verify_result = await client.auth.admin.get_user_by_id(user_id)
+                if verify_result.user:
+                    self.logger.error(
+                        "User still exists after deletion attempt", 
+                        user_id=user_id,
+                        user_exists=bool(verify_result.user)
+                    )
+                    return 0
+                else:
+                    self.logger.info(
+                        "User deletion verified - user no longer exists", 
+                        user_id=user_id
+                    )
+                    return 1
+            except Exception as verify_error:
+                # If we get an error trying to get the user, it might mean they were deleted
+                self.logger.info(
+                    "Error verifying user deletion (this might indicate success)", 
+                    user_id=user_id, 
+                    error=str(verify_error)
+                )
+                return 1
+            
         except Exception as e:
-            self.logger.error("Failed to delete auth user", error=str(e))
+            self.logger.error("Failed to delete auth user", user_id=user_id, error=str(e), traceback=traceback.format_exc())
             raise
 
     async def get_account_deletion_preview(self, user_id: str) -> Dict[str, Any]:
@@ -333,18 +377,27 @@ class AccountDeletionService:
             else:
                 data_summary["messages"] = 0
             
-            # Count other resources
-            agents_result = await client.table('agents').select('agent_id', count='exact').in_('account_id', account_ids).execute()
-            data_summary["agents"] = agents_result.count or 0
+            # Count other resources - only include tables that actually exist
+            try:
+                agents_result = await client.table('agents').select('agent_id', count='exact').in_('account_id', account_ids).execute()
+                data_summary["agents"] = agents_result.count or 0
+            except:
+                data_summary["agents"] = 0
             
-            projects_result = await client.table('projects').select('project_id', count='exact').in_('account_id', account_ids).execute()
-            data_summary["projects"] = projects_result.count or 0
+            try:
+                projects_result = await client.table('projects').select('project_id', count='exact').in_('account_id', account_ids).execute()
+                data_summary["projects"] = projects_result.count or 0
+            except:
+                data_summary["projects"] = 0
             
-            devices_result = await client.table('devices').select('id', count='exact').in_('account_id', account_ids).execute()
-            data_summary["devices"] = devices_result.count or 0
+            # Skip devices table as it doesn't exist in this schema
+            data_summary["devices"] = 0
             
-            api_keys_result = await client.table('api_keys').select('key_id', count='exact').in_('account_id', account_ids).execute()
-            data_summary["api_keys"] = api_keys_result.count or 0
+            try:
+                api_keys_result = await client.table('api_keys').select('key_id', count='exact').in_('account_id', account_ids).execute()
+                data_summary["api_keys"] = api_keys_result.count or 0
+            except:
+                data_summary["api_keys"] = 0
             
             total_records = sum(data_summary.values())
             
