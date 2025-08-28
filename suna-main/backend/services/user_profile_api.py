@@ -61,10 +61,7 @@ async def get_user_profile(
         client = await db.client
         
         # Get user account from basejump.accounts (single source of truth)
-        account_result = await client.schema('basejump').from_('accounts').select('''
-            *,
-            departments!accounts_department_fkey(display_name)
-        ''').eq('primary_owner_user_id', user_id).single().execute()
+        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).single().execute()
         
         account_data = account_result.data if account_result.data else None
         
@@ -74,12 +71,23 @@ async def get_user_profile(
                 detail="User account not found"
             )
         
+        # Get user email from auth.users table if not available in account data
+        user_email = account_data.get('email')
+        if not user_email:
+            try:
+                auth_user_result = await client.schema('auth').table('users').select('email').eq('id', user_id).single().execute()
+                if auth_user_result.data:
+                    user_email = auth_user_result.data.get('email')
+            except Exception as e:
+                # Fallback to JWT email if available
+                user_email = email
+        
         result_data = {
             'id': user_id,
-            'email': account_data.get('email', email),
+            'email': user_email or email or 'unknown@example.com',
             'display_name': account_data.get('display_name', account_data.get('name')),
             'name': account_data.get('name'),
-            'department_name': account_data.get('departments', {}).get('display_name') if account_data.get('departments') else None,
+            'department_name': account_data.get('department_name'),
             'created_at': account_data.get('created_at', datetime.now().isoformat()),
             'role': account_data.get('role', 'user')
         }
