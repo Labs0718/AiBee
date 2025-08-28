@@ -21,7 +21,7 @@ class UserProfileResponse(BaseModel):
     display_name: Optional[str] = None
     name: Optional[str] = None
     department_name: Optional[str] = None
-    is_admin: bool = False
+    role: str = 'user'  # 'admin', 'operator', 'user'
     created_at: str
 
 async def get_db():
@@ -60,27 +60,28 @@ async def get_user_profile(
         
         client = await db.client
         
-        # Get user profile from public.user_profiles table
-        profile_result = await client.from_('user_profiles').select('''
-            name,
-            departments!user_profiles_department_id_fkey(name)
-        ''').eq('id', user_id).single().execute()
+        # Get user account from basejump.accounts (single source of truth)
+        account_result = await client.schema('basejump').from_('accounts').select('''
+            *,
+            departments!accounts_department_fkey(display_name)
+        ''').eq('primary_owner_user_id', user_id).single().execute()
         
-        # Get account data from basejump.accounts as fallback
-        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
-        account_data = account_result.data[0] if account_result.data else None
+        account_data = account_result.data if account_result.data else None
         
-        # Extract profile data
-        profile_data = profile_result.data if profile_result.data else None
+        if not account_data:
+            raise HTTPException(
+                status_code=404,
+                detail="User account not found"
+            )
         
         result_data = {
             'id': user_id,
-            'email': email,
-            'display_name': account_data.get('name') if account_data else None,
-            'name': profile_data.get('name') if profile_data else (account_data.get('name') if account_data else None),
-            'department_name': profile_data.get('departments', {}).get('name') if profile_data and profile_data.get('departments') else None,
-            'created_at': account_data.get('created_at') if account_data else datetime.now().isoformat(),
-            'is_admin': False  # Default to False, can be enhanced later
+            'email': account_data.get('email', email),
+            'display_name': account_data.get('display_name', account_data.get('name')),
+            'name': account_data.get('name'),
+            'department_name': account_data.get('departments', {}).get('display_name') if account_data.get('departments') else None,
+            'created_at': account_data.get('created_at', datetime.now().isoformat()),
+            'role': account_data.get('role', 'user')
         }
         
         profile = UserProfileResponse(
@@ -89,7 +90,7 @@ async def get_user_profile(
             display_name=result_data['display_name'],
             name=result_data['name'],
             department_name=result_data['department_name'],
-            is_admin=result_data['is_admin'],
+            role=result_data['role'],
             created_at=result_data['created_at'] if isinstance(result_data['created_at'], str) else result_data['created_at'].isoformat() if result_data['created_at'] else datetime.now().isoformat()
         )
         

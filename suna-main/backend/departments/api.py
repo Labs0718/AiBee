@@ -55,7 +55,7 @@ async def get_department_names():
         supabase = await db.client
         
         response = await supabase.table("departments")\
-            .select("name")\
+            .select("display_name")\
             .eq("is_active", True)\
             .order("display_order")\
             .execute()
@@ -63,7 +63,7 @@ async def get_department_names():
         if not response.data:
             return []
         
-        return [dept["name"] for dept in response.data]
+        return [dept["display_name"] for dept in response.data]
         
     except Exception as e:
         logger.error(f"Error fetching department names: {str(e)}")
