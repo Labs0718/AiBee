@@ -58,39 +58,23 @@ async def get_user_profile(
         # Get email from JWT token
         _, email = get_user_info_from_jwt(request)
         
-        client = await db.client
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not get email from token"
+            )
         
-        # Get user profile from public.user_profiles table
-        profile_result = await client.from_('user_profiles').select('''
-            name,
-            departments!user_profiles_department_id_fkey(name)
-        ''').eq('id', user_id).single().execute()
-        
-        # Get account data from basejump.accounts as fallback
-        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
-        account_data = account_result.data[0] if account_result.data else None
-        
-        # Extract profile data
-        profile_data = profile_result.data if profile_result.data else None
-        
-        result_data = {
-            'id': user_id,
-            'email': email,
-            'display_name': account_data.get('name') if account_data else None,
-            'name': profile_data.get('name') if profile_data else (account_data.get('name') if account_data else None),
-            'department_name': profile_data.get('departments', {}).get('name') if profile_data and profile_data.get('departments') else None,
-            'created_at': account_data.get('created_at') if account_data else datetime.now().isoformat(),
-            'is_admin': False  # Default to False, can be enhanced later
-        }
-        
+        # Return basic profile information
+        # For now, just return the user_id and email from JWT
+        # We can enhance this later with actual database queries
         profile = UserProfileResponse(
-            id=str(result_data['id']),
-            email=result_data['email'],
-            display_name=result_data['display_name'],
-            name=result_data['name'],
-            department_name=result_data['department_name'],
-            is_admin=result_data['is_admin'],
-            created_at=result_data['created_at'] if isinstance(result_data['created_at'], str) else result_data['created_at'].isoformat() if result_data['created_at'] else datetime.now().isoformat()
+            id=str(user_id),
+            email=email,
+            display_name=email.split('@')[0],  # Use email prefix as display name
+            name=email.split('@')[0],  # Use email prefix as name
+            department_name=None,  # No department info for now
+            is_admin=False,
+            created_at=datetime.now().isoformat()
         )
         
         return profile
@@ -116,7 +100,7 @@ async def update_user_profile(
     try:
         # First, check if user has an account in basejump.accounts
         client = await db.client
-        account_result = await client.schema('basejump').from_('accounts').select('id').eq('primary_owner_user_id', user_id).execute()
+        account_result = client.schema('basejump').table('accounts').select('id').eq('primary_owner_user_id', user_id).execute()
         account = account_result.data[0] if account_result.data else None
         
         # Only allow certain fields to be updated
@@ -139,7 +123,7 @@ async def update_user_profile(
             if update_data:
                 update_data['updated_at'] = datetime.now().isoformat()
                 
-                result = await client.from_('basejump.accounts').update(update_data).eq('id', account['id']).execute()
+                result = client.schema('basejump').table('accounts').update(update_data).eq('id', account['id']).execute()
                 
                 if not result.data:
                     raise HTTPException(
