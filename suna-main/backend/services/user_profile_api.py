@@ -60,10 +60,8 @@ async def get_user_profile(
         
         client = await db.client
         
-        # Get user account from basejump.accounts with department join
-        account_result = await client.schema('basejump').from_('accounts').select(
-            '*, departments(name)'
-        ).eq('primary_owner_user_id', user_id).single().execute()
+        # Get user account from basejump.accounts
+        account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).single().execute()
         
         account_data = account_result.data if account_result.data else None
         
@@ -83,12 +81,16 @@ async def get_user_profile(
             # Fallback to JWT email if available
             user_email = email
         
-        # Extract department name from join result
+        # Get department name from department_id if it exists
         department_name = None
-        if account_data.get('departments') and isinstance(account_data.get('departments'), dict):
-            department_name = account_data['departments'].get('name')
-        elif account_data.get('departments') and isinstance(account_data.get('departments'), list) and len(account_data['departments']) > 0:
-            department_name = account_data['departments'][0].get('name')
+        if account_data.get('department_id'):
+            try:
+                dept_result = await client.from_('departments').select('name').eq('id', account_data['department_id']).single().execute()
+                if dept_result.data:
+                    department_name = dept_result.data.get('name')
+            except Exception as e:
+                # Department lookup failed, continue without department name
+                pass
         
         result_data = {
             'id': user_id,
