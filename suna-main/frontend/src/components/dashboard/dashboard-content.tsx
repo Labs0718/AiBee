@@ -56,6 +56,7 @@ export function DashboardContent() {
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const templateType = searchParams.get('template');
+  const [hasUserModified, setHasUserModified] = useState(false);
   const { data: accounts } = useAccounts();
   const personalAccount = accounts?.find((account) => account.personal_account);
   const chatInputRef = useRef<ChatInputHandles>(null);
@@ -105,13 +106,33 @@ export function DashboardContent() {
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
     
-    // 연차사용 템플릿일 때 미리 텍스트 입력
-    if (templateType === 'annual-leave' && !inputValue) {
-      setInputValue(`연차 사용일(예: 5월5일) : 
-연차사용종류(예: 오전반차, 연차 등) : `);
+    // 템플릿에 따라 미리 텍스트 입력 (사용자가 수정하지 않았을 때만)
+    if (templateType === 'annual-leave' && !hasUserModified) {
+      const annualLeaveTemplate = `연차 사용일(예: 5월5일) : 
+연차사용종류(예: 오전반차, 연차 등) : `;
+      if (inputValue !== annualLeaveTemplate) {
+        setInputValue(annualLeaveTemplate);
+      }
+    } else if (templateType === 'resource-booking' && !hasUserModified) {
+      const resourceBookingTemplate = `- 예약명(예: AI 커뮤니티 Zoom) : 
+- 종일 여부(Ex : 예/아니오) :
+- 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
+- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : `;
+      if (inputValue !== resourceBookingTemplate) {
+        setInputValue(resourceBookingTemplate);
+      }
+    } else if (templateType === null && (inputValue.includes('연차 사용일') || inputValue.includes('예약명'))) {
+      // 일반 페이지로 돌아갔을 때 템플릿 텍스트 제거
+      setInputValue('');
+      setHasUserModified(false);
     }
     
-  }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue]);
+  }, [searchParams, selectedAgentId, router, setSelectedAgent, templateType, inputValue, hasUserModified]);
+
+  // 템플릿 타입이 변경되면 hasUserModified 리셋
+  useEffect(() => {
+    setHasUserModified(false);
+  }, [templateType]);
 
   useEffect(() => {
     if (threadQuery.data && initiatedThreadId) {
@@ -157,9 +178,9 @@ export function DashboardContent() {
 
 2. 처음에 창 열리면 "결재 특이사항" 창때문에 내용이 안보이니까 꺽쇠? 클릭해서 닫아줘. "제목"입력칸이 보이도록 잘 닫아졌는지 "꼭" 확인후 다음단계 진행해.
 
-3. “제목”： 연차 휴가 신청합니다. 입력
+3. "제목"： 연차 휴가 신청합니다. 입력
 
-4. “일정등록” 옆에 “선택” 드롭다운 클릭 > 2번 단계에서 확인한 사용자명에 맞게 "개인캘린더.사용자명" 클릭
+4. "일정등록" 옆에 "선택" 드롭다운 클릭 > 2번 단계에서 확인한 사용자명에 맞게 "개인캘린더.사용자명" 클릭
 
 5. "근태구분" 오른쪽에 "선택" 드롭다운 클릭 > 사용자가 요청한 거에 맞춰서 알맞는 구분 클릭
 
@@ -206,6 +227,31 @@ export function DashboardContent() {
         finalMessage = `${message}
 
 ${ANNUAL_LEAVE_PROMPT}`;
+      } else if (templateType === 'resource-booking') {
+        const RESOURCE_BOOKING_PROMPT = `
+아래는 작업메뉴얼 입니다.
+
+1. https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : ejlee01 패스워드 : sxr932672@ 로그인 완료된 화면에서 사용자 명 확인 후, 상단에 "일정"클릭
+2. 왼쪽에 "자원관리" 클릭 > 바로 아래 드롭다운으로 뜨는 "자원캘린더" 탭 클릭
+3. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인해야함: 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
+4. 이전 단계에서 예약할 날짜, 시간 다른사람과 안겹치는지 확인 끝났다면: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist?goFromDate=2025-08-27&goEndDate=2025-08-27 링크 접속
+ - 여기서 goFromDate=2025-08-27&goEndDate=2025-08-27의 경우, goFromDate는 사용자가 요청한 예약시작날짜에 맞게, goEndDate는 사용자가 요청한 예약종료 날짜에 맞게 수정해서 링크 접속하면 됨. 
+ Ex) 8월28일로 예약했다면 둘 다 2025-08-28로 해서 링크 접속하기
+5. "예약명" 오른쪽 인풋칸에 : 사용자가 요청한 이름으로 입력
+6. "종일" 오른쪽에 예/아니오 버튼은 : 사용자가 요청한 정보로 **선택**
+7. "예약기간"은 : 사용자가 요청한 날짜와 시간대로 **선택**
+ - 예약기간의 달력 날짜 설정 방법: 날짜 오른쪽에 "달력아이콘 클릭" > 원하는 날짜 선택(앞 뒤날짜 둘다 사용자가 요청한 날짜로 맞추면됨) : 선택한 날짜의 월, 일이 제대로 들어갔는지 꼭 확인해야함.
+ - 예약기간의 시간 설정 방법: 각 시간 클릭해서 > 스크롤바로 원하는 시간대 찾은 뒤 클릭(앞 뒤 시간 둘다 사용자가 요청한 시간으로 맞추면됨)
+8. "자원명" 선택방법은 인풋칸 오른쪽에 "선택" 버튼 클릭해서 그 안에있는 요소들을 선택한 후 확인버튼 누르면 선택됨.
+8-1. 자원명 선택 가이드는 아래와 같음.
+ -  "(주)어빌리티시스템즈|회의실"을 더블클릭하면 : "본사 대회의실, 소회의실, 제안룸 등" 선택할 수있게 드롭다운 내려옴.
+ - "(주)어빌리티시스템즈|ZOOM계정"을 더블클릭하면 : "ZOOM계정 사용"을 선택할 수 있게 드롭다운 내려옴.
+ ** 사용자가 요청한 자원명인 탭(예: 본사-대회의실)클릭 후 "확인"버튼 클릭하면 됨
+9. 위 단계 다 마무리 지었다면, 스크롤바 내려서 "저장" 버튼 찾은 후 클릭`;
+        
+        finalMessage = `${message}
+
+${RESOURCE_BOOKING_PROMPT}`;
       }
 
       const formData = new FormData();
@@ -306,7 +352,10 @@ ${ANNUAL_LEAVE_PROMPT}`;
                 loading={isSubmitting}
                 placeholder="Describe what you need help with..."
                 value={inputValue}
-                onChange={setInputValue}
+                onChange={(value) => {
+                  setInputValue(value);
+                  setHasUserModified(true);
+                }}
                 hideAttachments={false}
                 selectedAgentId={selectedAgentId}
                 onAgentSelect={setSelectedAgent}
