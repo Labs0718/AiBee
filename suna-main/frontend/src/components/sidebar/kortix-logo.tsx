@@ -8,12 +8,18 @@ interface AbilityLogoProps {
 export function AbilityLogo({ size = 24 }: AbilityLogoProps) {
   return (
     <Image
-        src="/ability-logo.png"
+        src="/logo2.png"
         alt="Ability Systems"
         width={size}
         height={size}
         className="flex-shrink-0"
-        style={{ width: size, height: size, minWidth: size, minHeight: size }}
+        style={{ 
+          width: size,
+          height: size,
+          minWidth: size,
+          minHeight: size,
+          objectFit: 'contain'
+        }}
       />
   );
 }
