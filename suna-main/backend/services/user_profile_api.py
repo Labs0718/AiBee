@@ -21,7 +21,7 @@ class UserProfileResponse(BaseModel):
     display_name: Optional[str] = None
     name: Optional[str] = None
     department_name: Optional[str] = None
-    role: str = 'user'  # 'admin', 'operator', 'user'
+    user_role: str = 'user'  # 'operator', 'admin', 'user'
     created_at: str
 
 async def get_db():
@@ -129,7 +129,7 @@ async def get_user_profile(
             'name': real_name,
             'department_name': department_name,
             'created_at': account_data.get('created_at', datetime.now().isoformat()) if account_data else datetime.now().isoformat(),
-            'role': account_data.get('role', 'user') if account_data else 'user'
+            'user_role': account_data.get('user_role', 'user') if account_data else 'user'
         }
         
         profile = UserProfileResponse(
@@ -138,7 +138,7 @@ async def get_user_profile(
             display_name=result_data['display_name'],
             name=result_data['name'],
             department_name=result_data['department_name'],
-            role=result_data['role'],
+            user_role=result_data['user_role'],
             created_at=result_data['created_at'] if isinstance(result_data['created_at'], str) else result_data['created_at'].isoformat() if result_data['created_at'] else datetime.now().isoformat()
         )
         

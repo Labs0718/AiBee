@@ -119,11 +119,12 @@ export async function signUp(prevState: any, formData: FormData) {
 
   // 회원가입이 성공하면 user 정보가 있을 것임
   if (data && data.user) {
-    // RPC 함수로 프로필 업데이트
+    // RPC 함수로 프로필 업데이트 (기본 권한: user)
     const { error: updateError } = await supabase.rpc('update_user_profile_after_signup', {
       p_user_id: data.user.id,
       p_display_name: name.trim(),
-      p_department_id: departmentId
+      p_department_id: departmentId,
+      p_user_role: 'user'  // 기본값: 일반사용자
     });
 
     if (updateError) {

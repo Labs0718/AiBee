@@ -9,7 +9,7 @@ export interface UserProfile {
   display_name?: string;
   name?: string;
   department_name?: string;
-  is_admin: boolean;
+  user_role: 'operator' | 'admin' | 'user';
   created_at: string;
 }
 

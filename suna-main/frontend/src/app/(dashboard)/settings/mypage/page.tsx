@@ -129,7 +129,10 @@ export default function MyPage() {
                         <span className="text-gray-500 text-xs">• {userProfile?.department_name}</span>
                       )}
                     </div>
-                    <p className="text-gray-400 text-xs">{userProfile?.email} • {userProfile?.is_admin ? '관리자' : '사용자'}</p>
+                    <p className="text-gray-400 text-xs">{userProfile?.email} • {
+                      userProfile?.user_role === 'operator' ? '운영자' : 
+                      userProfile?.user_role === 'admin' ? '관리자' : '일반사용자'
+                    }</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </div>
@@ -223,9 +226,13 @@ export default function MyPage() {
                   <div className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
                     <Shield className="w-5 h-5 text-gray-400" />
                     <span className="text-gray-900 font-medium">
-                      {userProfile?.is_admin ? '관리자' : '일반 사용자'}
+                      {userProfile?.user_role === 'operator' ? '운영자' : 
+                       userProfile?.user_role === 'admin' ? '관리자' : '일반사용자'}
                     </span>
-                    {userProfile?.is_admin && (
+                    {userProfile?.user_role === 'operator' && (
+                      <span className="ml-auto text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">OPERATOR</span>
+                    )}
+                    {userProfile?.user_role === 'admin' && (
                       <span className="ml-auto text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">ADMIN</span>
                     )}
                   </div>
