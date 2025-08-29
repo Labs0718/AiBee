@@ -72,7 +72,8 @@ export async function signUp(prevState: any, formData: FormData) {
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
   const name = formData.get('name') as string;
-  const departmentId = formData.get('department') as string;  // Now this is the department ID
+  const departmentIdStr = formData.get('department') as string;
+  const departmentId = departmentIdStr ? parseInt(departmentIdStr, 10) : null;  // Convert to integer!
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
   // Construct full email address
@@ -100,7 +101,7 @@ export async function signUp(prevState: any, formData: FormData) {
 
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signUp({
+  const { error, data } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -116,42 +117,39 @@ export async function signUp(prevState: any, formData: FormData) {
     return { message: error.message || 'Could not create account' };
   }
 
-  const { error: signInError, data: signInData } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  // 회원가입이 성공하면 user 정보가 있을 것임
+  if (data && data.user) {
+    // RPC 함수로 프로필 업데이트
+    const { error: updateError } = await supabase.rpc('update_user_profile_after_signup', {
+      p_user_id: data.user.id,
+      p_display_name: name.trim(),
+      p_department_id: departmentId
+    });
 
-  if (signInData && signInData.user) {
-    // Now departmentId is already the ID from the form, no need to look it up
-
-    // Create basejump.accounts entry for the new user
-    const { error: accountError } = await supabase
-      .schema('basejump')
-      .from('accounts')
-      .insert({
-        primary_owner_user_id: signInData.user.id,
-        display_name: name.trim(),  // 실명은 display_name에만 저장
-        department_id: departmentId,
-        role: 'user', // default role
-        personal_account: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-    
-    if (accountError) {
-      console.error('Failed to create basejump account:', accountError);
+    if (updateError) {
+      console.error('Failed to update user profile:', updateError);
+      return { message: 'Account created but failed to update profile: ' + updateError.message };
     } else {
-      console.log('Basejump account created with department_id:', departmentId);
+      console.log('User profile updated successfully:', {
+        display_name: name.trim(),
+        department_id: departmentId
+      });
     }
 
     sendWelcomeEmail(email, name.trim());
-  }
-
-  if (signInError) {
-    return {
-      message:
-        'Account created! Check your email to confirm your registration.',
-    };
+    
+    // 이메일 확인이 필요한지 체크
+    if (data.user.email_confirmed_at) {
+      // 이미 확인된 경우 자동 로그인 시도
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (!signInError) {
+        return { success: true, redirectTo: returnUrl || '/dashboard' };
+      }
+    }
   }
 
   // Use client-side navigation instead of server-side redirect

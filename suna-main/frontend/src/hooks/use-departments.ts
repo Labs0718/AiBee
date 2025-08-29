@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
 
 export interface Department {
-  id: string;
+  id: number;  // INTEGER로 변경!
   name: string;
   display_order: number;
   is_active: boolean;
@@ -25,7 +25,7 @@ const fetchDepartments = async (): Promise<Department[]> => {
 };
 
 interface DepartmentOption {
-  id: string;
+  id: number;  // INTEGER로 변경!
   name: string;
 }
 

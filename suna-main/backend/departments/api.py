@@ -7,7 +7,7 @@ from pydantic import BaseModel
 router = APIRouter()
 
 class Department(BaseModel):
-    id: str
+    id: int  # INTEGER로 변경!
     name: str
     display_order: int
     is_active: bool
@@ -55,7 +55,7 @@ async def get_department_names():
         supabase = await db.client
         
         response = await supabase.table("departments")\
-            .select("id, name")\
+            .select("id, name, display_name")\
             .eq("is_active", True)\
             .order("display_order")\
             .execute()
@@ -63,8 +63,8 @@ async def get_department_names():
         if not response.data:
             return []
         
-        # Return both id and name for each department
-        return [{"id": dept["id"], "name": dept["name"]} for dept in response.data]
+        # Return id and display_name (Korean) for dropdown display
+        return [{"id": dept["id"], "name": dept["display_name"] or dept["name"]} for dept in response.data]
         
     except Exception as e:
         logger.error(f"Error fetching department names: {str(e)}")
