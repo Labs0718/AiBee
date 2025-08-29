@@ -95,9 +95,11 @@ async def get_user_profile(
         
         if department_id:
             try:
-                dept_result = await client.from_('departments').select('name').eq('id', department_id).execute()
+                dept_result = await client.from_('departments').select('id, name, display_name').eq('id', department_id).execute()
                 if dept_result.data:
-                    department_name = dept_result.data[0].get('name')
+                    dept_data = dept_result.data[0]
+                    # Use display_name if available, otherwise fall back to name
+                    department_name = dept_data.get('display_name') or dept_data.get('name')
             except Exception as e:
                 # Department lookup failed, continue without department name
                 pass
