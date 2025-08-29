@@ -183,10 +183,13 @@ export function NavUserWithTeams({
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">
-                    {user.department_name ? `${user.department_name} • ${user.email}` : user.email}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate font-medium">{user.name}</span>
+                    {user.department_name && (
+                      <span className="truncate text-xs text-muted-foreground">• {user.department_name}</span>
+                    )}
+                  </div>
+                  <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                 </div>
                 <ChevronsUpDown className="ml-auto size-4" />
               </SidebarMenuButton>
@@ -206,10 +209,13 @@ export function NavUserWithTeams({
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-medium">{user.name}</span>
-                    <span className="truncate text-xs">
-                      {user.department_name ? `${user.department_name} • ${user.email}` : user.email}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="truncate font-medium">{user.name}</span>
+                      {user.department_name && (
+                        <span className="truncate text-xs text-muted-foreground">• {user.department_name}</span>
+                      )}
+                    </div>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>
@@ -329,13 +335,6 @@ export function NavUserWithTeams({
                   </Link>
                 </DropdownMenuItem>
                 
-                {/* 자동화 연결설정 */}
-                <DropdownMenuItem asChild>
-                  <Link href="/automation-settings">
-                    <Settings className="h-4 w-4" />
-                    자동화 연결설정
-                  </Link>
-                </DropdownMenuItem>
                 
                 {/* 관리자 메뉴 - 임시로 모든 사용자에게 보이도록 설정 */}
                 <DropdownMenuItem asChild>

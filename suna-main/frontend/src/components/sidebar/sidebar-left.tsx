@@ -294,7 +294,7 @@ export function SidebarLeft({
               >
                 <Plug className="h-4 w-4 mr-1" />
                 <span className="flex items-center justify-between w-full">
-                  Integrations
+                  연동 설정
                 </span>
               </SidebarMenuButton>
             </Link>
@@ -323,32 +323,6 @@ export function SidebarLeft({
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <SidebarMenuSub>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        className={cn('pl-3 touch-manipulation', {
-                          'bg-accent text-accent-foreground font-medium': pathname === '/dashboard' && searchParams.get('template') === 'annual-leave',
-                        })} 
-                        asChild
-                      >
-                        <Link href="/dashboard?template=annual-leave" onClick={() => isMobile && setOpenMobile(false)}>
-                          <Plane className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span>그룹웨어 연차사용</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton 
-                        className={cn('pl-3 touch-manipulation', {
-                          'bg-accent text-accent-foreground font-medium': pathname === '/dashboard' && searchParams.get('template') === 'resource-booking',
-                        })} 
-                        asChild
-                      >
-                        <Link href="/dashboard?template=resource-booking" onClick={() => isMobile && setOpenMobile(false)}>
-                          <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-                          <span>그룹웨어 자원예약</span>
-                        </Link>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
                   </SidebarMenuSub>
                 </CollapsibleContent>
               </SidebarMenuItem>

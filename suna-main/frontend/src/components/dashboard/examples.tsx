@@ -24,6 +24,7 @@ import {
   Calendar,
   DollarSign,
   Rocket,
+  Plane,
 } from 'lucide-react';
 
 type PromptExample = {
@@ -34,12 +35,12 @@ type PromptExample = {
 
 const allPrompts: PromptExample[] = [
   {
-    title: 'Find best bakeries map',
+    title: '최고의 베이커리 지도 찾기',
     query: '1. Search Google Maps for "best bakeries in {{city}}"\n2. Create a custom list with top {{number}} bakeries\n3. For each bakery, gather:\n   - Customer ratings and popular items\n   - Hours, location, and specialties\n   - Price range and must-try pastries\n4. Generate a summary with recommendations',
     icon: <Globe className="text-blue-700 dark:text-blue-400" size={16} />,
   },
   {
-    title: 'Research education data',
+    title: '교육 데이터 조사',
     query: '1. Access UNESCO database for {{topic}} education statistics\n2. Compile data on:\n   - Student enrollment ratios by region\n   - Teacher-to-student ratios globally\n   - Education spending as % of GDP\n3. Create structured spreadsheet with trends\n4. Generate executive summary with key insights',
     icon: <BarChart3 className="text-purple-700 dark:text-purple-400" size={16} />,
   },
@@ -69,12 +70,12 @@ const allPrompts: PromptExample[] = [
     icon: <Target className="text-cyan-700 dark:text-cyan-400" size={16} />,
   },
   {
-    title: 'Research company intelligence',
+    title: '기업 정보 조사',
     query: '1. Research {{company_name}} comprehensively\n2. Gather recent news, funding, and leadership info\n3. Analyze competitive position and market share\n4. Research key personnel background\n5. Create detailed profile with actionable insights',
     icon: <Briefcase className="text-teal-700 dark:text-teal-400" size={16} />,
   },
   {
-    title: 'Audit calendar productivity',
+    title: '캘린더 생산성 분석',
     query: '1. Analyze {{calendar_app}} data from past {{months}} months\n2. Assess meeting frequency and focus time\n3. Identify optimization opportunities\n4. Analyze meeting effectiveness patterns\n5. Generate recommendations and implementation plan',
     icon: <Calendar className="text-violet-700 dark:text-violet-400" size={16} />,
   },
@@ -127,6 +128,77 @@ const allPrompts: PromptExample[] = [
     title: 'Build professional website',
     query: '1. Research {{person_name}} online comprehensively\n2. Analyze professional brand and achievements\n3. Design website structure and content\n4. Create optimized pages with portfolio\n5. Implement SEO and performance features',
     icon: <Globe className="text-red-600 dark:text-red-300" size={16} />,
+  },
+  {
+    title: '그룹웨어 연차사용',
+    query: `연차 사용일(예: 5월5일) : 
+연차사용종류(예: 오전반차, 연차 등) : 
+
+## 연차 신청 자동화 가이드
+
+1. 그룹웨어 접속 : https://gw.goability.co.kr/login
+
+2. 처음에 창 열리면 "결재 특이사항" 창때문에 내용이 안보이니까 꺽쇠? 클릭해서 닫아줘. "제목"입력칸이 보이도록 잘 닫아졌는지 "꼭" 확인후 다음단계 진행해.
+
+3. "제목"： 연차 휴가 신청합니다. 입력
+
+4. "일정등록" 옆에 "선택" 드롭다운 클릭 > 2번 단계에서 확인한 사용자명에 맞게 "개인캘린더.사용자명" 클릭
+
+5. "연차구분" 오른쪽 드롭다운 : 사용자가 요청한 연차 종류로 선택. (예: "연차", "오전반차", "오후반차" 중 선택)
+
+6. "신청일자": 사용자가 요청한 날짜로 설정해야함. 
+ - 신정일자 선택방법 : 
+   예) 2025-08-25  랑 2025-08-25 이런식으로 있을건데,  각 날짜 오른쪽에 보면 "달력아이콘"이있음. 달력아이콘 **클릭**
+	각각 알맞는 날짜로 선택하기 : 첫번째 날짜는 연차 시작날짜고, 두번째 날짜는 연차 종료 날짜임.
+ 	**너가 가끔 실수로 8월인데 7월 날짜로 선택할 때 있음. 사용자가 말한  월, 일자가 맞는지 한번 더 확인한 뒤 적용필수. **
+
+ * 8월5일 오전 반차일 경우: 08월05일,08월05일로 선택
+ * 8월5일 연차일 경우: 08월5일,08월05일로 선택
+ * 8월5일, 8월6일 연차일 경우: 08월05일, 08월06일로 선택
+
+7. "비고" 오른쪽 빈 칸에 "개인사유" 입력
+
+8. "저장" 버튼 클릭
+
+9. 새 탭에서 https://gw.goability.co.kr/workflow 접속
+
+10. 상단에 "새결재" 버튼 클릭
+
+11. "휴가원 (취소) 신청서" 클릭
+
+12. "기안" 버튼 클릭
+
+13. 결재함 아이콘 클릭 > 왼쪽 결재 메뉴들 확인하기
+
+14. 열린 상신함... 미결함.. 전결함.... 등등 중에서  "미결함" 클릭
+
+15. 제목에 "연차 휴가 신청합니다." 우리가 작성한 문서임 : "연차 휴가 신청합니다." 클릭
+
+16. "휴가 (취소) 신청서" 열렸는지 확인`,
+    icon: <Plane className="text-green-600 dark:text-green-400" size={16} />,
+  },
+  {
+    title: '그룹웨어 자원예약',
+    query: `- 예약명(예: AI 커뮤니티 Zoom) : 
+- 종일 여부(Ex : 예/아니오) :
+- 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
+- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : 
+
+## 자원예약 자동화 가이드
+
+1. 그룹웨어 접속 : https://gw.goability.co.kr/login
+2. 왼쪽에 "자원관리" 클릭 > 바로 아래 드롭다운으로 뜨는 "자원캘린더" 탭 클릭
+3. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인해야함: 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
+4. 이전 단계에서 예약할 날짜, 시간 다른사람과 안겹치는지 확인 끝났다면: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist?goFromDate=2025-08-27&goEndDate=2025-08-27 링크 접속
+ - 여기서 goFromDate=2025-08-27&goEndDate=2025-08-27의 경우, goFromDate는 사용자가 요청한 예약시작날짜에 맞게, goEndDate는 사용자가 요청한 예약종료 날짜에 맞게 수정해서 링크 접속하면 됨. 
+ Ex) 8월28일로 예약했다면 둘 다 2025-08-28로 해서 링크 접속하기
+5. "예약명" 오른쪽 인풋칸에 : 사용자가 요청한 이름으로 입력
+6. "종일" 오른쪽에 예/아니오 버튼은 : 사용자가 요청한 정보로 **선택**
+7. "예약기간"은 : 사용자가 요청한 날짜와 시간대로 **선택**
+ - 예약기간의 달력 날짜 설정 방법: 날짜 오른쪽에 "달력아이콘 클릭" > 원하는 날짜 선택(앞 뒤날짜 둘다 사용자가 요청한 날짜로 맞추면됨) : 선택한 날짜의 월, 일이 제대로 들어갔는지 꼭 확인해야함.
+ - 예약기간의 시간 설정 방법: 각 시간 클릭해서 > 스크롤바로 원하는 시간대 찾은 뒤 클릭(앞 뒤 시간 둘다 사용자가 요청한 시간으로 맞추면됨)
+8. "자원명" 선택방법은 인풋칸 오른쪽에 "선택" 버튼 클릭해서 그 안에있는 요소들을 선택한 후 확인버튼 누르면 선택됨.`,
+    icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
   },
 ];
 

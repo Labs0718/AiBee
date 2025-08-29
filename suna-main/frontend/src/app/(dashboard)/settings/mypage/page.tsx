@@ -121,10 +121,14 @@ export default function MyPage() {
                     </span>
                   </div>
                   <div className="text-sm">
-                    <p className="font-semibold text-gray-900">
-                      {userProfile?.display_name || userProfile?.name || userProfile?.email?.split('@')[0] || '사용자'}
-                    </p>
-                    <p className="text-gray-500 text-xs">{userProfile?.department_name || '부서 미지정'}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-gray-900">
+                        {userProfile?.display_name || userProfile?.name || userProfile?.email?.split('@')[0] || '사용자'}
+                      </p>
+                      {userProfile?.department_name && (
+                        <span className="text-gray-500 text-xs">• {userProfile?.department_name}</span>
+                      )}
+                    </div>
                     <p className="text-gray-400 text-xs">{userProfile?.email} • {userProfile?.is_admin ? '관리자' : '사용자'}</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
