@@ -394,6 +394,13 @@ function LoginContent() {
                   )}
                 </div>
               </div>
+              {isSignUp && (
+                <div className="mt-3 text-center">
+                  <p className="text-xs text-green-600 dark:text-green-400">
+                    회원가입 완료 후 이메일인증이 돼야 로그인 가능합니다.
+                  </p>
+                </div>
+              )}
             </form>
             
             <div className="mt-4 space-y-3 text-center text-sm">
