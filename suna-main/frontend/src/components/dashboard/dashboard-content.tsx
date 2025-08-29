@@ -36,6 +36,7 @@ const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
 export function DashboardContent() {
   const [inputValue, setInputValue] = useState('');
+  const [hiddenPrompt, setHiddenPrompt] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
   const { 
@@ -121,8 +122,8 @@ export function DashboardContent() {
       if (inputValue !== resourceBookingTemplate) {
         setInputValue(resourceBookingTemplate);
       }
-    } else if (templateType === null && (inputValue.includes('연차 사용일') || inputValue.includes('예약명'))) {
-      // 일반 페이지로 돌아갔을 때 템플릿 텍스트 제거
+    } else if (templateType === null && !hasUserModified && (inputValue.includes('연차 사용일') || inputValue.includes('예약명'))) {
+      // 일반 페이지로 돌아갔을 때 템플릿 텍스트 제거 (사용자가 수정하지 않았을 때만)
       setInputValue('');
       setHasUserModified(false);
     }
@@ -162,6 +163,9 @@ export function DashboardContent() {
     )
       return;
 
+    // 실제 전송될 메시지에 숨겨진 프롬프트 추가
+    const actualMessage = hiddenPrompt ? message + hiddenPrompt : message;
+
     setIsSubmitting(true);
 
     try {
@@ -169,7 +173,7 @@ export function DashboardContent() {
       localStorage.removeItem(PENDING_PROMPT_KEY);
 
       // 템플릿에 따라 자동 프롬프트 추가
-      let finalMessage = message;
+      let finalMessage = actualMessage;
       if (templateType === 'annual-leave') {
         const ANNUAL_LEAVE_PROMPT = `
 아래는 작업메뉴얼 입니다.
@@ -298,6 +302,7 @@ ${RESOURCE_BOOKING_PROMPT}`;
       }
     } finally {
       setIsSubmitting(false);
+      setHiddenPrompt(undefined); // 전송 후 숨겨진 프롬프트 초기화
     }
   };
 
@@ -364,7 +369,11 @@ ${RESOURCE_BOOKING_PROMPT}`;
               />
             </div>
             <div className="w-full">
-              <Examples onSelectPrompt={setInputValue} count={isMobile ? 3 : 4} />
+              <Examples onSelectPrompt={(query, hidden) => {
+                setInputValue(query);
+                setHiddenPrompt(hidden);
+                setHasUserModified(true); // Examples에서 선택했음을 표시
+              }} count={isMobile ? 3 : 4} />
             </div>
           </div>
           

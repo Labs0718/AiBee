@@ -299,35 +299,6 @@ export function SidebarLeft({
               </SidebarMenuButton>
             </Link>
           )}
-          
-          {/* AiBee Browser Automation Section */}
-          <SidebarMenu>
-            <Collapsible
-              defaultOpen={false}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    tooltip="AiBee Browser Automation"
-                    onClick={() => {
-                      if (state === 'collapsed') {
-                        setOpen(true);
-                      }
-                    }}
-                  >
-                    <Zap className="h-4 w-4 mr-1" />
-                    <span className="text-xs leading-tight">AiBee Browser Automation</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
-          </SidebarMenu>
          
         </SidebarGroup>
         <NavAgents />

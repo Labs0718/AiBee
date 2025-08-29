@@ -31,6 +31,7 @@ type PromptExample = {
   title: string;
   query: string;
   icon: React.ReactNode;
+  hiddenPrompt?: string; // 숨겨진 가이드 프롬프트
 };
 
 const allPrompts: PromptExample[] = [
@@ -132,7 +133,8 @@ const allPrompts: PromptExample[] = [
   {
     title: '그룹웨어 연차사용',
     query: `연차 사용일(예: 5월5일) : 
-연차사용종류(예: 오전반차, 연차 등) : 
+연차사용종류(예: 오전반차, 연차 등) : `,
+    hiddenPrompt: `
 
 ## 연차 신청 자동화 가이드
 
@@ -182,7 +184,8 @@ const allPrompts: PromptExample[] = [
     query: `- 예약명(예: AI 커뮤니티 Zoom) : 
 - 종일 여부(Ex : 예/아니오) :
 - 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
-- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : 
+- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : `,
+    hiddenPrompt: `
 
 ## 자원예약 자동화 가이드
 
@@ -212,7 +215,7 @@ export const Examples = ({
   onSelectPrompt,
   count = 3,
 }: {
-  onSelectPrompt?: (query: string) => void;
+  onSelectPrompt?: (query: string, hiddenPrompt?: string) => void;
   count?: number;
 }) => {
   const [displayedPrompts, setDisplayedPrompts] = useState<PromptExample[]>([]);
@@ -247,7 +250,7 @@ export const Examples = ({
               <Button
                 variant="outline"
                 className="w-fit h-fit px-3 py-2 rounded-full border-neutral-200 dark:border-neutral-800 bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-900 dark:hover:bg-neutral-800 text-sm font-normal text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => onSelectPrompt && onSelectPrompt(prompt.query)}
+                onClick={() => onSelectPrompt && onSelectPrompt(prompt.query, prompt.hiddenPrompt)}
               >
                 <div className="flex items-center gap-2">
                   <div className="flex-shrink-0">

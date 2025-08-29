@@ -60,6 +60,7 @@ export function HeroSection() {
   const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
   const { scrollY } = useScroll();
   const [inputValue, setInputValue] = useState('');
+  const [hiddenPrompt, setHiddenPrompt] = useState<string | undefined>(undefined);
   const [selectedAgentId, setSelectedAgentId] = useState<string | undefined>();
   const router = useRouter();
   const { user, isLoading } = useAuth();
@@ -162,9 +163,12 @@ export function HeroSection() {
   ) => {
     if ((!message.trim() && !chatInputRef.current?.getPendingFiles().length) || isSubmitting) return;
 
+    // 실제 전송될 메시지에 숨겨진 프롬프트 추가
+    const actualMessage = hiddenPrompt ? message + hiddenPrompt : message;
+
     // If user is not logged in, save prompt and show auth dialog
     if (!user && !isLoading) {
-      localStorage.setItem(PENDING_PROMPT_KEY, message.trim());
+      localStorage.setItem(PENDING_PROMPT_KEY, actualMessage.trim());
       setAuthDialogOpen(true);
       return;
     }
@@ -176,7 +180,7 @@ export function HeroSection() {
       localStorage.removeItem(PENDING_PROMPT_KEY);
 
       const formData = new FormData();
-      formData.append('prompt', message);
+      formData.append('prompt', actualMessage);
 
       // Add selected agent if one is chosen
       if (selectedAgentId) {
@@ -228,6 +232,7 @@ export function HeroSection() {
       }
     } finally {
       setIsSubmitting(false);
+      setHiddenPrompt(undefined); // 전송 후 숨겨진 프롬프트 초기화
     }
   };
 
@@ -354,7 +359,10 @@ export function HeroSection() {
             
             {/* Examples section - right after chat input */}
             <div className="w-full pt-2">
-              <Examples onSelectPrompt={setInputValue} count={tablet ? 2 : 4} />
+              <Examples onSelectPrompt={(query, hidden) => {
+                setInputValue(query);
+                setHiddenPrompt(hidden);
+              }} count={tablet ? 2 : 4} />
             </div>
           </div>
 

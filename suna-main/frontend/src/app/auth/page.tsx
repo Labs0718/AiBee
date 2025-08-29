@@ -109,7 +109,7 @@ function LoginContent() {
     }
 
     if (result && typeof result === 'object' && 'message' in result) {
-      toast.error('Login failed', {
+      toast.error('로그인 실패', {
         description: result.message as string,
         duration: 5000,
       });
@@ -165,7 +165,7 @@ function LoginContent() {
 
         return result;
       } else {
-        toast.error('Sign up failed', {
+        toast.error('가입 실패', {
           description: resultMessage,
           duration: 5000,
         });
@@ -293,7 +293,7 @@ function LoginContent() {
               <div className="mb-4 flex items-center flex-col gap-3 sm:gap-4 justify-center">
                 {customAgentsEnabled && <ReleaseBadge className='mb-2 sm:mb-4' text="Custom Agents, Playbooks, and more!" link="/changelog" />}
                 <h1 className="text-xl sm:text-2xl font-semibold text-foreground text-center leading-tight">
-                  {isSignUp ? 'Create your account' : 'Log into your account'}
+                  {isSignUp ? '계정 생성' : '로그인'}
                 </h1>
               </div>
             <div className="space-y-3 mb-4">
@@ -306,7 +306,7 @@ function LoginContent() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-background text-muted-foreground">
-                  or email
+                  또는 이메일
                 </span>
               </div>
             </div>
@@ -364,7 +364,7 @@ function LoginContent() {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="Password"
+                placeholder="비밀번호"
                 className="h-10 rounded-lg"
                 required
               />
@@ -373,7 +373,7 @@ function LoginContent() {
                   id="confirmPassword"
                   name="confirmPassword"
                   type="password"
-                  placeholder="Confirm password"
+                  placeholder="비밀번호 확인"
                   className="h-10 rounded-lg"
                   required
                 />
@@ -383,9 +383,9 @@ function LoginContent() {
                   <SubmitButton
                     formAction={isSignUp ? handleSignUp : handleSignIn}
                     className="w-full h-10 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors rounded-lg"
-                    pendingText={isSignUp ? "Creating account..." : "Signing in..."}
+                    pendingText={isSignUp ? "계정 생성 중..." : "로그인 중..."}
                   >
-                    {isSignUp ? 'Create account' : 'Sign in'}
+                    {isSignUp ? '계정 생성' : '로그인'}
                   </SubmitButton>
                   {wasEmailLastMethod && (
                     <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background shadow-sm">
@@ -410,7 +410,7 @@ function LoginContent() {
                   onClick={() => setForgotPasswordOpen(true)}
                   className="text-primary hover:underline"
                 >
-                  Forgot password?
+                  비밀번호를 잊으셨나요?
                 </button>
               )}
               
@@ -423,8 +423,8 @@ function LoginContent() {
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {isSignUp 
-                    ? 'Already have an account? Sign in' 
-                    : "Don't have an account? Sign up"
+                    ? '이미 계정이 있으신가요? 로그인' 
+                    : '계정이 없으신가요? 가입하기'
                   }
                 </Link>
               </div>
