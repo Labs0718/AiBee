@@ -130,6 +130,10 @@ const allPrompts: PromptExample[] = [
     query: '1. Research {{person_name}} online comprehensively\n2. Analyze professional brand and achievements\n3. Design website structure and content\n4. Create optimized pages with portfolio\n5. Implement SEO and performance features',
     icon: <Globe className="text-red-600 dark:text-red-300" size={16} />,
   },
+
+
+
+  //  그룹웨어 연차사용 가이드 - - - - - - - - -
   {
     title: '그룹웨어 연차사용',
     query: `연차 사용일(예: 5월5일) : 
@@ -138,7 +142,7 @@ const allPrompts: PromptExample[] = [
 
 ## 연차 신청 자동화 가이드
 
-1. 그룹웨어 접속 : https://gw.goability.co.kr/login
+1. 그룹웨어 접속 : https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : {사용자_아이디} 패스워드 : {사용자_패스워드}
 
 2. 처음에 창 열리면 "결재 특이사항" 창때문에 내용이 안보이니까 꺽쇠? 클릭해서 닫아줘. "제목"입력칸이 보이도록 잘 닫아졌는지 "꼭" 확인후 다음단계 진행해.
 
@@ -177,6 +181,8 @@ const allPrompts: PromptExample[] = [
 15. 제목에 "연차 휴가 신청합니다." 우리가 작성한 문서임 : "연차 휴가 신청합니다." 클릭
 
 16. "휴가 (취소) 신청서" 열렸는지 확인`,
+
+//  그룹웨어 자원예약 가이드 - - - - - - - - -
     icon: <Plane className="text-green-600 dark:text-green-400" size={16} />,
   },
   {
@@ -189,7 +195,7 @@ const allPrompts: PromptExample[] = [
 
 ## 자원예약 자동화 가이드
 
-1. 그룹웨어 접속 : https://gw.goability.co.kr/login
+1. 그룹웨어 접속 : https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : {사용자_아이디} 패스워드 : {사용자_패스워드}
 2. 왼쪽에 "자원관리" 클릭 > 바로 아래 드롭다운으로 뜨는 "자원캘린더" 탭 클릭
 3. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인해야함: 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
 4. 이전 단계에서 예약할 날짜, 시간 다른사람과 안겹치는지 확인 끝났다면: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist?goFromDate=2025-08-27&goEndDate=2025-08-27 링크 접속

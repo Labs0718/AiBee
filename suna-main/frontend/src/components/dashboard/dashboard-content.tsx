@@ -18,6 +18,7 @@ import { useAccounts } from '@/hooks/use-accounts';
 import { config } from '@/lib/config';
 import { useInitiateAgentWithInvalidation } from '@/hooks/react-query/dashboard/use-initiate-agent';
 import { ModalProviders } from '@/providers/modal-providers';
+import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { cn } from '@/lib/utils';
 import { useModal } from '@/hooks/use-modal-store';
@@ -31,6 +32,7 @@ import { useFeatureFlag } from '@/lib/feature-flags';
 import { CustomAgentsSection } from './custom-agents-section';
 import { toast } from 'sonner';
 import { ReleaseBadge } from '../auth/release-badge';
+import { createClient } from '@/lib/supabase/client';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
@@ -56,6 +58,7 @@ export function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isMobile = useIsMobile();
+  const { data: userProfile } = useUserProfile();
   const templateType = searchParams.get('template');
   const [hasUserModified, setHasUserModified] = useState(false);
   const { data: accounts } = useAccounts();
@@ -172,90 +175,37 @@ export function DashboardContent() {
       const files = chatInputRef.current?.getPendingFiles() || [];
       localStorage.removeItem(PENDING_PROMPT_KEY);
 
-      // 템플릿에 따라 자동 프롬프트 추가
+      // hiddenPrompt가 있으면 추가 + 사용자 정보 변수 처리
       let finalMessage = actualMessage;
-      if (templateType === 'annual-leave') {
-        const ANNUAL_LEAVE_PROMPT = `
-아래는 작업메뉴얼 입니다.
-
-1. https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : ejlee01 패스워드 : sxr932672@ 로그인 완료된 화면에서 사용자 명 확인 후, https://gw.goability.co.kr/attend/Views/Common/pop/eaPop.do?processId=ATTProc18&form_id=18&form_tp=ATTProc18&doc_width=900 해당 링크 접속
-
-2. 처음에 창 열리면 "결재 특이사항" 창때문에 내용이 안보이니까 꺽쇠? 클릭해서 닫아줘. "제목"입력칸이 보이도록 잘 닫아졌는지 "꼭" 확인후 다음단계 진행해.
-
-3. "제목"： 연차 휴가 신청합니다. 입력
-
-4. "일정등록" 옆에 "선택" 드롭다운 클릭 > 2번 단계에서 확인한 사용자명에 맞게 "개인캘린더.사용자명" 클릭
-
-5. "근태구분" 오른쪽에 "선택" 드롭다운 클릭 > 사용자가 요청한 거에 맞춰서 알맞는 구분 클릭
-
-6. "신청일자": 사용자가 요청한 날짜로 설정해야함. 
- - 신정일자 선택방법 : 
-   예) 2025-08-25  랑 2025-08-25 이런식으로 있을건데,  각 날짜 오른쪽에 보면 "달력아이콘"이있음. 달력아이콘 **클릭**
-	각각 알맞는 날짜로 선택하기 : 첫번째 날짜는 연차 시작날짜고, 두번째 날짜는 연차 종료 날짜임.
- 	**너가 가끔 실수로 8월인데 7월 날짜로 선택할 때 있음. 사용자가 말한  월, 일자가 맞는지 한번 더 확인한 뒤 적용필수. **
-
- * 8월5일 오전 반차일 경우: 08월05일,08월05일로 선택
- * 8월5일 연차일 경우: 08월5일,08월05일로 선택
- * 8월5일, 8월6일 연차일 경우: 08월05일, 08월06일로 선택
-
-7. "비고" 오른쪽 빈 칸에 "개인사유" 입력
-
-8. "내역추가" 버튼 클릭
- - 내역추가 버튼 클릭 잘안되니까: 아래 구조 참고해서 "내역추가" 버튼 클릭 시도해서 아래 표 새로 생성되는지 확인해야함.
-<button style="height:75px;width:75px;line-height:18px;" onclick="javascript:addAnnualLeave()" data-role="button" class="k-button" role="button" aria-disabled="false" tabindex="0">…</button>
-
-9. "결재상신" 클릭
-
-10. 오른쪽 위에 "상신" 버튼 클릭
-
-10-1. 결재상신 버튼 누르고 난뒤부터는 브라우저 접근 차단되니까, 브라우저 서비스 아예 종료 후=> 새로 브라우저 서비스 다시 실행해서 깔끔하게 새로 시작
-
-11. https://gw.goability.co.kr/gw/userMain.do 접속
-
-12. 상단에 "전자결재" 클릭
-
-13. 좌측에 "결재문서" 클릭
-
-14. 열린 상신함... 미결함.. 전결함.... 등등 중에서  "미결함" 클릭
-
-15. 제목에 "연차 휴가 신청합니다." 우리가 작성한 문서임 : "연차 휴가 신청합니다." 클릭
-
-16. "휴가 (취소) 신청서" 열렸는지 확인
-
-17. 스크롤 내려서 "사용 신청" 오른쪽에 "체크박스" 클릭
-
-18. 상단에 "결재" 클릭
-
-19. "승인" 클릭`;
+      if (hiddenPrompt) {
+        // 사용자 정보에서 그룹웨어 로그인 정보 추출
+        const userEmail = userProfile?.email || '';
+        const groupwareId = userEmail.split('@')[0] || 'defaultuser'; // 이메일 @ 앞 부분을 그룹웨어 아이디로 사용
         
-        finalMessage = `${message}
-
-${ANNUAL_LEAVE_PROMPT}`;
-      } else if (templateType === 'resource-booking') {
-        const RESOURCE_BOOKING_PROMPT = `
-아래는 작업메뉴얼 입니다.
-
-1. https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : ejlee01 패스워드 : sxr932672@ 로그인 완료된 화면에서 사용자 명 확인 후, 상단에 "일정"클릭
-2. 왼쪽에 "자원관리" 클릭 > 바로 아래 드롭다운으로 뜨는 "자원캘린더" 탭 클릭
-3. 사용자가 원하는 날짜에 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 만약 있다면: 하나씩 "클릭"해서 사용자가 예약할 날짜랑 겹치는지, 안겹치는지 확인해야함: 만약 안겹치거나 따로 예약된 내용이 없는 경우 바로 다음단계 진행/ 겹칠 경우 작업 중단 후 사용자에게 "n월 n일 n시는 ooooo예약이 있습니다. 다른 시간대로 예약을 잡아주세요!" 라고 대답하고 끝내기
-4. 이전 단계에서 예약할 날짜, 시간 다른사람과 안겹치는지 확인 끝났다면: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist?goFromDate=2025-08-27&goEndDate=2025-08-27 링크 접속
- - 여기서 goFromDate=2025-08-27&goEndDate=2025-08-27의 경우, goFromDate는 사용자가 요청한 예약시작날짜에 맞게, goEndDate는 사용자가 요청한 예약종료 날짜에 맞게 수정해서 링크 접속하면 됨. 
- Ex) 8월28일로 예약했다면 둘 다 2025-08-28로 해서 링크 접속하기
-5. "예약명" 오른쪽 인풋칸에 : 사용자가 요청한 이름으로 입력
-6. "종일" 오른쪽에 예/아니오 버튼은 : 사용자가 요청한 정보로 **선택**
-7. "예약기간"은 : 사용자가 요청한 날짜와 시간대로 **선택**
- - 예약기간의 달력 날짜 설정 방법: 날짜 오른쪽에 "달력아이콘 클릭" > 원하는 날짜 선택(앞 뒤날짜 둘다 사용자가 요청한 날짜로 맞추면됨) : 선택한 날짜의 월, 일이 제대로 들어갔는지 꼭 확인해야함.
- - 예약기간의 시간 설정 방법: 각 시간 클릭해서 > 스크롤바로 원하는 시간대 찾은 뒤 클릭(앞 뒤 시간 둘다 사용자가 요청한 시간으로 맞추면됨)
-8. "자원명" 선택방법은 인풋칸 오른쪽에 "선택" 버튼 클릭해서 그 안에있는 요소들을 선택한 후 확인버튼 누르면 선택됨.
-8-1. 자원명 선택 가이드는 아래와 같음.
- -  "(주)어빌리티시스템즈|회의실"을 더블클릭하면 : "본사 대회의실, 소회의실, 제안룸 등" 선택할 수있게 드롭다운 내려옴.
- - "(주)어빌리티시스템즈|ZOOM계정"을 더블클릭하면 : "ZOOM계정 사용"을 선택할 수 있게 드롭다운 내려옴.
- ** 사용자가 요청한 자원명인 탭(예: 본사-대회의실)클릭 후 "확인"버튼 클릭하면 됨
-9. 위 단계 다 마무리 지었다면, 스크롤바 내려서 "저장" 버튼 찾은 후 클릭`;
+        // 그룹웨어 비밀번호 가져오기
+        let groupwarePassword = '회원가입시 입력한 비밀번호와 동일한 비밀번호 사용';
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+          const response = await fetch(`${backendUrl}/api/groupware/password`, {
+            headers: {
+              'Authorization': `Bearer ${await (await createClient()).auth.getSession().then(s => s.data.session?.access_token)}`,
+            },
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            groupwarePassword = data.password;
+          }
+        } catch (error) {
+          console.error('Failed to get groupware password:', error);
+        }
         
-        finalMessage = `${message}
-
-${RESOURCE_BOOKING_PROMPT}`;
+        // hiddenPrompt에서 변수를 실제 값으로 치환
+        let processedHiddenPrompt = hiddenPrompt
+          .replace(/{사용자_아이디}/g, groupwareId)
+          .replace(/{사용자_패스워드}/g, groupwarePassword);
+        
+        finalMessage = actualMessage + processedHiddenPrompt;
       }
 
       const formData = new FormData();

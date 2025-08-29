@@ -681,7 +681,18 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                         const messageContent = (() => {
                                             try {
                                                 const parsed = safeJsonParse<ParsedContent>(message.content, { content: message.content });
-                                                return parsed.content || message.content;
+                                                const fullContent = parsed.content || message.content;
+                                                
+                                                // 숨겨진 자동화 가이드 프롬프트 제거
+                                                if (fullContent.includes('## 연차 신청 자동화 가이드')) {
+                                                    return fullContent.split('## 연차 신청 자동화 가이드')[0].trim();
+                                                }
+                                                
+                                                if (fullContent.includes('## 자원예약 자동화 가이드')) {
+                                                    return fullContent.split('## 자원예약 자동화 가이드')[0].trim();
+                                                }
+                                                
+                                                return fullContent;
                                             } catch {
                                                 return message.content;
                                             }

@@ -139,6 +139,42 @@ export async function signUp(prevState: any, formData: FormData) {
 
     sendWelcomeEmail(email, name.trim());
     
+    // Store groupware password (same as signup password)
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const adminApiKey = process.env.KORTIX_ADMIN_API_KEY;
+      
+      console.log('🔑 Storing groupware password for user:', data.user?.id);
+      console.log('🔑 Session exists:', !!data.session);
+      console.log('🔑 Access token exists:', !!data.session?.access_token);
+      
+      if (!adminApiKey) {
+        console.error('KORTIX_ADMIN_API_KEY not found');
+        return;
+      }
+
+      const response = await fetch(`${backendUrl}/api/groupware/store-password-admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Api-Key': adminApiKey,
+        },
+        body: JSON.stringify({
+          user_id: data.user?.id,
+          password: password,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('✅ Groupware password stored successfully');
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to store groupware password:', response.status, errorText);
+      }
+    } catch (error) {
+      console.error('❌ Error storing groupware password:', error);
+    }
+    
     // 이메일 확인이 필요한지 체크
     if (data.user.email_confirmed_at) {
       // 이미 확인된 경우 자동 로그인 시도

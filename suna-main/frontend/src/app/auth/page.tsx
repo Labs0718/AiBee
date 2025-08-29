@@ -369,6 +369,11 @@ function LoginContent() {
                 required
               />
               {isSignUp && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  * 이 비밀번호는 그룹웨어 브라우저 작업 시에도 사용되기 때문에, 그룹웨어 비밀번호와 동일하게 입력 부탁드립니다.
+                </p>
+              )}
+              {isSignUp && (
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
