@@ -461,7 +461,7 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
                         <div className="px-1.5">
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger className="flex items-center rounded-lg gap-2 px-3 py-2 mx-0 my-0.5">
-                                    <span className="font-medium">Playbooks</span>
+                                    <span className="font-medium">플레이북</span>
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuPortal>
                                     <DropdownMenuSubContent className="w-72 rounded-xl max-h-80 overflow-y-auto">
@@ -496,7 +496,7 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
                                             className="text-sm px-3 py-2 mx-0 my-0.5 flex items-center justify-between cursor-pointer rounded-lg"
                                             onClick={() => setIntegrationsOpen(true)}
                                         >
-                                            <span className="font-medium">Integrations</span>
+                                            <span className="font-medium">연동</span>
                                             <div className="flex items-center gap-1.5">
                                                 {googleDriveIcon?.icon_url && slackIcon?.icon_url && notionIcon?.icon_url ? (
                                                     <>
@@ -532,7 +532,7 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
             <Dialog open={integrationsOpen} onOpenChange={setIntegrationsOpen}>
                 <DialogContent className="p-0 max-w-6xl h-[90vh] overflow-hidden">
                     <DialogHeader className="sr-only">
-                        <DialogTitle>Integrations</DialogTitle>
+                        <DialogTitle>연동</DialogTitle>
                     </DialogHeader>
                     <IntegrationsRegistry
                         showAgentSelector={true}

@@ -347,7 +347,7 @@ ${RESOURCE_BOOKING_PROMPT}`;
           <div className="w-full max-w-[650px] flex flex-col items-center justify-center space-y-4 md:space-y-6">
             <div className="flex flex-col items-center text-center w-full">
               <p className="tracking-tight text-2xl md:text-3xl font-normal text-muted-foreground/80">
-                What would you like to do today?
+                오늘 무엇을 도와드릴까요?
               </p>
             </div>
             <div className="w-full">
@@ -355,7 +355,7 @@ ${RESOURCE_BOOKING_PROMPT}`;
                 ref={chatInputRef}
                 onSubmit={handleSubmit}
                 loading={isSubmitting}
-                placeholder="Describe what you need help with..."
+                placeholder="어떤 도움이 필요하신지 설명해 주세요..."
                 value={inputValue}
                 onChange={(value) => {
                   setInputValue(value);

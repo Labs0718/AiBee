@@ -473,21 +473,21 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Brain className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Instructions</span>
+                    <span className="text-xs font-medium">지시사항</span>
                   </button>
                   <button
                     onClick={() => router.push(`/agents/config/${selectedAgentId}?tab=configuration&accordion=knowledge`)}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Database className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Knowledge</span>
+                    <span className="text-xs font-medium">지식</span>
                   </button>
                   <button
                     onClick={() => router.push(`/agents/config/${selectedAgentId}?tab=configuration&accordion=triggers`)}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Zap className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Triggers</span>
+                    <span className="text-xs font-medium">트리거</span>
                   </button>
                   <button
                     onClick={() => router.push(`/agents/config/${selectedAgentId}?tab=configuration&accordion=workflows`)}

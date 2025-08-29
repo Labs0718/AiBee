@@ -262,12 +262,12 @@ export const FileUploadHandler = forwardRef<
                   ) : (
                     <Paperclip className="h-4 w-4" />
                   )}
-                  <span className="text-sm">Attach</span>
+                  <span className="text-sm">첨부</span>
                 </Button>
               </span>
             </TooltipTrigger>
             <TooltipContent side="top">
-              <p>{isLoggedIn ? 'Attach files' : 'Please login to attach files'}</p>
+              <p>{isLoggedIn ? '파일 첨부' : '파일 첨부를 위해 로그인해 주세요'}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
