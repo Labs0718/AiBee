@@ -24,7 +24,12 @@ const fetchDepartments = async (): Promise<Department[]> => {
   return response.json();
 };
 
-const fetchDepartmentNames = async (): Promise<string[]> => {
+interface DepartmentOption {
+  id: string;
+  name: string;
+}
+
+const fetchDepartmentNames = async (): Promise<DepartmentOption[]> => {
   const response = await fetch(`${API_URL}/departments/names`, {
     method: 'GET',
     headers: {

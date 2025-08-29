@@ -72,7 +72,7 @@ export async function signUp(prevState: any, formData: FormData) {
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
   const name = formData.get('name') as string;
-  const department = formData.get('department') as string;
+  const departmentId = formData.get('department') as string;  // Now this is the department ID
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
   // Construct full email address
@@ -86,7 +86,7 @@ export async function signUp(prevState: any, formData: FormData) {
     return { message: 'Please enter your name (at least 2 characters)' };
   }
 
-  if (!department) {
+  if (!departmentId) {
     return { message: 'Please select your department' };
   }
 
@@ -107,7 +107,7 @@ export async function signUp(prevState: any, formData: FormData) {
       emailRedirectTo: `${origin}/auth/callback?returnUrl=${returnUrl}`,
       data: {
         name: name.trim(),
-        dept_name: department,
+        dept_id: departmentId,  // Store department ID in metadata
       },
     },
   });
@@ -122,21 +122,26 @@ export async function signUp(prevState: any, formData: FormData) {
   });
 
   if (signInData && signInData.user) {
-    // Insert user profile data into public.user_profiles table
-    const { data: deptData } = await supabase
-      .from('departments')
-      .select('id')
-      .eq('name', department)
-      .single();
+    // Now departmentId is already the ID from the form, no need to look it up
 
-    if (deptData) {
-      await supabase
-        .from('user_profiles')
-        .insert({
-          id: signInData.user.id,
-          name: name.trim(),
-          department_id: deptData.id,
-        });
+    // Create basejump.accounts entry for the new user
+    const { error: accountError } = await supabase
+      .schema('basejump')
+      .from('accounts')
+      .insert({
+        primary_owner_user_id: signInData.user.id,
+        display_name: name.trim(),  // 실명은 display_name에만 저장
+        department_id: departmentId,
+        role: 'user', // default role
+        personal_account: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+    
+    if (accountError) {
+      console.error('Failed to create basejump account:', accountError);
+    } else {
+      console.log('Basejump account created with department_id:', departmentId);
     }
 
     sendWelcomeEmail(email, name.trim());

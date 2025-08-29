@@ -45,7 +45,7 @@ function LoginContent() {
   const { enabled: customAgentsEnabled } = useFeatureFlag("custom_agents");
   
   const isSignUp = mode === 'signup';
-  const { data: departmentNames = [], isLoading: departmentsLoading } = useDepartmentNames({
+  const { data: departments = [], isLoading: departmentsLoading } = useDepartmentNames({
     enabled: isSignUp
   });
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -352,9 +352,9 @@ function LoginContent() {
                     <option value="">
                       {departmentsLoading ? '부서 로딩중...' : '부서 선택'}
                     </option>
-                    {departmentNames.map((departmentName) => (
-                      <option key={departmentName} value={departmentName}>
-                        {departmentName}
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
                       </option>
                     ))}
                   </select>

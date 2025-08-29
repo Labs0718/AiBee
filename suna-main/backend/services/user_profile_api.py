@@ -63,10 +63,12 @@ async def get_user_profile(
         # Get user account from basejump.accounts
         account_result = await client.schema('basejump').from_('accounts').select('*').eq('primary_owner_user_id', user_id).execute()
         account_data = account_result.data[0] if account_result.data else None
+        print(f"🔍 DEBUG: Account data retrieved for user {user_id}: {account_data}")
         
         # Get user profile data from user_profiles table
         profile_result = await client.from_('user_profiles').select('name, department_id').eq('id', user_id).execute()
         profile_data = profile_result.data[0] if profile_result.data else None
+        print(f"🔍 DEBUG: Profile data retrieved for user {user_id}: {profile_data}")
         
         if not account_data and not profile_data:
             raise HTTPException(
@@ -74,12 +76,15 @@ async def get_user_profile(
                 detail="User account not found"
             )
         
-        # Get user email from auth.users table
+        # Get user email and metadata from auth.users table
         user_email = None
+        auth_user_data = None
         try:
-            auth_user_result = await client.schema('auth').table('users').select('email').eq('id', user_id).execute()
+            auth_user_result = await client.schema('auth').table('users').select('email, raw_user_meta_data').eq('id', user_id).execute()
             if auth_user_result.data:
-                user_email = auth_user_result.data[0].get('email')
+                auth_user_data = auth_user_result.data[0]
+                user_email = auth_user_data.get('email')
+                structlog.get_logger().info("Auth user data retrieved", auth_user_data=auth_user_data, user_id=user_id)
         except Exception as e:
             # Fallback to JWT email if available
             user_email = email
@@ -97,15 +102,29 @@ async def get_user_profile(
                 # Department lookup failed, continue without department name
                 pass
         
-        # Prioritize data from user_profiles table over accounts table
-        user_name = profile_data.get('name') if profile_data else account_data.get('name') if account_data else None
-        display_name = account_data.get('display_name') if account_data else user_name
+        # Get real name from various sources
+        # Priority: 1. user_profiles.name 2. auth.users.raw_user_meta_data.display_name 3. basejump.accounts.display_name 4. email prefix
+        real_name = None
+        if profile_data and profile_data.get('name'):
+            real_name = profile_data.get('name')
+        elif auth_user_data and auth_user_data.get('raw_user_meta_data') and auth_user_data.get('raw_user_meta_data').get('display_name'):
+            real_name = auth_user_data.get('raw_user_meta_data').get('display_name')
+        elif account_data and account_data.get('display_name'):
+            real_name = account_data.get('display_name')
+        elif account_data and account_data.get('name'):
+            real_name = account_data.get('name')
+        
+        # If no real name found, extract from email prefix
+        if not real_name and user_email:
+            real_name = user_email.split('@')[0]
+        
+        display_name = real_name
         
         result_data = {
             'id': user_id,
             'email': user_email or email or 'unknown@example.com',
             'display_name': display_name,
-            'name': user_name,
+            'name': real_name,
             'department_name': department_name,
             'created_at': account_data.get('created_at', datetime.now().isoformat()) if account_data else datetime.now().isoformat(),
             'role': account_data.get('role', 'user') if account_data else 'user'

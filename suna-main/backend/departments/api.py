@@ -48,14 +48,14 @@ async def get_departments():
 
 @router.get("/departments/names")
 async def get_department_names():
-    """Get department names only for dropdowns"""
+    """Get department IDs and names for dropdowns"""
     try:
         db = DBConnection()
         await db.initialize()
         supabase = await db.client
         
         response = await supabase.table("departments")\
-            .select("display_name")\
+            .select("id, name")\
             .eq("is_active", True)\
             .order("display_order")\
             .execute()
@@ -63,7 +63,8 @@ async def get_department_names():
         if not response.data:
             return []
         
-        return [dept["display_name"] for dept in response.data]
+        # Return both id and name for each department
+        return [{"id": dept["id"], "name": dept["name"]} for dept in response.data]
         
     except Exception as e:
         logger.error(f"Error fetching department names: {str(e)}")
