@@ -118,7 +118,7 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
           {!isStreaming && (
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs font-normal">
-                {completedTasks} / {totalTasks} tasks
+                {completedTasks} / {totalTasks} 작업
               </Badge>
               <Badge
                 variant="secondary"
@@ -133,7 +133,7 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
                 ) : (
                   <AlertTriangle className="h-3.5 w-3.5" />
                 )}
-                {isSuccess ? 'Tasks loaded' : 'Failed to load'}
+                {isSuccess ? '작업 로드 완료' : '로드 실패'}
               </Badge>
             </div>
           )}
@@ -147,10 +147,10 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
               <Clock className="h-10 w-10 text-green-500 dark:text-green-400 animate-spin" />
             </div>
             <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
-              Loading Tasks
+              작업 로딩 중
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Preparing your task list...
+              작업 목록을 준비하고 있습니다...
             </p>
           </div>
         ) : hasData ? (
@@ -165,10 +165,10 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
               <ListTodo className="h-10 w-10 text-zinc-400 dark:text-zinc-600" />
             </div>
             <h3 className="text-xl font-semibold mb-2 text-zinc-900 dark:text-zinc-100">
-              No Tasks Yet
+              아직 작업이 없습니다
             </h3>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Your task list will appear here once created
+작업 목록이 생성되면 여기에 표시됩니다
             </p>
           </div>
         )}

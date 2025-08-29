@@ -222,7 +222,7 @@ export function SidebarLeft({
             >
               <Plus className="h-4 w-4 mr-1" />
               <span className="flex items-center justify-between w-full">
-                New Task
+                새 작업
               </span>
             </SidebarMenuButton>
           </Link>
