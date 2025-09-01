@@ -285,11 +285,6 @@ export function DashboardContent() {
       <ModalProviders />
       <div className="flex flex-col h-screen w-full overflow-hidden">
 
-        {customAgentsEnabled && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 md:top-20 w-full max-w-[calc(100vw-2rem)] flex justify-center">
-            <ReleaseBadge text="Custom Agents, Playbooks, and more!" link="/agents?tab=my-agents" />
-          </div>
-        )}
         <div className={cn(
           "flex flex-col h-full px-4 items-center justify-center",
           customAgentsEnabled ? "pt-16 md:pt-20" : "justify-center"
