@@ -139,37 +139,20 @@ export async function signUp(prevState: any, formData: FormData) {
 
     sendWelcomeEmail(email, name.trim());
     
-    // Store groupware password (same as signup password)
+    // Store groupware password using Supabase RPC
     try {
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
       const adminApiKey = process.env.KORTIX_ADMIN_API_KEY;
+      console.log('🔑 Storing groupware password via Supabase RPC for user:', data.user?.id);
       
-      console.log('🔑 Storing groupware password for user:', data.user?.id);
-      console.log('🔑 Session exists:', !!data.session);
-      console.log('🔑 Access token exists:', !!data.session?.access_token);
-      
-      if (!adminApiKey) {
-        console.error('KORTIX_ADMIN_API_KEY not found');
-        return;
-      }
-
-      const response = await fetch(`${backendUrl}/api/groupware/store-password-admin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Api-Key': adminApiKey,
-        },
-        body: JSON.stringify({
-          user_id: data.user?.id,
-          password: password,
-        }),
+      const { error: rpcError } = await supabase.rpc('store_groupware_password_on_signup', {
+        p_user_id: data.user?.id,
+        p_password: password
       });
 
-      if (response.ok) {
-        console.log('✅ Groupware password stored successfully');
+      if (rpcError) {
+        console.error('❌ Failed to store groupware password via RPC:', rpcError);
       } else {
-        const errorText = await response.text();
-        console.error('❌ Failed to store groupware password:', response.status, errorText);
+        console.log('✅ Groupware password stored successfully via RPC');
       }
     } catch (error) {
       console.error('❌ Error storing groupware password:', error);

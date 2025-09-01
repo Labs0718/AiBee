@@ -186,7 +186,7 @@ export function DashboardContent() {
         let groupwarePassword = '회원가입시 입력한 비밀번호와 동일한 비밀번호 사용';
         try {
           const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-          const response = await fetch(`${backendUrl}/api/groupware/password`, {
+          const response = await fetch(`${backendUrl}/groupware/password`, {
             headers: {
               'Authorization': `Bearer ${await (await createClient()).auth.getSession().then(s => s.data.session?.access_token)}`,
             },
