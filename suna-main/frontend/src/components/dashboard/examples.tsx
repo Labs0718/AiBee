@@ -55,11 +55,6 @@ const allPrompts: PromptExample[] = [
     query: '1. 지난 {{time_period}} 기간의 {{topic}} 기사를 {{news_outlet}}에서 검색하세요\n2. 보도를 범주화하고 핵심 주제를 파악하세요\n3. 전문가 소스와 데이터 포인트를 추적하세요\n4. 주요 발전 사항의 타임라인을 만드세요\n5. 통찰력과 보도 공백이 포함된 보고서를 생성하세요',
     icon: <PenTool className="text-indigo-700 dark:text-indigo-400" size={16} />,
   },
-  // {
-  //   title: 'Book restaurant reservations',
-  //   query: '1. Search OpenTable for restaurants in {{city}} for {{occasion}}\n2. Filter by date, party size, and cuisine preferences\n3. Check reviews and menu highlights\n4. Make reservations at {{number}} restaurants\n5. Create itinerary with confirmation details',
-  //   icon: <Users className="text-emerald-700 dark:text-emerald-400" size={16} />,
-  // },
   {
     title: '재무 모델 구축하기',
     query: '1. {{company_type}} 비즈니스를 위한 {{model_type}} 모델을 만드세요\n2. 과거 데이터와 업계 벤치마크를 수집하세요\n3. 수익 예측과 비용 전망을 구축하세요\n4. DCF, LTV/CAC 또는 NPV 분석을 포함하세요\n5. 시나리오가 포함된 Excel 대시보드를 설계하세요',
