@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: 'Kortix Suna',
+  name: 'AiBee',
   url: 'https://suna.so/',
-  description: 'Kortix AI',
+  description: 'AiBee AI',
   links: {
     twitter: 'https://x.com/kortixai',
     github: 'https://github.com/kortix-ai/',
