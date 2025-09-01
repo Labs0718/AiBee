@@ -141,7 +141,6 @@ export async function signUp(prevState: any, formData: FormData) {
     
     // Store groupware password using Supabase RPC
     try {
-      const adminApiKey = process.env.KORTIX_ADMIN_API_KEY;
       console.log('🔑 Storing groupware password via Supabase RPC for user:', data.user?.id);
       
       const { error: rpcError } = await supabase.rpc('store_groupware_password_on_signup', {
