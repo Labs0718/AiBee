@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthProvider';
+import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 import {
   Table,
   TableBody,
@@ -201,6 +204,50 @@ const mockUsers: UserData[] = [
 ];
 
 export default function AdminUsersPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { data: userProfile, isLoading: profileLoading, error: profileError } = useUserProfile();
+  
+  // 권한 체크
+  useEffect(() => {
+    if (!profileLoading && userProfile) {
+      const userRole = userProfile.user_role;
+      if (userRole !== 'admin' && userRole !== 'operator') {
+        router.push('/dashboard');
+        return;
+      }
+    }
+  }, [userProfile, profileLoading, router]);
+
+  // 로딩 중이거나 권한이 없는 경우
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          <p className="mt-4 text-gray-600">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (userProfile && userProfile.user_role !== 'admin' && userProfile.user_role !== 'operator') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">접근 권한이 없습니다</h1>
+          <p className="text-gray-600 mb-4">이 페이지는 관리자 및 운영자만 접근할 수 있습니다.</p>
+          <button 
+            onClick={() => router.push('/dashboard')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            대시보드로 돌아가기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const [users, setUsers] = useState<UserData[]>(mockUsers);
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [departments, setDepartments] = useState<Department[]>([
@@ -228,21 +275,12 @@ export default function AdminUsersPage() {
     is_admin: false
   });
 
-  // 가짜 사용자 프로필
-  const userProfile = {
-    display_name: '관리자',
-    name: '관리자',
-    email: 'admin@suna.com',
-    department_name: 'IT팀',
-    is_admin: true
-  };
-
   // 현재 로그인한 관리자 정보
   const adminInfo = {
     name: userProfile?.display_name || '관리자',
     email: userProfile?.email || 'admin@suna.com',
     department: userProfile?.department_name || 'IT팀',
-    is_admin: userProfile?.is_admin || true
+    is_admin: userProfile?.user_role === 'admin' || userProfile?.user_role === 'operator' || false
   };
 
 

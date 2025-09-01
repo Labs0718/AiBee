@@ -54,6 +54,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useTheme } from 'next-themes';
 import { isLocalMode } from '@/lib/config';
 import { useFeatureFlag } from '@/lib/feature-flags';
+import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 
 export function NavUserWithTeams({
   user,
@@ -71,6 +72,7 @@ export function NavUserWithTeams({
   const [showNewTeamDialog, setShowNewTeamDialog] = React.useState(false);
   const { theme, setTheme } = useTheme();
   const { enabled: customAgentsEnabled, loading: flagLoading } = useFeatureFlag("custom_agents");
+  const { data: userProfile, isLoading: profileLoading } = useUserProfile();
 
   // Prepare personal account and team accounts
   const personalAccount = React.useMemo(
@@ -336,13 +338,15 @@ export function NavUserWithTeams({
                 </DropdownMenuItem>
                 
                 
-                {/* 관리자 메뉴 - 임시로 모든 사용자에게 보이도록 설정 */}
-                <DropdownMenuItem asChild>
-                  <Link href="/settings/admin/users">
-                    <Shield className="h-4 w-4" />
-                    회원관리
-                  </Link>
-                </DropdownMenuItem>
+                {/* 관리자 메뉴 - operator, admin 권한만 접근 가능 */}
+                {!profileLoading && userProfile && (userProfile.user_role === 'admin' || userProfile.user_role === 'operator') && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings/admin/users">
+                      <Shield className="h-4 w-4" />
+                      회원관리
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 
                 {/* 테마 설정 */}
                 <DropdownMenuItem
