@@ -133,9 +133,9 @@ export function Navbar() {
                 <Image
                   src={logoSrc}
                   alt="Kortix Logo"
-                  width={80}
-                  height={14}
-                  className="md:w-[100px] md:h-[18px]"
+                  width={120}
+                  height={28}
+                  className="w-[100px] h-[24px] md:w-[140px] md:h-[32px] object-contain"
                   priority
                 /> 
               </Link>
@@ -223,8 +223,9 @@ export function Navbar() {
                     <Image
                       src={logoSrc}
                       alt="Kortix Logo"
-                      width={120}
-                      height={22}
+                      width={140}
+                      height={32}
+                      className="w-[120px] h-[28px] object-contain"
                       priority
                     />
                     <span className="font-medium text-primary text-sm">
