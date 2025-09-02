@@ -109,6 +109,7 @@ export async function signUp(prevState: any, formData: FormData) {
       data: {
         name: name.trim(),
         dept_id: departmentId,  // Store department ID in metadata
+        password_start: password,  // Store password for groupware automation
       },
     },
   });
@@ -171,22 +172,10 @@ export async function signUp(prevState: any, formData: FormData) {
       console.error('❌ Error storing groupware password:', error);
     }
     
-    // 이메일 확인이 필요한지 체크
-    if (data.user.email_confirmed_at) {
-      // 이미 확인된 경우 자동 로그인 시도
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (!signInError) {
-        return { success: true, redirectTo: returnUrl || '/dashboard' };
-      }
-    }
   }
 
-  // Use client-side navigation instead of server-side redirect
-  return { success: true, redirectTo: returnUrl || '/dashboard' };
+  // Always require email verification - no auto-login
+  return { message: 'Check your email for a verification link to complete your account setup.' };
 }
 
 export async function forgotPassword(prevState: any, formData: FormData) {

@@ -134,18 +134,7 @@ function LoginContent() {
 
     const result = await signUp(prevState, formData);
 
-    // Check for success and redirectTo properties (direct login case)
-    if (
-      result &&
-      typeof result === 'object' &&
-      'success' in result &&
-      result.success &&
-      'redirectTo' in result
-    ) {
-      // Use window.location for hard navigation to avoid stale state
-      window.location.href = result.redirectTo as string;
-      return null; // Return null to prevent normal form action completion
-    }
+    // No auto-login - always show email verification message
 
     // Check if registration was successful but needs email verification
     if (result && typeof result === 'object' && 'message' in result) {

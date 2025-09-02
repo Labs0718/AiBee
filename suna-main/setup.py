@@ -402,18 +402,19 @@ class SetupWizard:
             self.run_step(5, self.collect_llm_api_keys)
             self.run_step(6, self.collect_morph_api_key)
             self.run_step(7, self.collect_search_api_keys)
-            self.run_step(8, self.collect_rapidapi_keys)
-            self.run_step(9, self.collect_kortix_keys)
+            self.run_step(8, self.collect_mailtrap_keys)
+            self.run_step(9, self.collect_rapidapi_keys)
+            self.run_step(10, self.collect_kortix_keys)
             # Supabase Cron does not require keys; ensure DB migrations enable cron functions
-            self.run_step(10, self.collect_webhook_keys)
-            self.run_step(11, self.collect_mcp_keys)
-            self.run_step(12, self.collect_pipedream_keys)
-            self.run_step(13, self.collect_slack_keys)
+            self.run_step(11, self.collect_webhook_keys)
+            self.run_step(12, self.collect_mcp_keys)
+            self.run_step(13, self.collect_pipedream_keys)
+            self.run_step(14, self.collect_slack_keys)
             # Removed duplicate webhook collection step
-            self.run_step(14, self.configure_env_files)
-            self.run_step(15, self.setup_supabase_database)
-            self.run_step(16, self.install_dependencies)
-            self.run_step(17, self.start_suna)
+            self.run_step(15, self.configure_env_files)
+            self.run_step(16, self.setup_supabase_database)
+            self.run_step(17, self.install_dependencies)
+            self.run_step(18, self.start_suna)
 
             self.final_instructions()
 
@@ -900,6 +901,41 @@ class SetupWizard:
 
         print_success("Search and scraping keys saved.")
 
+    def collect_mailtrap_keys(self):
+        """Collects the Mailtrap API key for email sending."""
+        print_step(8, self.total_steps, "Collecting Mailtrap Email API Key")
+
+        # Initialize mailtrap section if not exists
+        if "mailtrap" not in self.env_vars:
+            self.env_vars["mailtrap"] = {"MAILTRAP_API_TOKEN": ""}
+
+        # Check if we already have a value configured
+        existing_key = self.env_vars["mailtrap"]["MAILTRAP_API_TOKEN"]
+        if existing_key:
+            print_info(
+                f"Found existing Mailtrap key: {mask_sensitive_value(existing_key)}"
+            )
+            print_info("Press Enter to keep current value or type a new one.")
+        else:
+            print_info("A Mailtrap API key is required for email verification during signup.")
+            print_info(
+                "Get a key at https://mailtrap.io/ → Dashboard → API Tokens → Create Token"
+            )
+
+        mailtrap_key = self._get_input(
+            "Enter your Mailtrap API token: ",
+            validate_api_key,
+            "The token seems invalid, but continuing. You can edit it later in backend/.env",
+            allow_empty=False,
+            default_value=existing_key,
+        )
+        self.env_vars["mailtrap"] = {
+            "MAILTRAP_API_TOKEN": mailtrap_key,
+            "MAILTRAP_SENDER_EMAIL": "noreply@suna.so",
+            "MAILTRAP_SENDER_NAME": "Suna Team"
+        }
+        print_success("Mailtrap API key saved.")
+
     def collect_rapidapi_keys(self):
         """Collects the optional RapidAPI key."""
         print_step(8, self.total_steps, "Collecting RapidAPI Key (Optional)")
@@ -1150,6 +1186,7 @@ class SetupWizard:
             **self.env_vars["pipedream"],
             **self.env_vars["daytona"],
             **self.env_vars["kortix"],
+            **self.env_vars.get("mailtrap", {}),
             "NEXT_PUBLIC_URL": "http://localhost:3000",
             "GROUPWARE_ENCRYPTION_KEY": groupware_key,
         }
