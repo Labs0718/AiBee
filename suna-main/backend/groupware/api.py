@@ -4,7 +4,7 @@ Groupware API for managing groupware authentication
 
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
-from services.groupware_auth import GroupwareAuthService
+from services.supabase import DBConnection
 from utils.auth_utils import get_current_user_id_from_jwt, verify_admin_api_key
 from utils.logger import structlog
 
@@ -26,13 +26,22 @@ async def store_groupware_password(
     user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """
-    Store encrypted groupware password for the current user
+    Store groupware password in user_info.password_start for the current user
     """
     try:
-        groupware_service = GroupwareAuthService()
-        success = await groupware_service.store_groupware_password(user_id, request.password)
+        db = DBConnection()
+        await db.initialize()
+        client = await db.client
         
-        if success:
+        # Update password_start in user_info table
+        result = await client.table('user_info').upsert({
+            'id': user_id,
+            'password_start': request.password,
+            'updated_at': 'now()'
+        }, on_conflict='id').execute()
+        
+        if result.data:
+            structlog.get_logger().info(f"Successfully stored groupware password for user {user_id}")
             return {"message": "Groupware password stored successfully"}
         else:
             raise HTTPException(status_code=500, detail="Failed to store groupware password")
@@ -47,13 +56,21 @@ async def store_groupware_password_admin(
     admin_verified: bool = Depends(verify_admin_api_key)
 ):
     """
-    Store encrypted groupware password for a specific user (admin only)
+    Store groupware password in user_info.password_start for a specific user (admin only)
     """
     try:
-        groupware_service = GroupwareAuthService()
-        success = await groupware_service.store_groupware_password(request.user_id, request.password)
+        db = DBConnection()
+        await db.initialize()
+        client = await db.client
         
-        if success:
+        # Update password_start in user_info table
+        result = await client.table('user_info').upsert({
+            'id': request.user_id,
+            'password_start': request.password,
+            'updated_at': 'now()'
+        }, on_conflict='id').execute()
+        
+        if result.data:
             structlog.get_logger().info(f"Admin stored groupware password for user {request.user_id}")
             return {"message": "Groupware password stored successfully"}
         else:
@@ -68,13 +85,18 @@ async def get_groupware_password(
     user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """
-    Get decrypted groupware password for the current user
+    Get groupware password from user_info.password_start for the current user
     """
     try:
-        groupware_service = GroupwareAuthService()
-        password = await groupware_service.get_groupware_password(user_id)
+        db = DBConnection()
+        await db.initialize()
+        client = await db.client
         
-        if password:
+        # Get password_start from user_info table
+        result = await client.table('user_info').select('password_start').eq('id', user_id).single().execute()
+        
+        if result.data and result.data.get('password_start'):
+            password = result.data['password_start']
             return PasswordResponse(password=password)
         else:
             raise HTTPException(status_code=404, detail="Groupware password not found")
