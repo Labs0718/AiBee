@@ -144,64 +144,8 @@ const AdvancedStatsCard: React.FC<AdvancedStatsCardProps> = ({ title, value, cha
   </div>
 );
 
-// 가짜 사용자 데이터
-const mockUsers: UserData[] = [
-  {
-    user_id: '1',
-    email: 'kim.chulsoo@suna.com',
-    account_name: 'kim.chulsoo',
-    display_name: '김철수',
-    department_name: '개발팀',
-    is_admin: true,
-    email_confirmed_at: '2024-01-15T10:00:00Z',
-    created_at: '2024-01-15T10:00:00Z',
-    status: 'active'
-  },
-  {
-    user_id: '2',
-    email: 'lee.younghee@suna.com',
-    account_name: 'lee.younghee',
-    display_name: '이영희',
-    department_name: '기획팀',
-    is_admin: false,
-    email_confirmed_at: '2024-02-10T14:30:00Z',
-    created_at: '2024-02-10T14:30:00Z',
-    status: 'active'
-  },
-  {
-    user_id: '3',
-    email: 'park.minho@suna.com',
-    account_name: 'park.minho',
-    display_name: '박민호',
-    department_name: '디자인팀',
-    is_admin: false,
-    email_confirmed_at: null,
-    created_at: '2024-03-05T09:15:00Z',
-    status: 'inactive'
-  },
-  {
-    user_id: '4',
-    email: 'jung.soyoung@suna.com',
-    account_name: 'jung.soyoung',
-    display_name: '정소영',
-    department_name: '마케팅팀',
-    is_admin: false,
-    email_confirmed_at: '2024-01-20T16:45:00Z',
-    created_at: '2024-01-20T16:45:00Z',
-    status: 'active'
-  },
-  {
-    user_id: '5',
-    email: 'choi.daehyun@suna.com',
-    account_name: 'choi.daehyun',
-    display_name: '최대현',
-    department_name: '개발팀',
-    is_admin: true,
-    email_confirmed_at: '2024-02-28T11:20:00Z',
-    created_at: '2024-02-28T11:20:00Z',
-    status: 'active'
-  }
-];
+// 빈 사용자 데이터
+const mockUsers: UserData[] = [];
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -250,12 +194,7 @@ export default function AdminUsersPage() {
 
   const [users, setUsers] = useState<UserData[]>(mockUsers);
   const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([
-    { id: '1', name: '개발팀', display_name: '개발팀' },
-    { id: '2', name: '기획팀', display_name: '기획팀' },
-    { id: '3', name: '디자인팀', display_name: '디자인팀' },
-    { id: '4', name: '마케팅팀', display_name: '마케팅팀' }
-  ]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -547,32 +486,32 @@ export default function AdminUsersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
             <AdvancedStatsCard 
               title="Total Users" 
-              value={totalUsers.toLocaleString()} 
-              change={12}
+              value="0" 
+              change={0}
               icon={Archive}
               color="blue"
               subtitle="전체 등록 사용자"
             />
             <AdvancedStatsCard 
               title="Admin Users" 
-              value={adminUsers.toLocaleString()} 
-              change={5}
+              value="0" 
+              change={0}
               icon={Shield}
               color="emerald"
               subtitle="관리자 권한 사용자"
             />
             <AdvancedStatsCard 
               title="Verified Users" 
-              value={verifiedUsers.toLocaleString()} 
-              change={8}
+              value="0" 
+              change={0}
               icon={UserCheck}
               color="purple"
               subtitle="이메일 인증 완료"
             />
             <AdvancedStatsCard 
               title="Recent Joins" 
-              value={recentUsers.toLocaleString()} 
-              change={25}
+              value="0" 
+              change={0}
               icon={TrendingUp}
               color="orange"
               subtitle="최근 7일 신규 가입"
