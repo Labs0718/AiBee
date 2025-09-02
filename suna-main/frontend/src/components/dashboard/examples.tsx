@@ -170,7 +170,7 @@ const allPrompts: PromptExample[] = [
     query: `- 예약명(예: AI 커뮤니티 Zoom) : 
 - 종일 여부(Ex : 예/아니오) :
 - 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
-- 자원명(EX : 본사 대회의실, 본사 소회의실, 본사 제안룸1(小), ZOOM계정 사용) : `,
+- 자원명(EX : 본사-대회의실, 본사-소회의실, 본사-제안룸1(小), ZOOM계정 사용) : `,
     hiddenPrompt: `
 
 ## 자원예약 자동화 가이드
@@ -186,7 +186,16 @@ const allPrompts: PromptExample[] = [
 7. "예약기간"은 : 사용자가 요청한 날짜와 시간대로 **선택**
  - 예약기간의 달력 날짜 설정 방법: 날짜 오른쪽에 "달력아이콘 클릭" > 원하는 날짜 선택(앞 뒤날짜 둘다 사용자가 요청한 날짜로 맞추면됨) : 선택한 날짜의 월, 일이 제대로 들어갔는지 꼭 확인해야함.
  - 예약기간의 시간 설정 방법: 각 시간 클릭해서 > 스크롤바로 원하는 시간대 찾은 뒤 클릭(앞 뒤 시간 둘다 사용자가 요청한 시간으로 맞추면됨)
-8. "자원명" 선택방법은 인풋칸 오른쪽에 "선택" 버튼 클릭해서 그 안에있는 요소들을 선택한 후 확인버튼 누르면 선택됨.`,
+8. "자원명" 선택 방법:
+   - 자원선택 창에서 반드시 소분류(leaf node)를 클릭해야 함.
+   - 단순히 텍스트 입력이 아니라, 클릭 이벤트를 통해 아래 hidden input 값들이 채워져야 정상 예약됨:
+     - #resSeq (자원 시퀀스)
+     - #resName (자원명)
+     - #resourceNum (자원 번호)
+   - 선택 후 "확인" 버튼 클릭까지 해야 최종 반영됨.
+   - 예시: 
+     document.querySelector('#treeview .k-in:contains("본사-대회의실")').click();
+     document.querySelector('.pop_foot input[value="확인"]').click();`,
     icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
   },
 ];
