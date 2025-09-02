@@ -46,7 +46,7 @@ class GroupwareAuthService:
             result = await client.table('groupware_passwords').upsert({
                 'user_id': user_id,
                 'encrypted_password': encrypted_password
-            }).execute()
+            }, on_conflict='user_id').execute()
             
             if result.data:
                 structlog.get_logger().info(f"Successfully stored groupware password for user {user_id}")
@@ -74,6 +74,10 @@ class GroupwareAuthService:
             await db.initialize()
             client = await db.client
             
+            # Debug: Check what's in the database for this user
+            debug_result = await client.table('groupware_passwords').select('*').eq('user_id', user_id).execute()
+            structlog.get_logger().info(f"🔍 DEBUG: Checking groupware_passwords for user_id {user_id}: {debug_result.data}")
+            
             # Get encrypted password from database
             result = await client.table('groupware_passwords').select('encrypted_password').eq('user_id', user_id).single().execute()
             
@@ -87,5 +91,7 @@ class GroupwareAuthService:
                 return None
                 
         except Exception as e:
+            import traceback
             structlog.get_logger().error(f"Error retrieving groupware password for user {user_id}: {str(e)}")
+            structlog.get_logger().error(f"Full traceback: {traceback.format_exc()}")
             return None

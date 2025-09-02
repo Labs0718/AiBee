@@ -139,19 +139,33 @@ export async function signUp(prevState: any, formData: FormData) {
 
     sendWelcomeEmail(email, name.trim());
     
-    // Store groupware password using Supabase RPC
+    // Store groupware password using backend API (with proper encryption)
     try {
-      console.log('🔑 Storing groupware password via Supabase RPC for user:', data.user?.id);
+      console.log('🔑 Storing groupware password via backend API for user:', data.user?.id);
       
-      const { error: rpcError } = await supabase.rpc('store_groupware_password_on_signup', {
-        p_user_id: data.user?.id,
-        p_password: password
-      });
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+      
+      if (token) {
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+        const response = await fetch(`${backendUrl}/api/groupware/store-password`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            password: password
+          }),
+        });
 
-      if (rpcError) {
-        console.error('❌ Failed to store groupware password via RPC:', rpcError);
+        if (response.ok) {
+          console.log('✅ Groupware password stored successfully via API');
+        } else {
+          console.error('❌ Failed to store groupware password via API:', response.status);
+        }
       } else {
-        console.log('✅ Groupware password stored successfully via RPC');
+        console.error('❌ No auth token available');
       }
     } catch (error) {
       console.error('❌ Error storing groupware password:', error);

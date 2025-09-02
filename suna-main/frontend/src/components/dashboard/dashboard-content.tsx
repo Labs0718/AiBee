@@ -182,22 +182,43 @@ export function DashboardContent() {
         const userEmail = userProfile?.email || '';
         const groupwareId = userEmail.split('@')[0] || 'defaultuser'; // 이메일 @ 앞 부분을 그룹웨어 아이디로 사용
         
-        // 그룹웨어 비밀번호 가져오기
-        let groupwarePassword = '회원가입시 입력한 비밀번호와 동일한 비밀번호 사용';
+        // 그룹웨어 비밀번호 가져오기 (DB 직접 접근)
+        let groupwarePassword = '{사용자_패스워드}';
         try {
-          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-          const response = await fetch(`${backendUrl}/groupware/password`, {
-            headers: {
-              'Authorization': `Bearer ${await (await createClient()).auth.getSession().then(s => s.data.session?.access_token)}`,
-            },
-          });
+          const supabase = createClient();
+          const { data: user } = await supabase.auth.getUser();
           
-          if (response.ok) {
-            const data = await response.json();
-            groupwarePassword = data.password;
+          if (user.user) {
+            // 백엔드 API를 통해 복호화된 비밀번호 가져오기
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+            const { data: session } = await supabase.auth.getSession();
+            const token = session.session?.access_token;
+            
+            if (!token) {
+              console.error('No access token available');
+              groupwarePassword = '{사용자_패스워드}';
+            } else {
+              const response = await fetch(`${backendUrl}/groupware/password`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+              });
+            
+              if (response.ok) {
+                const data = await response.json();
+                groupwarePassword = data.password;
+              } else {
+                console.error('Failed to get groupware password:', response.status, response.statusText);
+                console.error('Response:', await response.text());
+                // API 실패시에도 변수 형태로 표시
+                groupwarePassword = '{사용자_패스워드}';
+              }
+            }
           }
         } catch (error) {
           console.error('Failed to get groupware password:', error);
+          // 오류 발생시에도 변수 형태로 표시
+          groupwarePassword = '{사용자_패스워드}';
         }
         
         // hiddenPrompt에서 변수를 실제 값으로 치환
