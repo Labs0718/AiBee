@@ -85,21 +85,34 @@ async def get_groupware_password(
     user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """
-    Get groupware password from user_info.password_start for the current user
+    Get groupware password from auth.users.raw_user_meta_data for the current user
     """
     try:
         db = DBConnection()
         await db.initialize()
         client = await db.client
         
-        # Get password_start from user_info table
-        result = await client.table('user_info').select('password_start').eq('id', user_id).single().execute()
+        # First try user_info table
+        try:
+            result = await client.table('user_info').select('password_start').eq('id', user_id).single().execute()
+            if result.data and result.data.get('password_start'):
+                password = result.data['password_start']
+                return PasswordResponse(password=password)
+        except:
+            pass
         
-        if result.data and result.data.get('password_start'):
-            password = result.data['password_start']
-            return PasswordResponse(password=password)
-        else:
-            raise HTTPException(status_code=404, detail="Groupware password not found")
+        # Fallback: Get password from auth.users raw_user_meta_data
+        auth_result = await client.rpc('get_user_metadata', {'user_uuid': user_id}).execute()
+        
+        if auth_result.data and len(auth_result.data) > 0:
+            metadata = auth_result.data[0].get('raw_user_meta_data', {})
+            password = metadata.get('password_start')
+            
+            if password:
+                structlog.get_logger().info(f"Retrieved password from metadata for user {user_id}")
+                return PasswordResponse(password=password)
+        
+        raise HTTPException(status_code=404, detail="Groupware password not found")
             
     except HTTPException:
         raise

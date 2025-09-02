@@ -223,20 +223,20 @@ function LoginContent() {
             </div>
 
             <h1 className="text-3xl font-semibold text-foreground mb-4">
-              Check your email
+              이메일을 확인해주세요
             </h1>
 
             <p className="text-muted-foreground mb-2">
-              We've sent a confirmation link to:
+              다음 이메일로 인증 링크를 보내드렸습니다:
             </p>
 
             <p className="text-lg font-medium mb-6">
-              {registrationEmail || 'your email address'}
+              {registrationEmail || '귀하의 이메일 주소'}
             </p>
 
             <div className="bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/50 rounded-lg p-4 mb-8">
               <p className="text-sm text-green-800 dark:text-green-400">
-                Click the link in the email to activate your account. If you don't see the email, check your spam folder.
+                이메일의 링크를 클릭하여 계정을 활성화하세요. 이메일이 보이지 않으면 스팸함을 확인해주세요.
               </p>
             </div>
 
@@ -245,13 +245,13 @@ function LoginContent() {
                 href="/"
                 className="flex h-11 items-center justify-center px-6 text-center rounded-lg border border-border bg-background hover:bg-accent transition-colors"
               >
-                Return to home
+                메인 홈 화면으로 돌아가기
               </Link>
               <button
                 onClick={resetRegistrationSuccess}
                 className="flex h-11 items-center justify-center px-6 text-center rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
-                Back to sign in
+                로그인 하러가기
               </button>
             </div>
           </div>

@@ -103,7 +103,7 @@ function ResetPasswordContent() {
               >
                 <ArrowLeft className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium text-muted-foreground text-xs tracking-wide">
-                  Back to sign in
+                  로그인 하러가기
                 </span>
               </Link>
 
