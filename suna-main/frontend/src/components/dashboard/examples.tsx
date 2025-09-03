@@ -194,6 +194,7 @@ const allPrompts: PromptExample[] = [
   - 예약이 없거나 시간이 겹치지 않으면 다음 단계 진행.
 
 4. "자원예약" 등록 페이지 접속
+  - URL: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist  
   - 참고: goFromDate, goEndDate 파라미터를 붙여도 페이지 로드 시 무조건 오늘 날짜로 열림  
   - 따라서 반드시 페이지 내에서 "예약기간" UI를 직접 설정해야 함 
 
