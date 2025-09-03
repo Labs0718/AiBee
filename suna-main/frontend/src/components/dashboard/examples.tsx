@@ -185,8 +185,16 @@ const allPrompts: PromptExample[] = [
 
 2. 로그인 완료 후 상단 메뉴에서 "일정" 클릭
   - 왼쪽 메뉴에서 "자원관리" 클릭 -> "자원캘린더" 클릭
-  - 구조 예시: <li role="treeitem" ...>자원캘린더</a></li>
-  - 단순 메뉴 클릭 이벤트 발생시키면 자원캘린더 화면 열리고, 사람들이 회의실이나 zoom계정 예약한 목록이 다 보이게 됨.
+  - 반드시 DOM 구조에서 "id="302020000_anchor" 인 "<a>" 태그를 클릭해야 함
+  - 클릭 시 사용 예시 (JS):
+     js
+     const target = document.querySelector('#302020000_anchor');
+     if (target) {
+       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+     }
+  - 반드시 클릭 이벤트를 발생시켜야 화면 이동됨
+  - 화면이 전환되면 회의실, Zoom 계정 등의 예약 현황을 확인할 수 있음
+  
 
 3. 자원캘린더 화면에서 사용자가 요청한 날짜와 시간의 예약 현황 확인
   - 만약 같은 날짜/시간대에 이미 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 있다면:
@@ -195,32 +203,55 @@ const allPrompts: PromptExample[] = [
 
 4. "자원예약" 등록 페이지 접속
   - URL: https://gw.goability.co.kr/schedule/Views/Common/resource/resRegist  
-  - 참고: goFromDate, goEndDate 파라미터를 붙여도 페이지 로드 시 무조건 오늘 날짜로 열림  
-  - 따라서 반드시 페이지 내에서 "예약기간" UI를 직접 설정해야 함 
+  - 따라서 반드시 페이지 내에서 "예약기간"을 직접 설정해야 함 
 
-5. "예약명" 입력
+5. "예약기간" 설정
+  - 날짜 : 달력 아이콘 클릭 -> 요청한 날짜 선택 (이때 시작일/종료일 모두 사용자가 요청한 날짜로 달력에서 직접 선택)
+  - 첫번째 날짜는 예약 시작 날짜고, 두번째 날짜는 에약 종료 날짜임.
+ 	**너가 가끔 실수로 8월인데 7월 날짜로 선택할 때 있음. 사용자가 말한 월, 일자가 맞는지 한번 더 확인한 뒤 적용필수. **
+  - 시간 : 시작/종료 시간을 드롭다운 클릭해서 스크롤에서 정확히 선택(사용자가 요청한 시간으로 맞추면됨)
+  - 선택 후 화면에 올바른 월/일/시/분 값이 반영되었는지 반드시 확인 
+
+6. "예약명" 입력
   - 예약명은 오른쪽 input에 사용자가 요청한 이름을 그대로 작성
 
-6. "종일" 여부 선택
-  - 사용자가 요청한 값(예/아니오)에 따라 버튼 클릭
-
-7. "예약기간" 설정
-  - 날짜 : 달력 아이콘 클릭 -> 요청한 날짜 선택 (이때 시작일/종료일 모두 사용자가 요청한 날짜로 달력에서 직접 선택)
-  - 시간 : 시작/종료 시간을 드롭다운 클릭해서 스크롤에서 정확히 선택(사용자가 요청한 시간으로 맞추면됨)
-  - 선택 후 화면에 올바른 월/일/시/분 값이 반영되었는지 반드시 확인   
+7. "종일" 여부 선택
+  - 사용자가 요청한 값(예/아니오)에 따라 버튼 클릭  
 
 8. "자원명" 선택
    - 자원명 입력칸 오른쪽 끝에 있는 "선택" 버튼 클릭
-   - 그러면 "자원선택" 팝업창이 뜸.
-   - 팝업창에서 반드시 소분류(leaf node)를 클릭해야 함(예: 본사-대회의실, 본사-소회의실, 본사-제안룸1(小), ZOOM계정 사용 등)
+   - "자원선택" 팝업창이 뜨면, 반드시 소분류(leaf node)를 클릭해야 함
+   - (예: 본사-대회의실, 본사-소회의실, 본사-제안룸1(小), ZOOM계정 사용 등)
    - 단순히 텍스트 입력이 아니라, 클릭 이벤트를 통해 아래 hidden input 값들이 채워져야 정상 예약됨:
-     - #resSeq (자원 시퀀스)
+     - #resSeq (자원 시퀀스 ID)
      - #resName (자원명)
      - #resourceNum (자원 번호)
+   - 사용자가 요청한 자원 leaf node를 클릭하면 파란색(선택됨)으로 강조 표시되어야 함.
+   - 이후 반드시 하단 "확인" 버튼 클릭까지 해야 최종 반영됨
    - 사용자가 요청한 자원(leaf node) 선택한 후, 팝업창 하단의 "확인" 버튼 클릭해야 최종 반영됨.
    - 예시: 
-     document.querySelector('#treeview .k-in:contains("본사-대회의실")').click();
-     document.querySelector('.pop_foot input[value="확인"]').click();`,
+    function triggerClick(el) {
+      el.dispatchEvent(new Event("focus", { bubbles: true }));
+      ["mousedown", "mouseup", "click"].forEach(type => {
+        el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
+      });
+    }
+
+    function selectResource(resourceName) {
+      const items = document.querySelectorAll('#treeview .k-in');
+      for (const el of items) {
+        if (el.textContent.trim() === resourceName) {
+          triggerClick(el);
+          break;
+        }
+      }
+      document.querySelector('#resource_search input[type="button"][value="확인"]').click();
+    }
+
+    // 사용 예: "본사-대회의실" 선택
+    selectResource("본사-대회의실");
+    
+  9. "저장" 버튼 클릭`,
     icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
   },
 ];
