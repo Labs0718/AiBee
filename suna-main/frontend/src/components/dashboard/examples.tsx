@@ -185,16 +185,12 @@ const allPrompts: PromptExample[] = [
 
 2. 로그인 완료 후 상단 메뉴에서 "일정" 클릭
   - 왼쪽 메뉴에서 "자원관리" 클릭 -> "자원캘린더" 클릭
-  - 반드시 DOM 구조에서 "id="302020000_anchor" 인 "<a>" 태그를 클릭해야 함
-  - 클릭 시 사용 예시 (JS):
-     js
-     const target = document.querySelector('#302020000_anchor');
-     if (target) {
-       target.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-     }
-  - 반드시 클릭 이벤트를 발생시켜야 화면 이동됨
-  - 화면이 전환되면 회의실, Zoom 계정 등의 예약 현황을 확인할 수 있음
-  
+  - 이때 반드시 클릭 이벤트를 발생시켜야 화면 이동됨
+  - 주의: "자원캘린더"는 jsTree 메뉴 구조에 속해 있으므로 단순 .click()만으로는 선택되지 않을 수 있음.
+  - 방법 1: 마우스 이벤트 시퀀스(mousedown → mouseup → click)를 dispatch
+  - 방법 2: jsTree API 호출 : $('#302000000').jstree("select_node", "#302020000");
+  - 화면이 전환성공 시 → 회의실, Zoom 계정 등 자원 예약 현황이 달력과 함께 표시되어야 함
+
 
 3. 자원캘린더 화면에서 사용자가 요청한 날짜와 시간의 예약 현황 확인
   - 만약 같은 날짜/시간대에 이미 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 있다면:
@@ -226,32 +222,25 @@ const allPrompts: PromptExample[] = [
      - #resSeq (자원 시퀀스 ID)
      - #resName (자원명)
      - #resourceNum (자원 번호)
-   - 사용자가 요청한 자원 leaf node를 클릭하면 파란색(선택됨)으로 강조 표시되어야 함.
-   - 이후 반드시 하단 "확인" 버튼 클릭까지 해야 최종 반영됨
+   - 자원명 선택 시 단순히 .click()만 하지 말고, 반드시 Kendo TreeView의 내부 이벤트(selectResource 등)를 트리거해야 함.
+   
+8. "자원명" 선택
+   - 자원명 입력칸 오른쪽 끝에 있는 "선택" 버튼 클릭
+   - "자원선택" 팝업창이 뜨면, 반드시 소분류(leaf node)를 클릭해야 함
+   - (예: 본사-대회의실, 본사-소회의실, 본사-제안룸1(小), ZOOM계정 사용 등)
+   - 단순히 텍스트 입력이 아니라, 클릭 이벤트를 통해 아래 hidden input 값들이 채워져야 정상 예약됨:
+     - #resSeq (자원 시퀀스 ID)
+     - #resName (자원명)
+     - #resourceNum (자원 번호)
    - 사용자가 요청한 자원(leaf node) 선택한 후, 팝업창 하단의 "확인" 버튼 클릭해야 최종 반영됨.
-   - 예시: 
-    function triggerClick(el) {
-      el.dispatchEvent(new Event("focus", { bubbles: true }));
-      ["mousedown", "mouseup", "click"].forEach(type => {
-        el.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
-      });
-    }
-
-    function selectResource(resourceName) {
-      const items = document.querySelectorAll('#treeview .k-in');
-      for (const el of items) {
-        if (el.textContent.trim() === resourceName) {
-          triggerClick(el);
-          break;
-        }
-      }
-      document.querySelector('#resource_search input[type="button"][value="확인"]').click();
-    }
-
-    // 사용 예: "본사-대회의실" 선택
-    selectResource("본사-대회의실");
-    
+   - 자원명 선택 시 단순히 .click()만 하지 말고, 반드시 Kendo TreeView의 내부 이벤트(selectResource 등)를 트리거해야 함.
+   - 방법: (1) MouseEvent(mousedown → mouseup → click) 순서로 dispatch 하거나,
+          (2) $("#treeview").data("kendoTreeView").select(node) 호출
+   - 선택이 완료되어야만 (#resSeq, #resName, #resourceNum 값이 채워지고 파란색 highlight 표시)
+   - 선택이 정상 반영된 경우에만 팝업창 하단의 "확인" 버튼 클릭
+      
   9. "저장" 버튼 클릭`,
+
     icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
   },
 ];
