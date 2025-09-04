@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
+import { useAdminUsers, AdminUserData } from '@/hooks/react-query/admin/use-admin-users';
 import {
   Table,
   TableBody,
@@ -77,17 +78,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface UserData {
-  user_id: string;
-  email: string;
-  account_name: string;
-  display_name: string;
-  department_name?: string;
-  is_admin: boolean;
-  email_confirmed_at?: string;
-  created_at: string;
-  status: 'active' | 'inactive';
-}
+// Use AdminUserData from the hook instead
+type UserData = AdminUserData;
 
 interface Department {
   id: string;
@@ -144,13 +136,28 @@ const AdvancedStatsCard: React.FC<AdvancedStatsCardProps> = ({ title, value, cha
   </div>
 );
 
-// 빈 사용자 데이터
-const mockUsers: UserData[] = [];
-
 export default function AdminUsersPage() {
   const router = useRouter();
   const { user } = useAuth();
   const { data: userProfile, isLoading: profileLoading, error: profileError } = useUserProfile();
+  
+  // State for filters and pagination
+  const [searchQuery, setSearchQuery] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  
+  // Fetch users with current filters
+  const { data: users, isLoading, error, refetch } = useAdminUsers({
+    page: currentPage,
+    limit: itemsPerPage,
+    search: searchQuery || undefined,
+    department: departmentFilter !== 'all' ? departmentFilter : undefined,
+    role: activeTab !== 'all' && ['admin', 'operator', 'user'].includes(activeTab) ? activeTab : undefined,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+  });
   
   // 권한 체크
   useEffect(() => {
@@ -192,21 +199,12 @@ export default function AdminUsersPage() {
     );
   }
 
-  const [users, setUsers] = useState<UserData[]>(mockUsers);
-  const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [editingUser, setEditingUser] = useState<UserData | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserData | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [editForm, setEditForm] = useState({
     display_name: '',
@@ -223,54 +221,14 @@ export default function AdminUsersPage() {
   };
 
 
-  // 초기 데이터 설정
-  useEffect(() => {
-    setFilteredUsers(users);
-  }, [users]);
-
-  // 필터링 로직
-  useEffect(() => {
-    let filtered = [...users];
-
-    // 탭 필터
-    if (activeTab !== 'all') {
-      if (activeTab === 'admin') {
-        filtered = filtered.filter(user => user.is_admin);
-      } else if (activeTab === 'regular') {
-        filtered = filtered.filter(user => !user.is_admin);
-      } else if (activeTab === 'verified') {
-        filtered = filtered.filter(user => user.email_confirmed_at);
-      } else if (activeTab === 'unverified') {
-        filtered = filtered.filter(user => !user.email_confirmed_at);
-      }
-    }
-
-    // 검색 필터
-    if (searchQuery) {
-      filtered = filtered.filter(user =>
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.account_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.department_name?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    // 부서 필터
-    if (departmentFilter !== 'all') {
-      filtered = filtered.filter(user => user.department_name === departmentFilter);
-    }
-
-    setFilteredUsers(filtered);
-  }, [users, searchQuery, departmentFilter, statusFilter, activeTab]);
+  // Loading state handling
+  const loadingState = profileLoading || isLoading;
 
   // 사용자 상태 변경
   const handleStatusChange = (userId: string, newStatus: 'active' | 'inactive') => {
-    setUsers(prev => prev.map(user => 
-      user.user_id === userId 
-        ? { ...user, status: newStatus }
-        : user
-    ));
+    // TODO: Implement actual status change API call
     toast.success(`사용자 상태가 ${newStatus === 'active' ? '활성' : '비활성'}으로 변경되었습니다.`);
+    refetch(); // Refetch data after change
   };
 
   const handleEditUser = (user: UserData) => {
@@ -286,23 +244,11 @@ export default function AdminUsersPage() {
   const handleUpdateUser = async () => {
     if (!editingUser) return;
 
-    // 시뮬레이션
-    setTimeout(() => {
-      setUsers(prev => prev.map(user => 
-        user.user_id === editingUser.user_id
-          ? {
-              ...user,
-              display_name: editForm.display_name,
-              department_name: departments.find(d => d.id === editForm.department_id)?.name || user.department_name,
-              is_admin: editForm.is_admin
-            }
-          : user
-      ));
-      
-      toast.success('사용자 정보가 성공적으로 업데이트되었습니다.');
-      setIsEditDialogOpen(false);
-      setEditingUser(null);
-    }, 1000);
+    // TODO: Implement actual user update API call
+    toast.success('사용자 정보가 성공적으로 업데이트되었습니다.');
+    setIsEditDialogOpen(false);
+    setEditingUser(null);
+    refetch(); // Refetch data after update
   };
 
   const handleDeleteUser = (user: UserData) => {
@@ -313,13 +259,11 @@ export default function AdminUsersPage() {
   const confirmDeleteUser = async () => {
     if (!userToDelete) return;
 
-    // 시뮬레이션
-    setTimeout(() => {
-      setUsers(prev => prev.filter(user => user.user_id !== userToDelete.user_id));
-      toast.success('사용자가 성공적으로 삭제되었습니다.');
-      setIsDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }, 1000);
+    // TODO: Implement actual user deletion API call
+    toast.success('사용자가 성공적으로 삭제되었습니다.');
+    setIsDeleteDialogOpen(false);
+    setUserToDelete(null);
+    refetch(); // Refetch data after deletion
   };
 
   // 선택된 사용자들 일괄 삭제
@@ -337,46 +281,10 @@ export default function AdminUsersPage() {
       return;
     }
 
-    setIsLoading(true);
-    let successCount = 0;
-    let failCount = 0;
-
-    try {
-      // 시뮬레이션: 선택된 각 사용자를 순차적으로 삭제
-      for (const userId of selectedUsers) {
-        try {
-          // 시뮬레이션 - 90% 성공률
-          const success = Math.random() > 0.1;
-          if (success) {
-            successCount++;
-          } else {
-            failCount++;
-          }
-        } catch (error) {
-          console.error(`사용자 ${userId} 삭제 실패:`, error);
-          failCount++;
-        }
-      }
-
-      // 실제 상태 업데이트
-      setUsers(prev => prev.filter(user => !selectedUsers.includes(user.user_id)));
-
-      // 결과 메시지
-      if (failCount > 0) {
-        toast.error(`${successCount}명 삭제 성공, ${failCount}명 삭제 실패`);
-      } else {
-        toast.success(`${successCount}명의 사용자가 성공적으로 삭제되었습니다.`);
-      }
-
-      // 선택 해제
-      setSelectedUsers([]);
-      
-    } catch (error) {
-      console.error('일괄 삭제 오류:', error);
-      toast.error('사용자 일괄 삭제 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Implement actual bulk deletion API call
+    toast.success(`${selectedUsers.length}명의 사용자가 성공적으로 삭제되었습니다.`);
+    setSelectedUsers([]);
+    refetch(); // Refetch data after bulk deletion
   };
 
   const handleSelectUser = (userId: string, checked: boolean) => {
@@ -388,28 +296,24 @@ export default function AdminUsersPage() {
   };
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedUsers(currentItems.map(user => user.user_id));
+    if (checked && users) {
+      setSelectedUsers(users.map(user => user.user_id));
     } else {
       setSelectedUsers([]);
     }
   };
 
-  // 페이지네이션
-  const currentItems = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-
   // 통계 계산
-  const totalUsers = users.length;
-  const verifiedUsers = users.filter(u => u.email_confirmed_at).length;
-  const adminUsers = users.filter(u => u.is_admin).length;
-  const recentUsers = users.filter(u => {
+  const totalUsers = users?.length || 0;
+  const verifiedUsers = users?.filter(u => u.email_confirmed_at).length || 0;
+  const adminUsers = users?.filter(u => u.is_admin).length || 0;
+  const recentUsers = users?.filter(u => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return new Date(u.created_at) > oneWeekAgo;
-  }).length;
+  }).length || 0;
 
-  if (isLoading) {
+  if (loadingState) {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
@@ -486,7 +390,7 @@ export default function AdminUsersPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
             <AdvancedStatsCard 
               title="Total Users" 
-              value="0" 
+              value={totalUsers.toString()} 
               change={0}
               icon={Archive}
               color="blue"
@@ -494,7 +398,7 @@ export default function AdminUsersPage() {
             />
             <AdvancedStatsCard 
               title="Admin Users" 
-              value="0" 
+              value={adminUsers.toString()} 
               change={0}
               icon={Shield}
               color="emerald"
@@ -502,7 +406,7 @@ export default function AdminUsersPage() {
             />
             <AdvancedStatsCard 
               title="Verified Users" 
-              value="0" 
+              value={verifiedUsers.toString()} 
               change={0}
               icon={UserCheck}
               color="purple"
@@ -510,7 +414,7 @@ export default function AdminUsersPage() {
             />
             <AdvancedStatsCard 
               title="Recent Joins" 
-              value="0" 
+              value={recentUsers.toString()} 
               change={0}
               icon={TrendingUp}
               color="orange"
@@ -613,11 +517,11 @@ export default function AdminUsersPage() {
                   <input 
                     type="checkbox" 
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-                    checked={currentItems.length > 0 && selectedUsers.length === currentItems.length}
+                    checked={(users?.length || 0) > 0 && selectedUsers.length === (users?.length || 0)}
                     onChange={(e) => handleSelectAll(e.target.checked)}
                   />
                   <span className="text-sm font-medium text-gray-700">
-                    총 {filteredUsers.length}명 사용자 • {currentItems.length}명 표시 중
+                    총 {totalUsers}명 사용자 • {users?.length || 0}명 표시 중
                     {selectedUsers.length > 0 && (
                       <span className="ml-2 text-blue-600">
                         • {selectedUsers.length}명 선택됨
@@ -657,7 +561,7 @@ export default function AdminUsersPage() {
                       <input 
                         type="checkbox" 
                         className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
-                        checked={currentItems.length > 0 && selectedUsers.length === currentItems.length}
+                        checked={(users?.length || 0) > 0 && selectedUsers.length === (users?.length || 0)}
                         onChange={(e) => handleSelectAll(e.target.checked)}
                       />
                     </TableHead>
@@ -670,7 +574,7 @@ export default function AdminUsersPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {currentItems.map((user) => (
+                  {users?.map((user) => (
                     <TableRow 
                       key={user.user_id} 
                       className="border-gray-100 hover:bg-gray-50 transition-colors group cursor-pointer"
@@ -788,61 +692,7 @@ export default function AdminUsersPage() {
               </Table>
             </div>
 
-            {/* 고급 페이지네이션 */}
-            {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-gray-500">
-                    <span className="font-medium text-gray-900">{((currentPage - 1) * itemsPerPage) + 1}</span>
-                    -
-                    <span className="font-medium text-gray-900">{Math.min(currentPage * itemsPerPage, filteredUsers.length)}</span>
-                    개 표시 중 • 총 
-                    <span className="font-medium text-gray-900"> {filteredUsers.length}</span>개
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <ArrowLeft className="w-4 h-4" />
-                      이전
-                    </button>
-                    
-                    <div className="flex gap-1">
-                      {[...Array(Math.min(5, totalPages))].map((_, index) => {
-                        const pageNum = currentPage <= 3 ? index + 1 : currentPage - 2 + index;
-                        if (pageNum > totalPages) return null;
-                        
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`w-10 h-10 rounded-lg font-medium text-sm transition-colors ${
-                              currentPage === pageNum
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    
-                    <button 
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      다음
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* TODO: Implement pagination when needed */}
           </div>
         </div>
       </div>
