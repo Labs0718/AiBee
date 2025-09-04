@@ -282,11 +282,6 @@ export default function PDFManagement() {
   const [filterTag, setFilterTag] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [totalCount, setTotalCount] = useState(0);
-  const [totalStats, setTotalStats] = useState({
-    all: 15,
-    common: 8,
-    dept: 7
-  });
 
   // 패널 관련 state
   const [panelMode, setPanelMode] = useState<'upload' | 'edit' | 'hidden'>('hidden');
@@ -356,15 +351,6 @@ export default function PDFManagement() {
         const pdfs = await fetchPDFDocuments();
         setPdfList(pdfs);
         setTotalCount(pdfs.length);
-        
-        // 통계 계산
-        const commonDocs = pdfs.filter(pdf => pdf.docType === '전사공통').length;
-        const deptDocs = pdfs.filter(pdf => pdf.docType === '부서문서').length;
-        setTotalStats({
-          all: pdfs.length,
-          common: commonDocs,
-          dept: deptDocs
-        });
         setIsLoading(false);
       }
     };
@@ -404,12 +390,26 @@ export default function PDFManagement() {
 
   // 문서 수정 처리
   const handleDocumentEdit = (doc: NormalizedPDF) => {
+    // 전사공통 문서는 관리자만 수정 가능
+    if (doc.docType === '전사공통' && !userInfo?.is_admin) {
+      alert('전사공통 문서는 관리자만 수정할 수 있습니다.');
+      return;
+    }
     setEditingDocument(doc);
     setPanelMode('edit');
   };
 
   // 문서 삭제 처리
   const handleDocumentDelete = async (documentId: string) => {
+    // 삭제할 문서 정보 찾기
+    const docToDelete = pdfList.find(pdf => pdf.id === documentId);
+    
+    // 전사공통 문서는 관리자만 삭제 가능
+    if (docToDelete?.docType === '전사공통' && !userInfo?.is_admin) {
+      alert('전사공통 문서는 관리자만 삭제할 수 있습니다.');
+      return;
+    }
+    
     if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) {
       return;
     }
@@ -537,6 +537,7 @@ export default function PDFManagement() {
   const filteredPdfs = pdfList.filter(pdf => {
     const matchesSearch = searchTerm === '' || 
       pdf.fileName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pdf.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pdf.dept.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pdf.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     
@@ -550,6 +551,13 @@ export default function PDFManagement() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredPdfs.slice(startIndex, startIndex + itemsPerPage);
   const totalPages = Math.ceil(filteredPdfs.length / itemsPerPage);
+
+  // 실시간 카운트 계산
+  const realTimeStats = {
+    all: pdfList.length,
+    common: pdfList.filter(pdf => pdf.docType === '전사공통').length,
+    dept: pdfList.filter(pdf => pdf.docType === '부서문서').length
+  };
 
   const getAccessLevelBadge = (level: string) => {
     switch(level) {
@@ -638,7 +646,7 @@ export default function PDFManagement() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
             <AdvancedStatsCard 
               title="Total Documents" 
-              value={totalStats.all.toLocaleString()} 
+              value={realTimeStats.all.toLocaleString()} 
               change={12}
               icon={Archive}
               color="blue"
@@ -646,7 +654,7 @@ export default function PDFManagement() {
             />
             <AdvancedStatsCard 
               title="Enterprise Shared" 
-              value={totalStats.common.toLocaleString()} 
+              value={realTimeStats.common.toLocaleString()} 
               change={8}
               icon={Globe}
               color="emerald"
@@ -654,7 +662,7 @@ export default function PDFManagement() {
             />
             <AdvancedStatsCard 
               title="Department Files" 
-              value={totalStats.dept.toLocaleString()} 
+              value={realTimeStats.dept.toLocaleString()} 
               change={-3}
               icon={Building}
               color="purple"
@@ -675,9 +683,9 @@ export default function PDFManagement() {
             <div className="border-b border-gray-200 px-6">
               <nav className="flex space-x-8">
                 {[
-                  { id: 'all', label: '전체 문서', count: totalStats.all },
-                  { id: 'common', label: '전사 공통', count: totalStats.common },
-                  { id: 'dept', label: '부서 문서', count: totalStats.dept }
+                  { id: 'all', label: '전체 문서', count: realTimeStats.all },
+                  { id: 'common', label: '전사 공통', count: realTimeStats.common },
+                  { id: 'dept', label: '부서 문서', count: realTimeStats.dept }
                 ].map(tab => (
                   <button
                     key={tab.id}
