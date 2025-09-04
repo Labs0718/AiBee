@@ -912,7 +912,7 @@ export default function PDFManagement() {
                     </th>
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">문서 정보</th>
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">분류</th>
-                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">소유 부서</th>
+                    <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">업로드한 부서</th>
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">업로드 일시</th>
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">크기</th>
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">접근 권한</th>
@@ -1122,13 +1122,13 @@ export default function PDFManagement() {
                   file_name: fileName,
                   original_file_name: uploadingFile.name,
                   document_type: metadata.type,
-                  department: userInfo?.department_name || '미지정',
+                  department: metadata.department || '미지정',
                   access_level: metadata.accessLevel,
                   version: metadata.version || 'v1.0',
                   category: metadata.category,
                   tags: metadata.tags,
                   description: metadata.description,
-                  creator_name: userInfo.name,
+                  creator_name: metadata.creator || userInfo.name,
                   file_size: uploadingFile.size,
                   download_count: 0,
                   view_count: 0,

@@ -290,15 +290,21 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
           <label className="block text-sm font-medium text-gray-700">
             업로드 부서 *
           </label>
-          <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600">
-            <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
               <Building className="w-4 h-4 text-gray-400" />
-              <span>{userDepartment}</span>
             </div>
+            <input
+              type="text"
+              value={formData.department}
+              onChange={(e) => handleInputChange('department', e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="업로드 부서를 입력하세요"
+            />
           </div>
           <p className="text-xs text-gray-500">
             {formData.type === 'dept' 
-              ? `부서 문서는 ${userDepartment}에서만 접근 가능합니다`
+              ? '부서 문서는 해당 부서에서만 접근 가능합니다'
               : '전사 공통 문서는 모든 부서에서 접근 가능합니다'
             }
           </p>
@@ -432,14 +438,20 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
           <label className="block text-sm font-medium text-gray-700">
             작성자 *
           </label>
-          <div className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600">
-            <div className="flex items-center gap-2">
+          <div className="relative">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
               <User className="w-4 h-4 text-gray-400" />
-              <span>{userName}</span>
             </div>
+            <input
+              type="text"
+              value={formData.creator}
+              onChange={(e) => handleInputChange('creator', e.target.value)}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              placeholder="작성자 이름을 입력하세요"
+            />
           </div>
           <p className="text-xs text-gray-500">
-            작성자는 현재 로그인한 사용자로 자동 설정됩니다
+            실제 문서를 작성한 사람의 이름을 입력하세요
           </p>
         </div>
 
