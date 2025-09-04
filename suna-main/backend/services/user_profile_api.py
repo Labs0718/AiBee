@@ -320,11 +320,7 @@ async def get_all_users(
                 elif role == 'user' and user_role not in ['user', None]:
                     continue
             
-            if status:
-                if status == 'verified' and not email_confirmed_at:
-                    continue
-                elif status == 'unverified' and email_confirmed_at:
-                    continue
+            # Remove status filtering since we removed authentication status
             
             user_profile = UserProfileResponse(
                 id=str(user_id),
@@ -360,4 +356,86 @@ async def get_all_users(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to fetch users list"
+        )
+
+@router.put("/users/{target_user_id}/role")
+async def update_user_role(
+    target_user_id: str,
+    role_data: dict,
+    current_user_id: str = Depends(get_current_user_id_from_jwt),
+    db: DBConnection = Depends(get_db)
+):
+    """
+    Update user's role (admin/operator only)
+    """
+    try:
+        client = await db.client
+        
+        # Check if current user has admin/operator privileges
+        current_user_result = await client.schema('basejump').from_('accounts').select('user_role').eq('primary_owner_user_id', current_user_id).execute()
+        current_user_role = current_user_result.data[0]['user_role'] if current_user_result.data else 'user'
+        
+        if current_user_role not in ['admin', 'operator']:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied. Admin or operator privileges required."
+            )
+        
+        # Validate new role
+        new_role = role_data.get('user_role')
+        if new_role not in ['admin', 'operator', 'user']:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid role. Must be 'admin', 'operator', or 'user'"
+            )
+        
+        # Get target user's account
+        target_account_result = await client.schema('basejump').from_('accounts').select('id, user_role').eq('primary_owner_user_id', target_user_id).execute()
+        
+        if not target_account_result.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User account not found"
+            )
+        
+        target_account = target_account_result.data[0]
+        
+        # Update user role
+        update_data = {
+            'user_role': new_role,
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        result = await client.schema('basejump').from_('accounts').update(update_data).eq('id', target_account['id']).execute()
+        
+        if not result.data:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update user role"
+            )
+        
+        structlog.get_logger().info(
+            "User role updated", 
+            target_user_id=target_user_id, 
+            old_role=target_account.get('user_role', 'user'),
+            new_role=new_role,
+            updated_by=current_user_id
+        )
+        
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "message": "User role updated successfully",
+                "user_id": target_user_id,
+                "new_role": new_role
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        structlog.get_logger().error("Failed to update user role", error=str(e), target_user_id=target_user_id, current_user_id=current_user_id)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update user role"
         )

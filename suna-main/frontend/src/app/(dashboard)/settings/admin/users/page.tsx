@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 import { useAdminUsers, AdminUserData } from '@/hooks/react-query/admin/use-admin-users';
+import { useUpdateUserRole } from '@/hooks/react-query/admin/use-update-user-role';
 import {
   Table,
   TableBody,
@@ -39,6 +40,7 @@ import {
   Edit, 
   Trash2, 
   Shield, 
+  Crown,
   Mail, 
   Building,
   Calendar,
@@ -209,7 +211,7 @@ export default function AdminUsersPage() {
   const [editForm, setEditForm] = useState({
     display_name: '',
     department_id: '',
-    is_admin: false
+    user_role: 'user' as 'admin' | 'operator' | 'user'
   });
 
   // 현재 로그인한 관리자 정보
@@ -220,6 +222,9 @@ export default function AdminUsersPage() {
     is_admin: userProfile?.user_role === 'admin' || userProfile?.user_role === 'operator' || false
   };
 
+
+  // Mutation hooks
+  const updateUserRoleMutation = useUpdateUserRole();
 
   // Loading state handling
   const loadingState = profileLoading || isLoading;
@@ -236,7 +241,7 @@ export default function AdminUsersPage() {
     setEditForm({
       display_name: user.display_name || '',
       department_id: departments.find(d => d.name === user.department_name)?.id || '',
-      is_admin: user.is_admin
+      user_role: user.user_role
     });
     setIsEditDialogOpen(true);
   };
@@ -244,11 +249,25 @@ export default function AdminUsersPage() {
   const handleUpdateUser = async () => {
     if (!editingUser) return;
 
-    // TODO: Implement actual user update API call
-    toast.success('사용자 정보가 성공적으로 업데이트되었습니다.');
-    setIsEditDialogOpen(false);
-    setEditingUser(null);
-    refetch(); // Refetch data after update
+    try {
+      // Update user role if changed
+      if (editForm.user_role !== editingUser.user_role) {
+        await updateUserRoleMutation.mutateAsync({
+          userId: editingUser.user_id,
+          roleData: { user_role: editForm.user_role }
+        });
+      }
+
+      // TODO: Implement other user update API calls (display_name, department)
+      
+      toast.success('사용자 정보가 성공적으로 업데이트되었습니다.');
+      setIsEditDialogOpen(false);
+      setEditingUser(null);
+      refetch(); // Refetch data after update
+    } catch (error) {
+      // Error is handled by the mutation hook
+      console.error('Failed to update user:', error);
+    }
   };
 
   const handleDeleteUser = (user: UserData) => {
@@ -405,12 +424,12 @@ export default function AdminUsersPage() {
               subtitle="관리자 권한 사용자"
             />
             <AdvancedStatsCard 
-              title="Verified Users" 
-              value={verifiedUsers.toString()} 
+              title="Regular Users" 
+              value={(totalUsers - adminUsers).toString()} 
               change={0}
               icon={UserCheck}
               color="purple"
-              subtitle="이메일 인증 완료"
+              subtitle="일반 사용자"
             />
             <AdvancedStatsCard 
               title="Recent Joins" 
@@ -428,10 +447,9 @@ export default function AdminUsersPage() {
               <nav className="flex space-x-8">
                 {[
                   { id: 'all', label: '전체 사용자', count: totalUsers },
-                  { id: 'admin', label: '관리자', count: adminUsers },
-                  { id: 'regular', label: '일반 사용자', count: totalUsers - adminUsers },
-                  { id: 'verified', label: '인증 완료', count: verifiedUsers },
-                  { id: 'unverified', label: '미인증', count: totalUsers - verifiedUsers }
+                  { id: 'admin', label: '관리자', count: users?.filter(u => u.user_role === 'admin').length || 0 },
+                  { id: 'operator', label: '운영자', count: users?.filter(u => u.user_role === 'operator').length || 0 },
+                  { id: 'user', label: '일반 사용자', count: users?.filter(u => u.user_role === 'user').length || 0 }
                 ].map(tab => (
                   <button
                     key={tab.id}
@@ -568,7 +586,6 @@ export default function AdminUsersPage() {
                     <TableHead className="text-gray-700 font-semibold">사용자 정보</TableHead>
                     <TableHead className="text-gray-700 font-semibold">부서</TableHead>
                     <TableHead className="text-gray-700 font-semibold">권한</TableHead>
-                    <TableHead className="text-gray-700 font-semibold">인증 상태</TableHead>
                     <TableHead className="text-gray-700 font-semibold">가입일</TableHead>
                     <TableHead className="text-center text-gray-700 font-semibold">작업</TableHead>
                   </TableRow>
@@ -614,14 +631,21 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          user.is_admin 
-                            ? 'bg-emerald-100 text-emerald-800' 
+                          user.user_role === 'admin'
+                            ? 'bg-red-100 text-red-800'
+                            : user.user_role === 'operator'
+                            ? 'bg-emerald-100 text-emerald-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {user.is_admin ? (
+                          {user.user_role === 'admin' ? (
+                            <>
+                              <Crown className="w-3 h-3 mr-1" />
+                              관리자
+                            </>
+                          ) : user.user_role === 'operator' ? (
                             <>
                               <Shield className="w-3 h-3 mr-1" />
-                              관리자
+                              운영자
                             </>
                           ) : (
                             <>
@@ -630,21 +654,6 @@ export default function AdminUsersPage() {
                             </>
                           )}
                         </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={user.email_confirmed_at ? 'default' : 'destructive'} 
-                          className={user.email_confirmed_at 
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100 border-emerald-200' 
-                            : 'bg-red-100 text-red-800 hover:bg-red-100 border-red-200'
-                          }
-                        >
-                          {user.email_confirmed_at ? (
-                            <><Check className="h-3 w-3 mr-1" />인증완료</>
-                          ) : (
-                            <><X className="h-3 w-3 mr-1" />미인증</>
-                          )}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="text-sm text-gray-900">{new Date(user.created_at).toLocaleDateString('ko-KR')}</div>
@@ -751,19 +760,22 @@ export default function AdminUsersPage() {
             </div>
             
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="is_admin" className="text-right">
-                관리자
+              <Label htmlFor="user_role" className="text-right">
+                권한
               </Label>
-              <div className="col-span-3 flex items-center space-x-2">
-                <Switch
-                  id="is_admin"
-                  checked={editForm.is_admin}
-                  onCheckedChange={(checked) => setEditForm(prev => ({ ...prev, is_admin: checked }))}
-                />
-                <Label htmlFor="is_admin" className="text-sm">
-                  {editForm.is_admin ? '관리자' : '일반사용자'}
-                </Label>
-              </div>
+              <Select 
+                value={editForm.user_role} 
+                onValueChange={(value: 'admin' | 'operator' | 'user') => setEditForm(prev => ({ ...prev, user_role: value }))}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="권한을 선택하세요" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="admin">관리자 (Admin)</SelectItem>
+                  <SelectItem value="operator">운영자 (Operator)</SelectItem>
+                  <SelectItem value="user">일반사용자 (User)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
