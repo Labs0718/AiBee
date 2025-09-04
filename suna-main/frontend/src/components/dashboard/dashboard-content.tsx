@@ -339,7 +339,7 @@ export function DashboardContent() {
                 setInputValue(query);
                 setHiddenPrompt(hidden);
                 setHasUserModified(true); // Examples에서 선택했음을 표시
-              }} count={isMobile ? 3 : 4} />
+              }} count={isMobile ? 3 : 5} />
             </div>
           </div>
           

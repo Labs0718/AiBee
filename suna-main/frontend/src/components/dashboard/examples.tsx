@@ -247,17 +247,39 @@ const allPrompts: PromptExample[] = [
 
     icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
   },
+  
+  {
+    title: '내 연차 찾기',
+    query: '내 연차 찾기',
+    hiddenPrompt: `
+## 내 연차 찾기 자동화 가이드
+
+1. 그룹웨어 접속 : https://gw.goability.co.kr/gw/uat/uia/egovLoginUsr.do 해당 사이트에 들어가서 로그인 아이디 : {사용자_아이디} 패스워드 : {사용자_패스워드}
+**보안 중요:** 사용자에게 응답할 때는 아이디는 노출돼도 되지만, 패스워드는 안됨: 패스워드는 절대 노출하지 말고 "********"로 마스킹하여 표시할 것.
+
+2. 상단 메뉴에서 "인사/근태" 클릭
+
+3. "근태관리" >  개인근태현황.... 개인연차현황... 근태신청현황 있을 건데, 그중에서 "개인연차현황" 클릭해야함.
+
+3. 개인연차현황 페이지가 열리면 가로 스크롤바를 오른쪽으로 움직여서 테이블의 제목행 중: "잔여연차" 컬럼과, "사용" 컬럼 찾기 
+
+4. 현재 날짜에서 연도를 확인하고, 테이블에서 해당 연도의 행을 찾아 각 컬럼에 해당하는 숫자값을 확인(보통 첫 번째 행이지만 확실히 하기 위해 현재년도 텍스트 확인)
+
+5. 각 컬럼의 확실한 숫자를 사용자에게 다음 형식으로 알려주기 : "{사용자명}님의 연차 사용 조회 결과: {현재연도}년 현재 ["사용"컬럼 숫자]개 사용하였으며, 잔여연차는 ["잔여연차" 숫자]개입니다."
+`,
+    icon: <Heart className="text-red-600 dark:text-red-400" size={16} />,
+  },
 ];
 
 // Function to get random prompts
-const getRandomPrompts = (count: number = 3): PromptExample[] => {
+const getRandomPrompts = (count: number = 5): PromptExample[] => {
   const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, count);
 };
 
 export const Examples = ({
   onSelectPrompt,
-  count = 3,
+  count = 5,
 }: {
   onSelectPrompt?: (query: string, hiddenPrompt?: string) => void;
   count?: number;
