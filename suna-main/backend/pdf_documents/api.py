@@ -14,6 +14,28 @@ router = APIRouter()
 UPLOAD_DIR = Path("uploads/pdfs")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+def sanitize_filename(filename: str) -> str:
+    """파일명을 안전하게 정리"""
+    # 파일명과 확장자 분리
+    name, ext = os.path.splitext(filename)
+    
+    # 특수문자를 언더스코어로 변경 (한글, 영문, 숫자, 일부 특수문자만 유지)
+    name = re.sub(r'[^\w가-힣.\-\s]', '_', name)
+    
+    # 연속된 공백을 언더스코어로 변경
+    name = re.sub(r'\s+', '_', name)
+    
+    # 연속된 언더스코어 정리
+    name = re.sub(r'_+', '_', name)
+    
+    # 앞뒤 언더스코어 제거
+    name = name.strip('_')
+    
+    # 타임스탬프 추가 (중복 방지)
+    timestamp = str(int(time.time() * 1000))
+    
+    return f"{timestamp}_{name}{ext}"
+
 @router.post("/upload")
 async def upload_pdf(
     request: Request,
@@ -38,8 +60,9 @@ async def upload_pdf(
         if file_size > MAX_SIZE:
             raise HTTPException(status_code=400, detail="파일 크기는 50MB 이하여야 합니다.")
         
-        # 파일 저장 경로
-        file_path = UPLOAD_DIR / fileName
+        # 파일명 안전하게 정리
+        safe_filename = sanitize_filename(fileName)
+        file_path = UPLOAD_DIR / safe_filename
         
         # 파일 저장
         async with aiofiles.open(file_path, 'wb') as f:
@@ -50,7 +73,8 @@ async def upload_pdf(
             "success": True,
             "message": "파일이 성공적으로 업로드되었습니다.",
             "file_path": str(file_path),
-            "file_size": file_size
+            "file_size": file_size,
+            "safe_filename": safe_filename
         }
         
     except Exception as e:
