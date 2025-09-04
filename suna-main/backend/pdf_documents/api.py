@@ -60,8 +60,9 @@ async def upload_pdf(
         if file_size > MAX_SIZE:
             raise HTTPException(status_code=400, detail="파일 크기는 50MB 이하여야 합니다.")
         
-        # 파일명 안전하게 정리
-        safe_filename = sanitize_filename(fileName)
+        # 파일명 그대로 사용 (타임스탬프만 추가)
+        timestamp = str(int(time.time() * 1000))
+        safe_filename = f"{timestamp}_{fileName}"
         file_path = UPLOAD_DIR / safe_filename
         
         # 파일 저장

@@ -231,16 +231,28 @@ export default function PDFManagement() {
       const { data: { session } } = await client.auth.getSession();
       if (session?.user) {
         // RPC 함수를 사용하여 사용자 정보 조회
+        console.log('RPC 호출:', { user_uuid: session.user.id });
         const { data: userInfo, error } = await client
           .rpc('get_user_info', { user_uuid: session.user.id });
+
+        console.log('RPC 응답:', { userInfo, error });
 
         if (userInfo && !error) {
           setUserInfo({
             id: session.user.id,
-            name: userInfo.name || '사용자',
+            name: userInfo.name || session.user.email?.split('@')[0] || '사용자',
             email: session.user.email || '',
-            department_name: userInfo.department_name || '미분류',
+            department_name: userInfo.department_name || '미지정',
             is_admin: userInfo.is_admin || false
+          });
+        } else {
+          console.log('RPC 실패, 기본값 사용');
+          setUserInfo({
+            id: session.user.id,
+            name: session.user.email?.split('@')[0] || '사용자',
+            email: session.user.email || '',
+            department_name: '미지정',
+            is_admin: false
           });
         }
       }
@@ -1081,8 +1093,10 @@ export default function PDFManagement() {
           
           try {
             if (panelMode === 'upload' && uploadingFile) {
-              // 실제 파일 업로드
-              const fileName = `${Date.now()}_${uploadingFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+              // 실제 파일 업로드 - 원본 파일명 그대로 사용
+              const fileName = uploadingFile.name;
+              console.log('업로드 파일명:', fileName);
+              console.log('현재 사용자 정보:', userInfo);
               
               // 먼저 데이터베이스에 메타데이터 저장
               const { data: newDocument, error: dbError } = await supabase
