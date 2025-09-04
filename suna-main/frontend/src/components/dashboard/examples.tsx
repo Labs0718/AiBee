@@ -200,11 +200,12 @@ const allPrompts: PromptExample[] = [
   - 왼쪽 메뉴에서 "자원관리" 클릭 
   - 반드시 "자원관리" 바로 아래쪽의 "자원캘린더" 항목도 클릭해야 함
   - "자원캘린더" 클릭 시 단순히 .click()만 하면 화면이 전환되지 않음
-  - 다음 우선순위로 동작을 시도해야 합니다:  
-  1) jstree의 select_node("#302020000") 호출  
-  2) 실패 시 #302020000_anchor에 대해 mousedown → mouseup → click 이벤트 순서대로 dispatch  
-  3) 그래도 실패하면, 자원캘린더 클릭 시 발생하는 Ajax 요청(GetCalResourceListFull 등)을 직접 호출하여 내부 상태를 맞춘 후 /gw/resource/calendarMain.do 로 이동  
-  성공 기준: 화면에 회의실/Zoom 자원 달력이 표시될 때까지 반복
+  - 반드시 아래 우선순위대로 실행해야 한다:
+  1) $("#sub_nav_jstree").jstree("select_node", "#302020000") 호출
+  2) 실패 시 #302020000_anchor에 대해 mousedown → mouseup → click 이벤트 순서대로 dispatch
+  3) 그래도 실패하면, 자원캘린더 클릭 시 발생하는 Ajax 요청(GetCalResourceListFull)을 직접 호출하여 내부 상태를 맞춘 뒤 /gw/resource/calendarMain.do 로 이동
+  - 성공 기준: Network 탭에서 GetCalResourceListFull 요청이 발생하고, 화면에 회의실/Zoom 자원 달력이 표시될 때까지 반복 시도한다.
+  - 단순 URL 이동(/gw/resource/calendarMain.do)만으로는 "권한 없음" 오류가 발생하므로 반드시 Ajax 요청을 선행해야 한다.
 
 3. 자원캘린더 화면에서 사용자가 요청한 날짜와 시간의 예약 현황 확인
   - 만약 같은 날짜/시간대에 이미 예약된 내용(예: 12일에 "13:30[정가람]본사-대회의실 등)이 있다면:
