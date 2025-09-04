@@ -120,7 +120,7 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
         version: editingDocument.version || 'v1.0',
         category: editingDocument.category || '',
         description: editingDocument.description || '',
-        creator: userName
+        creator: editingDocument.creator || userName
       });
     }
   }, [mode, uploadingFile, editingDocument, userDepartment, userName]);
@@ -158,6 +158,9 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
   const handleSave = async () => {
     setIsLoading(true);
     try {
+      console.log('전달할 formData:', formData);
+      console.log('작성자:', formData.creator);
+      console.log('부서:', formData.department);
       await new Promise(resolve => setTimeout(resolve, 1500)); // 시뮬레이션
       onSave(formData);
     } finally {

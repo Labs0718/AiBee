@@ -1104,6 +1104,8 @@ export default function PDFManagement() {
         initialDocumentType={uploadDocumentType}
         onSave={async (metadata) => {
           console.log('저장된 메타데이터:', metadata);
+          console.log('작성자 정보:', metadata.creator);
+          console.log('부서 정보:', metadata.department);
           if (!supabase || !userInfo) return;
           
           setIsLoading(true);
@@ -1196,11 +1198,13 @@ export default function PDFManagement() {
                 .from('pdf_documents')
                 .update({
                   document_type: metadata.type,
+                  department: metadata.department,
                   access_level: metadata.accessLevel,
                   version: metadata.version,
                   category: metadata.category,
                   tags: metadata.tags,
                   description: metadata.description,
+                  creator_name: metadata.creator,
                   updated_at: new Date().toISOString()
                 })
                 .eq('id', editingDocument.id);
@@ -1217,6 +1221,8 @@ export default function PDFManagement() {
                   ? {
                       ...pdf,
                       docType: metadata.type === 'common' ? '전사공통' : '부서문서',
+                      dept: metadata.department || pdf.dept,
+                      creator: metadata.creator || pdf.creator,
                       version: metadata.version || pdf.version,
                       accessLevel: metadata.accessLevel || pdf.accessLevel,
                       tags: metadata.tags || pdf.tags,
