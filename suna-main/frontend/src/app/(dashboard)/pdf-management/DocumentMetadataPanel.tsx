@@ -27,6 +27,7 @@ interface PDFFile {
   original: string;
   docType: string;
   dept: string;
+  creator: string;
   createdAt: string;
   size: string;
   status: string;
