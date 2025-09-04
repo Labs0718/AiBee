@@ -62,7 +62,7 @@ interface UserInfo {
   id: string;
   name: string;
   email: string;
-  department: string;
+  department_name: string;
   is_admin: boolean;
 }
 
@@ -93,6 +93,7 @@ interface NormalizedPDF {
   original: string;
   docType: string;
   dept: string;
+  creator: string;
   createdAt: string;
   size: string;
   status: string;
@@ -238,7 +239,7 @@ export default function PDFManagement() {
             id: session.user.id,
             name: userInfo.name || '사용자',
             email: session.user.email || '',
-            department: userInfo.department_name || '미분류',
+            department_name: userInfo.department_name || '미분류',
             is_admin: userInfo.is_admin || false
           });
         }
@@ -308,6 +309,7 @@ export default function PDFManagement() {
         original: doc.original_file_name,
         docType: doc.document_type === 'common' ? '전사공통' : '부서문서',
         dept: doc.department,
+        creator: doc.creator_name || '알 수 없음',
         createdAt: formatDate(doc.created_at),
         size: formatStorageSize(doc.file_size),
         status: '활성',
@@ -601,7 +603,7 @@ export default function PDFManagement() {
                   </div>
                   <div className="text-sm">
                     <p className="font-semibold text-gray-900">{userInfo.name || '사용자'}</p>
-                    <p className="text-gray-500 text-xs">{userInfo.department || '미분류'}</p>
+                    <p className="text-gray-500 text-xs">{userInfo.department_name || '미분류'}</p>
                     <p className="text-gray-400 text-xs">{userInfo.email || ''} • {userInfo.is_admin ? '관리자' : '사용자'}</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -1067,7 +1069,7 @@ export default function PDFManagement() {
         mode={panelMode}
         uploadingFile={uploadingFile}
         editingDocument={editingDocument}
-        userDepartment={userInfo.department}
+        userDepartment={userInfo.department_name}
         userName={userInfo.name}
         isAdmin={userInfo.is_admin}
         departments={departments}
@@ -1089,7 +1091,7 @@ export default function PDFManagement() {
                   file_name: fileName,
                   original_file_name: uploadingFile.name,
                   document_type: metadata.type,
-                  department: metadata.department,
+                  department: userInfo?.department_name || '미지정',
                   access_level: metadata.accessLevel,
                   version: metadata.version || 'v1.0',
                   category: metadata.category,
@@ -1141,6 +1143,7 @@ export default function PDFManagement() {
                 original: newDocument.original_file_name,
                 docType: newDocument.document_type === 'common' ? '전사공통' : '부서문서',
                 dept: newDocument.department,
+                creator: newDocument.creator_name || userInfo?.name || '알 수 없음',
                 createdAt: formatDate(newDocument.created_at),
                 size: formatStorageSize(newDocument.file_size),
                 status: '활성',
