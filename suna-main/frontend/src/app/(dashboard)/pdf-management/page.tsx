@@ -56,6 +56,7 @@ import {
 import DocumentMetadataPanel from './DocumentMetadataPanel';
 import { createClient } from '@/lib/supabase/client';
 import { apiClient } from '@/lib/api-client';
+import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 
 // 타입 정의
 interface UserInfo {
@@ -218,48 +219,52 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({ icon: Icon, label
 );
 
 export default function PDFManagement() {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const { data: userProfile, isLoading: profileLoading } = useUserProfile();
   const [supabase, setSupabase] = useState<any>(null);
+
+  // 부서 목록 조회
+  const fetchDepartments = async () => {
+    if (!supabase) return;
+    
+    try {
+      const { data: depts, error } = await supabase
+        .from('departments')
+        .select('name, display_name')
+        .order('name');
+      
+      if (error) {
+        console.error('부서 목록 조회 오류:', error);
+        return;
+      }
+      
+      const departmentNames = depts?.map(dept => dept.display_name || dept.name) || [];
+      setDepartments(departmentNames);
+    } catch (error) {
+      console.error('부서 목록 조회 중 오류:', error);
+    }
+  };
 
   // Supabase 클라이언트 초기화
   useEffect(() => {
     const client = createClient();
     setSupabase(client);
-    
-    // 사용자 정보 가져오기
-    const fetchUserInfo = async () => {
-      const { data: { session } } = await client.auth.getSession();
-      if (session?.user) {
-        // RPC 함수를 사용하여 사용자 정보 조회
-        console.log('RPC 호출:', { user_uuid: session.user.id });
-        const { data: userInfo, error } = await client
-          .rpc('get_user_info', { user_uuid: session.user.id });
-
-        console.log('RPC 응답:', { userInfo, error });
-
-        if (userInfo && !error) {
-          setUserInfo({
-            id: session.user.id,
-            name: userInfo.name || session.user.email?.split('@')[0] || '사용자',
-            email: session.user.email || '',
-            department_name: userInfo.department_name || '미지정',
-            is_admin: userInfo.is_admin || false
-          });
-        } else {
-          console.log('RPC 실패, 기본값 사용');
-          setUserInfo({
-            id: session.user.id,
-            name: session.user.email?.split('@')[0] || '사용자',
-            email: session.user.email || '',
-            department_name: '미지정',
-            is_admin: false
-          });
-        }
-      }
-    };
-
-    fetchUserInfo();
   }, []);
+  
+  // 부서 목록 로드
+  useEffect(() => {
+    if (supabase) {
+      fetchDepartments();
+    }
+  }, [supabase]);
+
+  // userProfile을 UserInfo 형태로 변환
+  const userInfo: UserInfo | null = userProfile ? {
+    id: userProfile.id,
+    name: userProfile.name || userProfile.display_name || userProfile.email?.split('@')[0] || '사용자',
+    email: userProfile.email || '',
+    department_name: userProfile.department_name || '미지정',
+    is_admin: userProfile.user_role === 'admin' || userProfile.user_role === 'operator'
+  } : null;
 
   const [pdfList, setPdfList] = useState<NormalizedPDF[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -287,22 +292,24 @@ export default function PDFManagement() {
   const [panelMode, setPanelMode] = useState<'upload' | 'edit' | 'hidden'>('hidden');
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [editingDocument, setEditingDocument] = useState<any>(null);
+  const [uploadDocumentType, setUploadDocumentType] = useState<'common' | 'dept'>('dept');
   
-  // 부서 목록 상태
-  const departments = ['개발팀', '기획팀', '디자인팀', '영업팀', '마케팅팀'];
+  // 부서 목록 상태 (실제 데이터베이스에서 가져오기)
+  const [departments, setDepartments] = useState<string[]>([]);
 
   const deptFileInputRef = useRef<HTMLInputElement>(null);
   const commonFileInputRef = useRef<HTMLInputElement>(null);
 
   // PDF 문서 데이터를 실제 데이터베이스에서 조회
   const fetchPDFDocuments = async (): Promise<NormalizedPDF[]> => {
-    if (!supabase || !userInfo) return [];
+    if (!supabase || !userProfile) return [];
 
     try {
+      // 본인 문서 + 전사공통 문서 + 같은 부서 문서 조회
       let query = supabase
         .from('pdf_documents')
         .select('*')
-        .eq('account_id', userInfo.id)
+        .or(`account_id.eq.${userProfile.id},document_type.eq.common,and(document_type.eq.dept,department.eq.${userProfile.department_name || ''})`)
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
@@ -344,7 +351,7 @@ export default function PDFManagement() {
   // 데이터 초기화
   useEffect(() => {
     const loadPDFs = async () => {
-      if (supabase && userInfo) {
+      if (supabase && userProfile) {
         setIsLoading(true);
         const pdfs = await fetchPDFDocuments();
         setPdfList(pdfs);
@@ -363,7 +370,7 @@ export default function PDFManagement() {
     };
 
     loadPDFs();
-  }, [supabase, userInfo]);
+  }, [supabase, userProfile]);
 
   // 파일 업로드 처리
   const handleFileUpload = async (files: FileList | null, type: 'common' | 'dept') => {
@@ -391,6 +398,7 @@ export default function PDFManagement() {
     }
 
     setUploadingFile(file);
+    setUploadDocumentType(type);
     setPanelMode('upload');
   };
 
@@ -563,7 +571,7 @@ export default function PDFManagement() {
   };
 
   // 사용자 정보 로딩 중일 때 로딩 화면 표시
-  if (!userInfo) {
+  if (profileLoading || !userInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -778,7 +786,7 @@ export default function PDFManagement() {
                 <>
                   <QuickActionButton
                     icon={Globe}
-                    label="전사 공통 문서 - 정책, 가이드라인 등"
+                    label="전사 공통 문서 업로드 - 정책, 가이드라인 등"
                     onClick={() => commonFileInputRef.current?.click()}
                     variant="success"
                   />
@@ -1084,7 +1092,8 @@ export default function PDFManagement() {
         userDepartment={userInfo.department_name}
         userName={userInfo.name}
         isAdmin={userInfo.is_admin}
-        departments={departments}
+        departments={userInfo.department_name ? [userInfo.department_name] : []}
+        initialDocumentType={uploadDocumentType}
         onSave={async (metadata) => {
           console.log('저장된 메타데이터:', metadata);
           if (!supabase || !userInfo) return;
@@ -1227,6 +1236,7 @@ export default function PDFManagement() {
           setPanelMode('hidden');
           setUploadingFile(null);
           setEditingDocument(null);
+          setUploadDocumentType('dept');
         }}
       />
     </div>

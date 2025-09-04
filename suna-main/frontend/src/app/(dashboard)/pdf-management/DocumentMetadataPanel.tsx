@@ -48,6 +48,7 @@ interface DocumentMetadataPanelProps {
   onSave: (metadata: any) => void;
   onCancel: () => void;
   departments: string[];
+  initialDocumentType?: 'common' | 'dept';
 }
 
 const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
@@ -59,11 +60,12 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
   isAdmin,
   onSave,
   onCancel,
-  departments
+  departments,
+  initialDocumentType = 'dept'
 }) => {
   const [formData, setFormData] = useState({
     fileName: '',
-    type: 'dept' as 'common' | 'dept',
+    type: initialDocumentType,
     department: userDepartment,
     accessLevel: 'public' as 'public' | 'restricted' | 'confidential',
     tags: [] as string[],
@@ -90,12 +92,20 @@ const DocumentMetadataPanel: React.FC<DocumentMetadataPanelProps> = ({
     '교육/훈련', '프로젝트', '보고서', '정책/가이드라인', '기타'
   ];
 
+  // initialDocumentType이 변경될 때 formData 업데이트
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      type: initialDocumentType
+    }));
+  }, [initialDocumentType]);
+
   useEffect(() => {
     if (mode === 'upload' && uploadingFile) {
       setFormData(prev => ({
         ...prev,
         fileName: uploadingFile.name.replace('.pdf', ''),
-        type: 'dept',
+        type: initialDocumentType,
         department: userDepartment,
         accessLevel: 'restricted',
         creator: userName
