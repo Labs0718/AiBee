@@ -1111,22 +1111,28 @@ export default function PDFManagement() {
                 return;
               }
 
-              // 로컬 파일 시스템에 파일 저장 (백엔드 API 호출)
+              // 백엔드 API로 파일 업로드
               const formData = new FormData();
               formData.append('file', uploadingFile);
               formData.append('fileName', fileName);
               formData.append('documentId', newDocument.id);
               
-              const uploadResponse = await apiClient.upload('/api/pdf-documents/upload', formData, {
-                showErrors: false
+              const { data: { session } } = await supabase.auth.getSession();
+              const token = session?.access_token;
+              
+              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/pdf-documents/upload`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: formData
               });
-
-              if (!uploadResponse.success) {
-                // 업로드 실패 시 DB 레코드 삭제
-                await supabase.from('pdf_documents').delete().eq('id', newDocument.id);
-                setError('파일 업로드에 실패했습니다.');
-                return;
+              
+              if (!response.ok) {
+                throw new Error('파일 업로드 실패');
               }
+              
+              const result = await response.json();
 
               // UI에 새 문서 추가
               const newDoc: NormalizedPDF = {

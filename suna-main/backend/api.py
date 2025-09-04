@@ -200,8 +200,10 @@ api_router.include_router(composio_api.router)
 
 from departments import api as departments_api
 from groupware import api as groupware_api
+from pdf_documents import api as pdf_documents_api
 api_router.include_router(departments_api.router)
 api_router.include_router(groupware_api.router, prefix="/groupware")
+api_router.include_router(pdf_documents_api.router, prefix="/pdf-documents")
 
 @api_router.get("/health")
 async def health_check():
