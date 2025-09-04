@@ -54,6 +54,8 @@ import {
   HardDrive
 } from 'lucide-react';
 import DocumentMetadataPanel from './DocumentMetadataPanel';
+import { createClient } from '@/lib/supabase/client';
+import { apiClient } from '@/lib/api-client';
 
 // 타입 정의
 interface UserInfo {
@@ -62,6 +64,27 @@ interface UserInfo {
   email: string;
   department: string;
   is_admin: boolean;
+}
+
+interface PDFDocument {
+  id: string;
+  file_name: string;
+  original_file_name: string;
+  document_type: 'common' | 'dept';
+  department: string;
+  access_level: 'public' | 'restricted' | 'confidential';
+  version: string;
+  category?: string;
+  tags: any[];
+  description?: string;
+  creator_name?: string;
+  file_size: number;
+  download_count: number;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  account_id: string;
+  embedding_status: 'pending' | 'processing' | 'completed' | 'failed';
 }
 
 interface NormalizedPDF {
@@ -194,14 +217,36 @@ const QuickActionButton: React.FC<QuickActionButtonProps> = ({ icon: Icon, label
 );
 
 export default function PDFManagement() {
-  // 가짜 사용자 데이터
-  const userInfo: UserInfo = {
-    id: '1',
-    name: '김철수',
-    email: 'kimcs@company.com',
-    department: '개발팀',
-    is_admin: true
-  };
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [supabase, setSupabase] = useState<any>(null);
+
+  // Supabase 클라이언트 초기화
+  useEffect(() => {
+    const client = createClient();
+    setSupabase(client);
+    
+    // 사용자 정보 가져오기
+    const fetchUserInfo = async () => {
+      const { data: { session } } = await client.auth.getSession();
+      if (session?.user) {
+        // RPC 함수를 사용하여 사용자 정보 조회
+        const { data: userInfo, error } = await client
+          .rpc('get_user_info', { user_uuid: session.user.id });
+
+        if (userInfo && !error) {
+          setUserInfo({
+            id: session.user.id,
+            name: userInfo.name || '사용자',
+            email: session.user.email || '',
+            department: userInfo.department_name || '미분류',
+            is_admin: userInfo.is_admin || false
+          });
+        }
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
 
   const [pdfList, setPdfList] = useState<NormalizedPDF[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -236,104 +281,80 @@ export default function PDFManagement() {
   const deptFileInputRef = useRef<HTMLInputElement>(null);
   const commonFileInputRef = useRef<HTMLInputElement>(null);
 
-  // 가짜 PDF 데이터
-  const generateMockPDFs = (): NormalizedPDF[] => {
-    const mockData = [
-      {
-        id: '1',
-        fileName: '2024년 1분기 개발 보고서',
-        original: '2024_Q1_development_report.pdf',
-        docType: '부서문서',
-        dept: '개발팀',
-        createdAt: '2024-03-15 14:30',
-        size: '2.4 MB',
-        status: '활성',
-        version: 'v1.0',
-        accessLevel: 'restricted',
-        tags: ['보고서', '개발', '분기'],
-        downloadCount: 45,
-        category: '보고서',
-        description: '1분기 개발팀 성과 및 목표 달성 현황'
-      },
-      {
-        id: '2',
-        fileName: '전사 보안 가이드라인',
-        original: 'company_security_guideline.pdf',
-        docType: '전사공통',
-        dept: 'IT팀',
-        createdAt: '2024-02-20 10:15',
-        size: '5.2 MB',
-        status: '활성',
-        version: 'v2.1',
-        accessLevel: 'public',
-        tags: ['보안', '가이드라인', '정책'],
-        downloadCount: 128,
-        category: '정책/가이드라인',
-        description: '전사 보안 정책 및 준수 사항'
-      },
-      {
-        id: '3',
-        fileName: 'API 설계 문서',
-        original: 'api_design_document.pdf',
-        docType: '부서문서',
-        dept: '개발팀',
-        createdAt: '2024-03-22 16:45',
-        size: '1.8 MB',
-        status: '활성',
-        version: 'v1.2',
-        accessLevel: 'restricted',
-        tags: ['API', '설계', '개발'],
-        downloadCount: 23,
-        category: '기술문서',
-        description: 'RESTful API 설계 및 구현 가이드'
-      },
-      {
-        id: '4',
-        fileName: '마케팅 전략 기획서',
-        original: 'marketing_strategy_2024.pdf',
-        docType: '부서문서',
-        dept: '마케팅팀',
-        createdAt: '2024-01-10 09:20',
-        size: '3.7 MB',
-        status: '활성',
-        version: 'v1.0',
-        accessLevel: 'restricted',
-        tags: ['마케팅', '전략', '기획'],
-        downloadCount: 67,
-        category: '기획서',
-        description: '2024년 마케팅 전략 및 실행 계획'
-      },
-      {
-        id: '5',
-        fileName: '신입사원 교육 매뉴얼',
-        original: 'new_employee_manual.pdf',
-        docType: '전사공통',
-        dept: '인사팀',
-        createdAt: '2024-01-05 11:30',
-        size: '4.1 MB',
-        status: '활성',
-        version: 'v3.0',
-        accessLevel: 'public',
-        tags: ['교육', '매뉴얼', '신입사원'],
-        downloadCount: 89,
-        category: '교육/훈련',
-        description: '신입사원 온보딩 및 교육 과정'
-      }
-    ];
+  // PDF 문서 데이터를 실제 데이터베이스에서 조회
+  const fetchPDFDocuments = async (): Promise<NormalizedPDF[]> => {
+    if (!supabase || !userInfo) return [];
 
-    return mockData;
+    try {
+      let query = supabase
+        .from('pdf_documents')
+        .select('*')
+        .eq('account_id', userInfo.id)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      const { data: documents, error } = await query;
+
+      if (error) {
+        console.error('PDF 문서 조회 오류:', error);
+        setError('문서를 불러오는데 실패했습니다.');
+        return [];
+      }
+
+      // 데이터베이스 형식을 UI 형식으로 변환
+      const normalizedPDFs: NormalizedPDF[] = (documents || []).map((doc: PDFDocument) => ({
+        id: doc.id,
+        fileName: doc.file_name,
+        original: doc.original_file_name,
+        docType: doc.document_type === 'common' ? '전사공통' : '부서문서',
+        dept: doc.department,
+        createdAt: formatDate(doc.created_at),
+        size: formatStorageSize(doc.file_size),
+        status: '활성',
+        version: doc.version,
+        accessLevel: doc.access_level,
+        tags: Array.isArray(doc.tags) ? doc.tags : [],
+        downloadCount: doc.download_count,
+        category: doc.category,
+        description: doc.description
+      }));
+
+      return normalizedPDFs;
+    } catch (error) {
+      console.error('PDF 문서 조회 중 오류:', error);
+      setError('문서를 불러오는데 실패했습니다.');
+      return [];
+    }
   };
 
   // 데이터 초기화
   useEffect(() => {
-    const mockPdfs = generateMockPDFs();
-    setPdfList(mockPdfs);
-    setTotalCount(mockPdfs.length);
-  }, []);
+    const loadPDFs = async () => {
+      if (supabase && userInfo) {
+        setIsLoading(true);
+        const pdfs = await fetchPDFDocuments();
+        setPdfList(pdfs);
+        setTotalCount(pdfs.length);
+        
+        // 통계 계산
+        const commonDocs = pdfs.filter(pdf => pdf.docType === '전사공통').length;
+        const deptDocs = pdfs.filter(pdf => pdf.docType === '부서문서').length;
+        setTotalStats({
+          all: pdfs.length,
+          common: commonDocs,
+          dept: deptDocs
+        });
+        setIsLoading(false);
+      }
+    };
+
+    loadPDFs();
+  }, [supabase, userInfo]);
 
   // 파일 업로드 처리
   const handleFileUpload = async (files: FileList | null, type: 'common' | 'dept') => {
     if (!files || files.length === 0) return;
+    if (!userInfo) return;
 
     if (type === 'common' && !userInfo.is_admin) {
       alert('전사공통 문서는 관리자만 업로드할 수 있습니다.');
@@ -341,6 +362,20 @@ export default function PDFManagement() {
     }
 
     const file = files[0];
+    
+    // PDF 파일인지 확인
+    if (!file.type.includes('pdf')) {
+      alert('PDF 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    // 파일 크기 제한 (50MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+    if (file.size > maxSize) {
+      alert('파일 크기는 50MB를 초과할 수 없습니다.');
+      return;
+    }
+
     setUploadingFile(file);
     setPanelMode('upload');
   };
@@ -356,23 +391,52 @@ export default function PDFManagement() {
     if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) {
       return;
     }
+    if (!supabase) return;
 
     setIsLoading(true);
     
-    // 시뮬레이션
-    setTimeout(() => {
-      setPdfList(prev => prev.filter(pdf => pdf.id !== documentId));
-      setUploadStatus('success');
+    try {
+      // 소프트 삭제 (deleted_at 필드 설정)
+      const { error } = await supabase
+        .from('pdf_documents')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', documentId);
+
+      if (error) {
+        console.error('문서 삭제 오류:', error);
+        setError('문서 삭제에 실패했습니다.');
+      } else {
+        // 로컬 상태에서 제거
+        setPdfList(prev => prev.filter(pdf => pdf.id !== documentId));
+        setUploadStatus('success');
+        setTimeout(() => setUploadStatus(null), 3000);
+      }
+    } catch (error) {
+      console.error('문서 삭제 중 오류:', error);
+      setError('문서 삭제 중 오류가 발생했습니다.');
+    } finally {
       setIsLoading(false);
-      setTimeout(() => setUploadStatus(null), 3000);
-    }, 1000);
+    }
   };
 
   // 문서 다운로드 처리
   const handleDocumentDownload = async (documentId: string, fileName: string) => {
-    // 시뮬레이션
-    console.log(`다운로드: ${fileName}`);
-    alert(`${fileName} 다운로드 시작`);
+    try {
+      // API 엔드포인트로 직접 이동하여 파일 다운로드
+      const downloadUrl = `/api/pdf-documents/${documentId}/download`;
+      
+      // 새 창에서 다운로드 URL 열기
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('다운로드 오류:', error);
+      alert('파일 다운로드 중 오류가 발생했습니다.');
+    }
   };
 
   // 선택된 문서들 다운로드 처리
@@ -392,6 +456,7 @@ export default function PDFManagement() {
       alert('삭제할 문서를 선택해주세요.');
       return;
     }
+    if (!supabase) return;
 
     const confirmMessage = selectedFiles.length === 1 
       ? '선택한 문서를 삭제하시겠습니까?' 
@@ -403,14 +468,29 @@ export default function PDFManagement() {
 
     setIsLoading(true);
     
-    // 시뮬레이션
-    setTimeout(() => {
-      setPdfList(prev => prev.filter(pdf => !selectedFiles.includes(pdf.id)));
-      setSelectedFiles([]);
-      setUploadStatus('success');
+    try {
+      // 선택된 문서들 소프트 삭제
+      const { error } = await supabase
+        .from('pdf_documents')
+        .update({ deleted_at: new Date().toISOString() })
+        .in('id', selectedFiles);
+
+      if (error) {
+        console.error('문서 삭제 오류:', error);
+        setError('문서 삭제에 실패했습니다.');
+      } else {
+        // UI에서 제거
+        setPdfList(prev => prev.filter(pdf => !selectedFiles.includes(pdf.id)));
+        setSelectedFiles([]);
+        setUploadStatus('success');
+        setTimeout(() => setUploadStatus(null), 3000);
+      }
+    } catch (error) {
+      console.error('문서 삭제 중 오류:', error);
+      setError('문서 삭제 중 오류가 발생했습니다.');
+    } finally {
       setIsLoading(false);
-      setTimeout(() => setUploadStatus(null), 3000);
-    }, 1000);
+    }
   };
 
   // 체크박스 선택 처리
@@ -468,6 +548,18 @@ export default function PDFManagement() {
     }
   };
 
+  // 사용자 정보 로딩 중일 때 로딩 화면 표시
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <RotateCcw className="w-8 h-8 text-blue-600 animate-spin" />
+          <p className="text-gray-600">PDF 관리 시스템을 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <div className="flex-1">
@@ -505,12 +597,12 @@ export default function PDFManagement() {
                 
                 <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2.5 border border-gray-200 hover:shadow-sm transition-all">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">{userInfo.name.charAt(0)}</span>
+                    <span className="text-white text-sm font-bold">{userInfo.name?.charAt(0) || 'U'}</span>
                   </div>
                   <div className="text-sm">
-                    <p className="font-semibold text-gray-900">{userInfo.name}</p>
-                    <p className="text-gray-500 text-xs">{userInfo.department}</p>
-                    <p className="text-gray-400 text-xs">{userInfo.email} • {userInfo.is_admin ? '관리자' : '사용자'}</p>
+                    <p className="font-semibold text-gray-900">{userInfo.name || '사용자'}</p>
+                    <p className="text-gray-500 text-xs">{userInfo.department || '미분류'}</p>
+                    <p className="text-gray-400 text-xs">{userInfo.email || ''} • {userInfo.is_admin ? '관리자' : '사용자'}</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                 </div>
@@ -981,48 +1073,127 @@ export default function PDFManagement() {
         departments={departments}
         onSave={async (metadata) => {
           console.log('저장된 메타데이터:', metadata);
+          if (!supabase || !userInfo) return;
           
-          if (panelMode === 'upload' && uploadingFile) {
-            // 새 문서 추가 시뮬레이션
-            const newDoc: NormalizedPDF = {
-              id: String(Date.now()),
-              fileName: uploadingFile.name.replace('.pdf', ''),
-              original: uploadingFile.name,
-              docType: metadata.type === 'common' ? '전사공통' : '부서문서',
-              dept: metadata.department,
-              createdAt: formatDate(new Date()),
-              size: formatStorageSize(uploadingFile.size),
-              status: '활성',
-              version: metadata.version || 'v1.0',
-              accessLevel: metadata.accessLevel || 'public',
-              tags: metadata.tags || [],
-              downloadCount: 0,
-              category: metadata.category,
-              description: metadata.description
-            };
+          setIsLoading(true);
+          
+          try {
+            if (panelMode === 'upload' && uploadingFile) {
+              // 실제 파일 업로드
+              const fileName = `${Date.now()}_${uploadingFile.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+              
+              // 먼저 데이터베이스에 메타데이터 저장
+              const { data: newDocument, error: dbError } = await supabase
+                .from('pdf_documents')
+                .insert({
+                  file_name: fileName,
+                  original_file_name: uploadingFile.name,
+                  document_type: metadata.type,
+                  department: metadata.department,
+                  access_level: metadata.accessLevel,
+                  version: metadata.version || 'v1.0',
+                  category: metadata.category,
+                  tags: metadata.tags,
+                  description: metadata.description,
+                  creator_name: userInfo.name,
+                  file_size: uploadingFile.size,
+                  download_count: 0,
+                  view_count: 0,
+                  account_id: userInfo.id,
+                  embedding_status: 'pending'
+                })
+                .select()
+                .single();
+              
+              if (dbError) {
+                console.error('데이터베이스 저장 오류:', dbError);
+                setError('문서 정보 저장에 실패했습니다.');
+                return;
+              }
+
+              // 로컬 파일 시스템에 파일 저장 (백엔드 API 호출)
+              const formData = new FormData();
+              formData.append('file', uploadingFile);
+              formData.append('fileName', fileName);
+              formData.append('documentId', newDocument.id);
+              
+              const uploadResponse = await apiClient.upload('/api/pdf-documents/upload', formData, {
+                showErrors: false
+              });
+
+              if (!uploadResponse.success) {
+                // 업로드 실패 시 DB 레코드 삭제
+                await supabase.from('pdf_documents').delete().eq('id', newDocument.id);
+                setError('파일 업로드에 실패했습니다.');
+                return;
+              }
+
+              // UI에 새 문서 추가
+              const newDoc: NormalizedPDF = {
+                id: newDocument.id,
+                fileName: newDocument.file_name,
+                original: newDocument.original_file_name,
+                docType: newDocument.document_type === 'common' ? '전사공통' : '부서문서',
+                dept: newDocument.department,
+                createdAt: formatDate(newDocument.created_at),
+                size: formatStorageSize(newDocument.file_size),
+                status: '활성',
+                version: newDocument.version,
+                accessLevel: newDocument.access_level,
+                tags: newDocument.tags || [],
+                downloadCount: newDocument.download_count,
+                category: newDocument.category,
+                description: newDocument.description
+              };
+              
+              setPdfList(prev => [newDoc, ...prev]);
+              setUploadStatus('success');
+              setTimeout(() => setUploadStatus(null), 3000);
+              
+            } else if (panelMode === 'edit' && editingDocument) {
+              // 기존 문서 정보 수정
+              const { error: updateError } = await supabase
+                .from('pdf_documents')
+                .update({
+                  document_type: metadata.type,
+                  access_level: metadata.accessLevel,
+                  version: metadata.version,
+                  category: metadata.category,
+                  tags: metadata.tags,
+                  description: metadata.description,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', editingDocument.id);
+
+              if (updateError) {
+                console.error('문서 수정 오류:', updateError);
+                setError('문서 정보 수정에 실패했습니다.');
+                return;
+              }
+
+              // UI 업데이트
+              setPdfList(prev => prev.map(pdf => 
+                pdf.id === editingDocument.id 
+                  ? {
+                      ...pdf,
+                      docType: metadata.type === 'common' ? '전사공통' : '부서문서',
+                      version: metadata.version || pdf.version,
+                      accessLevel: metadata.accessLevel || pdf.accessLevel,
+                      tags: metadata.tags || pdf.tags,
+                      category: metadata.category,
+                      description: metadata.description
+                    }
+                  : pdf
+              ));
+              setUploadStatus('success');
+              setTimeout(() => setUploadStatus(null), 3000);
+            }
             
-            setPdfList(prev => [newDoc, ...prev]);
-            setUploadStatus('success');
-            setTimeout(() => setUploadStatus(null), 3000);
-          } else if (panelMode === 'edit' && editingDocument) {
-            // 기존 문서 수정 시뮬레이션
-            setPdfList(prev => prev.map(pdf => 
-              pdf.id === editingDocument.id 
-                ? {
-                    ...pdf,
-                    fileName: metadata.fileName || pdf.fileName,
-                    docType: metadata.type === 'common' ? '전사공통' : '부서문서',
-                    dept: metadata.department || pdf.dept,
-                    version: metadata.version || pdf.version,
-                    accessLevel: metadata.accessLevel || pdf.accessLevel,
-                    tags: metadata.tags || pdf.tags,
-                    category: metadata.category,
-                    description: metadata.description
-                  }
-                : pdf
-            ));
-            setUploadStatus('success');
-            setTimeout(() => setUploadStatus(null), 3000);
+          } catch (error) {
+            console.error('저장 중 오류:', error);
+            setError('저장 중 오류가 발생했습니다.');
+          } finally {
+            setIsLoading(false);
           }
           
           setPanelMode('hidden');
