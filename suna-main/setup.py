@@ -167,6 +167,11 @@ def load_existing_env_vars():
         "kortix": {
             "KORTIX_ADMIN_API_KEY": backend_env.get("KORTIX_ADMIN_API_KEY", ""),
         },
+        "mailtrap": {
+            "MAILTRAP_API_TOKEN": backend_env.get("MAILTRAP_API_TOKEN", ""),
+            "MAILTRAP_SENDER_EMAIL": backend_env.get("MAILTRAP_SENDER_EMAIL", ""),
+            "MAILTRAP_SENDER_NAME": backend_env.get("MAILTRAP_SENDER_NAME", ""),
+        },
         "frontend": {
             "NEXT_PUBLIC_SUPABASE_URL": frontend_env.get(
                 "NEXT_PUBLIC_SUPABASE_URL", ""
@@ -276,6 +281,7 @@ class SetupWizard:
             "mcp": existing_env_vars["mcp"],
             "pipedream": existing_env_vars["pipedream"],
             "kortix": existing_env_vars["kortix"],
+            "mailtrap": existing_env_vars.get("mailtrap", {}),
         }
 
         # Override with any progress data (in case user is resuming)
@@ -910,7 +916,7 @@ class SetupWizard:
             self.env_vars["mailtrap"] = {"MAILTRAP_API_TOKEN": ""}
 
         # Check if we already have a value configured
-        existing_key = self.env_vars["mailtrap"]["MAILTRAP_API_TOKEN"]
+        existing_key = self.env_vars["mailtrap"].get("MAILTRAP_API_TOKEN", "")
         if existing_key:
             print_info(
                 f"Found existing Mailtrap key: {mask_sensitive_value(existing_key)}"
