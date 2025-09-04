@@ -1407,7 +1407,7 @@ class SetupWizard:
 
     def final_instructions(self):
         """Shows final instructions to the user."""
-        print(f"\n{Colors.GREEN}{Colors.BOLD}✨ Suna Setup Complete! ✨{Colors.ENDC}\n")
+        print(f"\n{Colors.GREEN}{Colors.BOLD}✨ AiBee Setup Complete! ✨{Colors.ENDC}\n")
 
         default_model = self.env_vars.get("llm", {}).get("MODEL_TO_USE", "N/A")
         print_info(
@@ -1427,10 +1427,10 @@ class SetupWizard:
                 f"  {Colors.CYAN}docker compose logs -f{Colors.ENDC}    - Follow logs"
             )
             print(
-                f"  {Colors.CYAN}docker compose down{Colors.ENDC}       - Stop Suna services"
+                f"  {Colors.CYAN}docker compose down{Colors.ENDC}       - Stop AiBee services"
             )
             print(
-                f"  {Colors.CYAN}python start.py{Colors.ENDC}           - To start or stop Suna services"
+                f"  {Colors.CYAN}python start.py{Colors.ENDC}           - To start or stop AiBee services"
             )
         else:
             print_info(
