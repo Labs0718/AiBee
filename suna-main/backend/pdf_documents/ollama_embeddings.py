@@ -9,16 +9,23 @@ import numpy as np
 from supabase import create_client
 import asyncio
 
-# Ollama API 설정 (Docker Compose 환경 고려)
-OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11435")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-large")  # BGE Large 모델
+# Ollama API 설정 (로컬 환경 우선)
+OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11435")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-m3")  # BGE-M3 다국어 모델
 
 class OllamaEmbeddingProcessor:
     def __init__(self):
-        self.supabase = create_client(
-            os.getenv("NEXT_PUBLIC_SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        # Backend uses SUPABASE_URL instead of NEXT_PUBLIC_SUPABASE_URL
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        
+        print(f"Supabase 연결: URL={supabase_url[:50]}..." if supabase_url else "URL=None")
+        print(f"Supabase Key: {'설정됨' if supabase_key else '없음'}")
+        
+        if not supabase_url or not supabase_key:
+            raise Exception(f"Supabase 환경 변수 누락: URL={bool(supabase_url)}, Key={bool(supabase_key)}")
+            
+        self.supabase = create_client(supabase_url, supabase_key)
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1500,
             chunk_overlap=200,
@@ -41,6 +48,7 @@ class OllamaEmbeddingProcessor:
     def get_ollama_embedding(self, text: str) -> List[float]:
         """Ollama를 사용하여 텍스트 임베딩 생성"""
         try:
+            print(f"Ollama 임베딩 요청: URL={OLLAMA_API_URL}, 모델={EMBEDDING_MODEL}")
             response = requests.post(
                 f"{OLLAMA_API_URL}/api/embeddings",
                 json={
@@ -52,10 +60,16 @@ class OllamaEmbeddingProcessor:
             
             if response.status_code == 200:
                 result = response.json()
-                return result.get("embedding", [])
+                embedding = result.get("embedding", [])
+                print(f"임베딩 성공: 차원 {len(embedding)}")
+                return embedding
             else:
-                print(f"Ollama 임베딩 오류: {response.status_code}")
+                print(f"Ollama 임베딩 오류: {response.status_code}, 응답: {response.text}")
                 return None
+        except requests.exceptions.ConnectionError as e:
+            print(f"Ollama 서버 연결 실패: {str(e)}")
+            print(f"Ollama URL 확인: {OLLAMA_API_URL}")
+            return None
         except Exception as e:
             print(f"Ollama 연결 오류: {str(e)}")
             return None

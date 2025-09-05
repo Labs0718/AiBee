@@ -190,21 +190,29 @@ export async function DELETE(
       return NextResponse.json({ error: '문서 삭제 중 오류가 발생했습니다.' }, { status: 500 });
     }
 
-    // 관련 PDF 청크도 삭제
+    // PDF 임베딩 데이터 삭제 (CASCADE로 자동 삭제되지만 명시적으로 삭제)
     await supabase
-      .from('pdf_chunks')
+      .from('pdf_embeddings')
       .delete()
       .eq('document_id', documentId);
 
-    // 물리적 파일 삭제 (선택사항 - 백그라운드에서 처리할 수도 있음)
+    // Supabase Storage에서 파일 삭제
     try {
-      const filePath = path.join(process.cwd(), 'uploads', 'pdfs', document.file_name);
-      if (existsSync(filePath)) {
-        await unlink(filePath);
+      // storage_path가 있다면 Storage에서 삭제
+      const { data: docData } = await supabase
+        .from('pdf_documents')
+        .select('storage_path')
+        .eq('id', documentId)
+        .single();
+        
+      if (docData?.storage_path) {
+        await supabase.storage
+          .from('pdf-documents')
+          .remove([docData.storage_path]);
       }
-    } catch (fileError) {
-      console.warn('물리적 파일 삭제 실패:', fileError);
-      // 파일 삭제 실패는 치명적이지 않으므로 계속 진행
+    } catch (storageError) {
+      console.warn('Storage 파일 삭제 실패:', storageError);
+      // Storage 삭제 실패는 치명적이지 않으므로 계속 진행
     }
 
     return NextResponse.json({
