@@ -444,16 +444,37 @@ export default function PDFManagement() {
   // 문서 다운로드 처리
   const handleDocumentDownload = async (documentId: string, fileName: string) => {
     try {
-      // API 엔드포인트로 직접 이동하여 파일 다운로드
+      // API 엔드포인트로 fetch 요청
       const downloadUrl = `/api/pdf-documents/${documentId}/download`;
       
-      // 새 창에서 다운로드 URL 열기
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/pdf',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('다운로드 실패');
+      }
+
+      // Blob으로 변환
+      const blob = await response.blob();
+      
+      // Blob URL 생성
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // 다운로드 링크 생성 및 클릭
       const link = document.createElement('a');
-      link.href = downloadUrl;
+      link.href = blobUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
+      
+      // 정리
       document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
       
     } catch (error) {
       console.error('다운로드 오류:', error);
@@ -1005,12 +1026,6 @@ export default function PDFManagement() {
                       </td>
                       <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
-                          <button 
-                            className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                            title="미리보기"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
                           <button 
                             className="p-2.5 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
                             onClick={() => handleDocumentDownload(pdf.id, pdf.original)}
