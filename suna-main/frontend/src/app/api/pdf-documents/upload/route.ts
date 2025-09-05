@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Supabase Storage에 업로드 (Service Role 클라이언트 사용)
     // 사용자별 폴더 구조: {user_id}/{document_id}/{filename}
     const storagePath = `${user.id}/${documentId}/${fileName}`;
-    const serviceRoleSupabase = createServiceRoleClient();
+    const serviceRoleSupabase = await createServiceRoleClient();
     
     const { data: uploadData, error: uploadError } = await serviceRoleSupabase.storage
       .from('pdf-documents')

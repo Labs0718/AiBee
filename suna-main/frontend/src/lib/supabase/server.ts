@@ -31,7 +31,7 @@ export async function createClient() {
 }
 
 // Service role client for server-side operations like file uploads
-export function createServiceRoleClient() {
+export async function createServiceRoleClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
