@@ -48,6 +48,10 @@ class SandboxPdfSearchTool(SandboxToolsBase):
     async def search_internal_documents(self, query: str, max_results: int = 5, filter_department: str = None) -> ToolResult:
         """Search internal PDF documents using vector similarity"""
         try:
+            print("[PDF_SEARCH] 내부문서 검색 시작")
+            print(f"[PDF_SEARCH] 검색 키워드: {query}")
+            print("[PDF_SEARCH] search_internal_documents 도구 호출 중...")
+            
             # 검색 실행
             results = await self.processor.search_similar_documents(
                 query=query,
@@ -55,12 +59,21 @@ class SandboxPdfSearchTool(SandboxToolsBase):
                 filter_department=filter_department
             )
             
+            print("[PDF_SEARCH] search_internal_documents 도구 호출 완료")
+            print("[PDF_SEARCH] PDF 검색 결과 분석 중...")
+            
             if not results:
+                print(f"[PDF_SEARCH] PDF 검색 실패: {query}")
+                print("[PDF_SEARCH] 발견된 문서: 0개")
                 return ToolResult(
                     success=True,
                     content="내부 문서에서 관련 자료를 찾지 못했습니다. 다른 키워드로 검색하거나 웹 검색을 활용해보세요.",
                     metadata={"total_results": 0}
                 )
+            
+            # 검색 성공 로그
+            print(f"[PDF_SEARCH] PDF 검색 성공: {query}")
+            print(f"[PDF_SEARCH] 발견된 문서: {len(results)}개")
             
             # 결과 포맷팅
             formatted_content = f"**내부 문서 검색 결과** ({len(results)}건)\n\n"
@@ -93,6 +106,7 @@ class SandboxPdfSearchTool(SandboxToolsBase):
             )
             
         except Exception as e:
+            print(f"[PDF_SEARCH] 오류 발생: {str(e)}")
             return ToolResult(
                 success=False,
                 content=f"내부 문서 검색 중 오류가 발생했습니다: {str(e)}",

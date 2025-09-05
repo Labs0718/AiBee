@@ -309,20 +309,25 @@ const allPrompts: PromptExample[] = [
 ## 필수 실행 순서 (반드시 순서대로 진행)
 
 ** STEP 1: 내부 문서 검색 (절대 필수 - 첫 번째 도구 호출)**
- 주의: 다른 어떤 작업보다 먼저 반드시 search_internal_documents 도구를 호출하세요!
+🛑 경고: web_search가 아닌 search_internal_documents 도구만 사용하세요! 🛑
+🚫 web_search 도구는 절대 먼저 사용하지 마세요! 🚫
 
-첫 번째 도구 호출로 search_internal_documents를 사용하여:
+반드시 search_internal_documents 도구를 첫 번째로 호출하여:
+
+**검색 수행 내용:**
 - 사용자 입력에서 핵심 키워드를 추출하여 검색 실행
 - 과거 유사 위기 대응 사례, 매뉴얼, 정책 문서 우선 수집
 - 검색 전략: "{핵심이슈} 대응 사례", "{지역} 위기 관리", "{이슈유형} 해결 방안"
 
-** 검색 결과 보고 (절대 필수)**
-search_internal_documents 도구 사용 후 반드시 다음과 같이 사용자에게 보고하세요:
+** 검색 결과 보고 (필수)**
+search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고하세요:
 - 검색이 성공한 경우: "내부 문서에서 '[검색된 내용 요약]'에 대한 자료를 찾았습니다."
 - 검색이 실패한 경우: "내부 문서에서 관련 자료를 찾을 수 없습니다."
 
-** STEP 2: 웹 검색 (두 번째 단계)**
- search_internal_documents 검색과 결과 보고가 완전히 완료된 후에만 web_search 도구로 실시간 상황 분석:
+** STEP 2: 웹 검색 (두 번째 단계 - search_internal_documents 완료 후에만!)**
+⚠️ 중요: search_internal_documents 도구 사용과 결과 보고가 완전히 완료된 후에만 web_search 도구 사용 허용 ⚠️
+
+web_search 도구로 실시간 상황 분석:
 - 해당 지역 실시간 뉴스 및 SNS 반응 조사
 - 유사 사례의 최신 해결 동향 파악
 - 전국 동일 이슈 발생 현황 및 대응 상태 확인
