@@ -66,6 +66,9 @@ dependencies = [
   "PyYAML==6.0.1",
   "composio>=0.8.0",
   "fastapi-sso>=0.18.0",
+  "numpy>=1.24.0",
+  "langchain>=0.2.0",
+  "langchain-text-splitters>=0.2.0",
 ]
 
 [project.urls]

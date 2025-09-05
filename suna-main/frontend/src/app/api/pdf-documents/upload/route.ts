@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,38 +31,62 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '파일 크기는 50MB를 초과할 수 없습니다.' }, { status: 400 });
     }
 
-    // 업로드 디렉토리 생성
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'pdfs');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // 파일 저장
-    const filePath = path.join(uploadsDir, fileName);
+    // 파일을 Buffer로 변환
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    await writeFile(filePath, buffer);
+    // Supabase Storage에 업로드 (Service Role 클라이언트 사용)
+    // 사용자별 폴더 구조: {user_id}/{document_id}/{filename}
+    const storagePath = `${user.id}/${documentId}/${fileName}`;
+    const serviceRoleSupabase = createServiceRoleClient();
+    
+    const { data: uploadData, error: uploadError } = await serviceRoleSupabase.storage
+      .from('pdf-documents')
+      .upload(storagePath, buffer, {
+        contentType: 'application/pdf',
+        upsert: true
+      });
 
-    // 데이터베이스에서 문서 정보 확인
-    const { data: document, error: dbError } = await supabase
+    if (uploadError) {
+      console.error('Storage 업로드 오류:', uploadError);
+      return NextResponse.json({ error: '파일 업로드에 실패했습니다.' }, { status: 500 });
+    }
+
+    // 데이터베이스 문서 정보 업데이트 (storage_path 추가)
+    const { data: document, error: updateError } = await supabase
       .from('pdf_documents')
-      .select('*')
+      .update({ 
+        storage_path: storagePath,
+        file_uploaded: true
+      })
       .eq('id', documentId)
       .eq('account_id', user.id)
+      .select()
       .single();
 
-    if (dbError || !document) {
-      return NextResponse.json({ error: '문서 정보를 찾을 수 없습니다.' }, { status: 404 });
+    if (updateError || !document) {
+      // 업로드 실패 시 Storage에서 파일 삭제
+      await serviceRoleSupabase.storage.from('pdf-documents').remove([storagePath]);
+      return NextResponse.json({ error: '문서 정보 업데이트에 실패했습니다.' }, { status: 500 });
     }
+
+    // Ollama 임베딩 처리를 위한 백그라운드 작업 트리거
+    // 백엔드 API 호출 (비동기로 처리)
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+    fetch(`${backendUrl}/pdf-documents/${documentId}/process-embeddings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': request.headers.get('Authorization') || ''
+      }
+    }).catch(error => console.error('임베딩 처리 요청 실패:', error));
 
     return NextResponse.json({
       success: true,
-      message: '파일이 성공적으로 업로드되었습니다.',
+      message: '파일이 성공적으로 업로드되었습니다. 임베딩 처리가 시작됩니다.',
       document: {
         id: document.id,
         fileName: document.file_name,
-        filePath: filePath,
+        storagePath: storagePath,
         size: file.size
       }
     });

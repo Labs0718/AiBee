@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { readFile } from 'fs/promises';
-import { existsSync } from 'fs';
-import path from 'path';
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +27,7 @@ export async function GET(
         department,
         access_level,
         account_id,
+        storage_path,
         deleted_at
       `)
       .eq('id', documentId)
@@ -55,16 +53,23 @@ export async function GET(
       return NextResponse.json({ error: '이 문서에 대한 접근 권한이 없습니다.' }, { status: 403 });
     }
 
-    // 파일 경로 생성
-    const filePath = path.join(process.cwd(), 'uploads', 'pdfs', document.file_name);
+    // storage_path가 없으면 오류
+    if (!document.storage_path) {
+      return NextResponse.json({ error: '파일 경로 정보가 없습니다.' }, { status: 404 });
+    }
 
-    // 파일 존재 여부 확인
-    if (!existsSync(filePath)) {
+    // Supabase Storage에서 파일 다운로드
+    const { data: fileData, error: storageError } = await supabase.storage
+      .from('pdf-documents')
+      .download(document.storage_path);
+
+    if (storageError || !fileData) {
+      console.error('Storage 다운로드 오류:', storageError);
       return NextResponse.json({ error: '파일을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    // 파일 읽기
-    const fileBuffer = await readFile(filePath);
+    // Blob을 Buffer로 변환
+    const fileBuffer = Buffer.from(await fileData.arrayBuffer());
 
     // 다운로드 횟수 증가 (public 스키마이므로 직접 접근)
     const { data: currentDoc } = await supabase

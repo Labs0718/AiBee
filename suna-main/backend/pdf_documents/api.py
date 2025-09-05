@@ -7,6 +7,7 @@ import re
 import time
 from utils.auth_utils import get_current_user_id_from_jwt
 from services.supabase import DBConnection
+from .ollama_embeddings import OllamaEmbeddingProcessor
 
 router = APIRouter()
 
@@ -123,3 +124,117 @@ async def download_pdf(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"파일 다운로드 실패: {str(e)}")
+
+@router.post("/{document_id}/process-embeddings")
+async def process_embeddings(
+    document_id: str,
+    request: Request
+):
+    """PDF 문서의 임베딩 처리"""
+    try:
+        # JWT에서 사용자 ID 추출
+        user_id = await get_current_user_id_from_jwt(request)
+        
+        # 데이터베이스 연결
+        db = DBConnection()
+        await db.initialize()
+        
+        # 문서 정보 조회
+        query = """
+            SELECT id, storage_path, file_uploaded 
+            FROM pdf_documents 
+            WHERE id = %s AND account_id = %s AND deleted_at IS NULL
+        """
+        result = await db.fetch_one(query, [document_id, user_id])
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
+        
+        if not result['file_uploaded'] or not result['storage_path']:
+            raise HTTPException(status_code=400, detail="파일이 아직 업로드되지 않았습니다.")
+        
+        # 임베딩 상태를 processing으로 업데이트
+        update_query = "UPDATE pdf_documents SET embedding_status = %s WHERE id = %s"
+        await db.execute(update_query, ['processing', document_id])
+        
+        # Ollama 임베딩 프로세서 초기화
+        processor = OllamaEmbeddingProcessor()
+        
+        # 백그라운드에서 임베딩 처리
+        import asyncio
+        asyncio.create_task(processor.process_document(document_id, result['storage_path']))
+        
+        return {
+            "success": True,
+            "message": "임베딩 처리가 시작되었습니다.",
+            "document_id": document_id
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"임베딩 처리 실패: {str(e)}")
+
+@router.post("/search")
+async def search_documents(
+    query: str = Form(...),
+    match_count: int = Form(5),
+    filter_department: str = Form(None),
+    request: Request = None
+):
+    """벡터 검색을 통한 문서 검색"""
+    try:
+        # JWT에서 사용자 ID 추출
+        user_id = await get_current_user_id_from_jwt(request)
+        
+        # Ollama 임베딩 프로세서 초기화
+        processor = OllamaEmbeddingProcessor()
+        
+        # 검색 실행
+        results = await processor.search_similar_documents(
+            query=query,
+            match_count=match_count,
+            filter_department=filter_department
+        )
+        
+        return {
+            "success": True,
+            "query": query,
+            "results": results,
+            "total_results": len(results)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"검색 실패: {str(e)}")
+
+@router.get("/{document_id}/embedding-status")
+async def get_embedding_status(
+    document_id: str,
+    request: Request
+):
+    """임베딩 처리 상태 조회"""
+    try:
+        # JWT에서 사용자 ID 추출
+        user_id = await get_current_user_id_from_jwt(request)
+        
+        # 데이터베이스 연결
+        db = DBConnection()
+        await db.initialize()
+        
+        # 문서 상태 조회
+        query = """
+            SELECT embedding_status, total_chunks 
+            FROM pdf_documents 
+            WHERE id = %s AND account_id = %s AND deleted_at IS NULL
+        """
+        result = await db.fetch_one(query, [document_id, user_id])
+        
+        if not result:
+            raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
+        
+        return {
+            "document_id": document_id,
+            "embedding_status": result['embedding_status'],
+            "total_chunks": result.get('total_chunks', 0)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"상태 조회 실패: {str(e)}")
