@@ -238,7 +238,7 @@ async def get_all_users(
                 detail="Access denied. Admin or operator privileges required."
             )
         
-        # Build base query to get all users
+        # Build base query to get all users from basejump.accounts (includes email now)
         query = client.schema('basejump').from_('accounts').select('*')
         
         # Execute base query first
@@ -261,13 +261,45 @@ async def get_all_users(
             auth_user_data = None
             email_confirmed_at = None
             try:
-                auth_user_result = await client.schema('auth').table('users').select('email, raw_user_meta_data, email_confirmed_at').eq('id', user_id).execute()
+                # Try to get email from auth.users raw_user_meta_data (more likely to work with RLS)
+                auth_user_result = await client.schema('auth').table('users').select('raw_user_meta_data, email_confirmed_at').eq('id', user_id).execute()
                 if auth_user_result.data:
                     auth_user_data = auth_user_result.data[0]
-                    user_email = auth_user_data.get('email')
+                    raw_meta_data = auth_user_data.get('raw_user_meta_data', {})
+                    
+                    structlog.get_logger().info(f"🔍 Raw meta data for user {user_id}: {raw_meta_data}")
+                    
+                    # Extract email from raw_user_meta_data
+                    if raw_meta_data and isinstance(raw_meta_data, dict):
+                        user_email = raw_meta_data.get('email')
+                        structlog.get_logger().info(f"📧 Extracted email from raw_meta_data: {user_email}")
+                    else:
+                        structlog.get_logger().warning(f"⚠️ raw_user_meta_data is not a valid dict: {type(raw_meta_data)} - {raw_meta_data}")
+                    
                     email_confirmed_at = auth_user_data.get('email_confirmed_at')
+                    
+                    if user_email:
+                        structlog.get_logger().info(f"✅ Successfully retrieved email from raw_user_meta_data for user {user_id}: {user_email}")
+                    else:
+                        structlog.get_logger().warning(f"❌ No email found in raw_user_meta_data for user {user_id}")
+                else:
+                    structlog.get_logger().warning(f"⚠️ No auth user data found for user {user_id}")
             except Exception as e:
-                pass
+                structlog.get_logger().warning(f"❌ Failed to get auth user data for user {user_id}: {e}")
+                
+            # Additional fallbacks if auth.users query failed
+            if not user_email:
+                structlog.get_logger().info(f"🔍 Trying fallback methods for user {user_id}")
+                # Try to get email from account metadata
+                if account_data:
+                    # First check if there's email in account data (from our new email column)
+                    if account_data.get('email') and '@' in str(account_data.get('email')):
+                        user_email = account_data.get('email')
+                        structlog.get_logger().info(f"📧 Found email in account.email: {user_email}")
+                    # Check if name field contains email
+                    elif account_data.get('name') and '@' in str(account_data.get('name')) and '.' in str(account_data.get('name')):
+                        user_email = account_data.get('name')
+                        structlog.get_logger().info(f"📧 Found email in account name: {user_email}")
             
             # Get department name
             department_name = None
@@ -286,8 +318,11 @@ async def get_all_users(
             real_name = None
             if profile_data and profile_data.get('name'):
                 real_name = profile_data.get('name')
-            elif auth_user_data and auth_user_data.get('raw_user_meta_data') and auth_user_data.get('raw_user_meta_data').get('display_name'):
-                real_name = auth_user_data.get('raw_user_meta_data').get('display_name')
+            elif auth_user_data and auth_user_data.get('raw_user_meta_data'):
+                # Extract name from raw_user_meta_data
+                raw_meta_data = auth_user_data.get('raw_user_meta_data', {})
+                if isinstance(raw_meta_data, dict):
+                    real_name = raw_meta_data.get('name') or raw_meta_data.get('display_name')
             elif account_data and account_data.get('display_name'):
                 real_name = account_data.get('display_name')
             elif account_data and account_data.get('name'):
@@ -322,9 +357,22 @@ async def get_all_users(
             
             # Remove status filtering since we removed authentication status
             
+            # Fallback for email if still not found
+            final_email = user_email
+            if not final_email:
+                # Try to extract email from display_name or name if they look like emails
+                for potential_email in [display_name, real_name, account_data.get('name') if account_data else None]:
+                    if potential_email and '@' in str(potential_email) and '.' in str(potential_email):
+                        final_email = potential_email
+                        break
+                
+                # Last resort: use user_id based email format
+                if not final_email:
+                    final_email = f"user-{user_id[:8]}@unknown.local"
+            
             user_profile = UserProfileResponse(
                 id=str(user_id),
-                email=user_email or 'unknown@example.com',
+                email=final_email,
                 display_name=display_name,
                 name=real_name,
                 department_name=department_name,
