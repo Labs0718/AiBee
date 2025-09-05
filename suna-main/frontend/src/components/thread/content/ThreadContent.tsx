@@ -696,8 +696,8 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('## 내 연차 찾기 자동화 가이드')[0].trim();
                                                 }
                                                 
-                                                if (fullContent.includes('## 민원 대응 전략 수립 자동화 가이드')) {
-                                                    return fullContent.split('## 민원 대응 전략 수립 자동화 가이드')[0].trim();
+                                                if (fullContent.includes('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')) {
+                                                    return fullContent.split('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')[0].trim();
                                                 }
                                                 
                                                 return fullContent;

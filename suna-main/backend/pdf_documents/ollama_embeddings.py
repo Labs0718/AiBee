@@ -251,39 +251,32 @@ class OllamaEmbeddingProcessor:
         return list(set(expanded))[:5]  # 중복 제거, 최대 5개
     
     async def _keyword_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
-        """PostgreSQL Full Text Search를 이용한 키워드 검색"""
+        """간단한 키워드 검색 (LIKE 사용)"""
         try:
-            # PostgreSQL의 한국어 전문 검색
-            search_query = f"""
-            SELECT 
-                document_id,
-                chunk_text,
-                document_title,
-                department,
-                ts_rank(to_tsvector('korean', chunk_text), plainto_tsquery('korean', %s)) as rank,
-                'keyword' as search_type
-            FROM pdf_embeddings pe
-            JOIN pdf_documents pd ON pe.document_id = pd.id
-            WHERE to_tsvector('korean', chunk_text) @@ plainto_tsquery('korean', %s)
-            AND pd.deleted_at IS NULL
-            AND pd.embedding_status = 'completed'
-            {}
-            ORDER BY rank DESC
-            LIMIT %s
-            """.format("AND pd.department = %s" if filter_department else "")
+            # 간단한 키워드 매칭으로 폴백
+            query_builder = self.supabase.table('pdf_embeddings').select(
+                'document_id, chunk_text, pdf_documents(original_file_name, department)'
+            ).ilike('chunk_text', f'%{query}%').limit(match_count)
             
-            params = [query, query]
             if filter_department:
-                params.append(filter_department)
-            params.append(match_count)
+                query_builder = query_builder.eq('pdf_documents.department', filter_department)
             
-            # 직접 SQL 실행 (supabase rpc 대신)
-            result = self.supabase.postgrest.rpc('execute_sql', {
-                'sql': search_query,
-                'params': params
-            }).execute()
+            result = query_builder.execute()
             
-            return result.data if result.data else []
+            # 결과 포맷 맞추기
+            formatted_results = []
+            for item in result.data or []:
+                doc_info = item.get('pdf_documents', {})
+                formatted_results.append({
+                    'document_id': item['document_id'],
+                    'chunk_text': item['chunk_text'],
+                    'document_title': doc_info.get('original_file_name', '제목 없음'),
+                    'department': doc_info.get('department', '부서 정보 없음'),
+                    'search_type': 'keyword',
+                    'similarity': 0.5  # 기본 점수
+                })
+            
+            return formatted_results
             
         except Exception as e:
             print(f"키워드 검색 오류: {str(e)}")
