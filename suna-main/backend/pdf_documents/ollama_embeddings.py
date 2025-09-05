@@ -61,13 +61,22 @@ class OllamaEmbeddingProcessor:
             return None
     
     async def process_document(self, document_id: str, storage_path: str) -> Dict[str, Any]:
-        """문서를 처리하고 임베딩 생성"""
+        """Supabase Storage에서 문서를 다운로드하고 임베딩 생성"""
         try:
-            # 1. Supabase Storage에서 PDF 다운로드
-            pdf_bytes = self.supabase.storage.from_('pdf-documents').download(storage_path)
+            print(f"임베딩 처리 시작: document_id={document_id}, storage_path={storage_path}")
+            
+            # 1. Supabase Storage에서 PDF 파일 다운로드
+            file_response = self.supabase.storage.from_('pdf-documents').download(storage_path)
+            
+            if file_response.error:
+                return {"success": False, "error": f"PDF 파일을 다운로드할 수 없습니다: {file_response.error}"}
+            
+            pdf_bytes = file_response.data
             
             if not pdf_bytes:
-                return {"success": False, "error": "PDF 파일을 다운로드할 수 없습니다."}
+                return {"success": False, "error": "PDF 파일이 비어있습니다."}
+            
+            print(f"PDF 파일 다운로드 완료: {len(pdf_bytes)} bytes")
             
             # 2. PDF에서 텍스트 추출
             text = self.extract_text_from_pdf(pdf_bytes)
@@ -75,15 +84,20 @@ class OllamaEmbeddingProcessor:
             if not text.strip():
                 return {"success": False, "error": "PDF에서 텍스트를 추출할 수 없습니다."}
             
+            print(f"텍스트 추출 완료: {len(text)} 문자")
+            
             # 3. 텍스트를 청크로 분할
             chunks = self.text_splitter.split_text(text)
+            print(f"텍스트 분할 완료: {len(chunks)}개 청크")
             
             # 4. 기존 임베딩 삭제
-            self.supabase.table('pdf_embeddings').delete().eq('document_id', document_id).execute()
+            delete_result = self.supabase.table('pdf_embeddings').delete().eq('document_id', document_id).execute()
+            print(f"기존 임베딩 삭제 완료")
             
             # 5. 각 청크에 대해 임베딩 생성 및 저장
             embeddings_data = []
             for i, chunk in enumerate(chunks):
+                print(f"청크 {i+1}/{len(chunks)} 임베딩 생성 중...")
                 embedding = self.get_ollama_embedding(chunk)
                 
                 if embedding:
@@ -103,14 +117,23 @@ class OllamaEmbeddingProcessor:
             
             # 6. 배치로 임베딩 저장
             if embeddings_data:
+                print(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
                 result = self.supabase.table('pdf_embeddings').insert(embeddings_data).execute()
                 
+                if result.error:
+                    print(f"임베딩 저장 오류: {result.error}")
+                    return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
+                
                 # 7. 문서 상태 업데이트
-                self.supabase.table('pdf_documents').update({
+                update_result = self.supabase.table('pdf_documents').update({
                     'embedding_status': 'completed',
                     'total_chunks': len(embeddings_data)
                 }).eq('id', document_id).execute()
                 
+                if update_result.error:
+                    print(f"문서 상태 업데이트 오류: {update_result.error}")
+                
+                print(f"임베딩 처리 완료: {len(embeddings_data)}개 임베딩 생성됨")
                 return {
                     "success": True,
                     "message": f"{len(embeddings_data)}개의 임베딩이 생성되었습니다.",
@@ -123,9 +146,12 @@ class OllamaEmbeddingProcessor:
             print(f"문서 처리 오류: {str(e)}")
             
             # 오류 상태 업데이트
-            self.supabase.table('pdf_documents').update({
-                'embedding_status': 'failed'
-            }).eq('id', document_id).execute()
+            try:
+                self.supabase.table('pdf_documents').update({
+                    'embedding_status': 'failed'
+                }).eq('id', document_id).execute()
+            except Exception as update_error:
+                print(f"오류 상태 업데이트 실패: {update_error}")
             
             return {"success": False, "error": str(e)}
     

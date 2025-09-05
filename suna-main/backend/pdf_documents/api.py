@@ -1,41 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 import os
-import aiofiles
-from pathlib import Path
-import re
 import time
 from utils.auth_utils import get_current_user_id_from_jwt
 from services.supabase import DBConnection
 from .ollama_embeddings import OllamaEmbeddingProcessor
 
 router = APIRouter()
-
-# 업로드 디렉토리 설정
-UPLOAD_DIR = Path("uploads/pdfs")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-
-def sanitize_filename(filename: str) -> str:
-    """파일명을 안전하게 정리"""
-    # 파일명과 확장자 분리
-    name, ext = os.path.splitext(filename)
-    
-    # 특수문자를 언더스코어로 변경 (한글, 영문, 숫자, 일부 특수문자만 유지)
-    name = re.sub(r'[^\w가-힣.\-\s]', '_', name)
-    
-    # 연속된 공백을 언더스코어로 변경
-    name = re.sub(r'\s+', '_', name)
-    
-    # 연속된 언더스코어 정리
-    name = re.sub(r'_+', '_', name)
-    
-    # 앞뒤 언더스코어 제거
-    name = name.strip('_')
-    
-    # 타임스탬프 추가 (중복 방지)
-    timestamp = str(int(time.time() * 1000))
-    
-    return f"{timestamp}_{name}{ext}"
 
 @router.post("/upload")
 async def upload_pdf(
@@ -44,46 +15,74 @@ async def upload_pdf(
     fileName: str = Form(...),
     documentId: str = Form(...)
 ):
-    """PDF 파일 업로드"""
+    """PDF 파일을 Supabase Storage에 업로드"""
+    print(f"PDF 업로드 요청: fileName={fileName}, documentId={documentId}")
     try:
         # JWT에서 사용자 ID 추출
+        print("JWT에서 사용자 ID 추출 중...")
         user_id = await get_current_user_id_from_jwt(request)
+        print(f"사용자 ID: {user_id}")
+        
         # 파일 유효성 검사
         if not file.content_type or not file.content_type.startswith('application/pdf'):
             raise HTTPException(status_code=400, detail="PDF 파일만 업로드 가능합니다.")
         
         # 파일 크기 제한 (50MB)
         MAX_SIZE = 50 * 1024 * 1024  # 50MB
-        file_size = 0
         content = await file.read()
         file_size = len(content)
         
         if file_size > MAX_SIZE:
             raise HTTPException(status_code=400, detail="파일 크기는 50MB 이하여야 합니다.")
         
-        # 파일명 그대로 사용 (타임스탬프만 추가)
-        timestamp = str(int(time.time() * 1000))
-        safe_filename = f"{timestamp}_{fileName}"
-        file_path = UPLOAD_DIR / safe_filename
+        # 데이터베이스 연결
+        db = DBConnection()
+        await db.initialize()
+        client = await db.client
         
-        # 파일 저장
-        async with aiofiles.open(file_path, 'wb') as f:
-            await f.write(content)
+        # Supabase Storage에 업로드 (사용자별 폴더 구조: {user_id}/{document_id}/{filename})
+        storage_path = f"{user_id}/{documentId}/{fileName}"
+        
+        upload_response = await client.storage.from_('pdf-documents').upload(
+            storage_path,
+            content,
+            file_options={
+                "content-type": "application/pdf",
+                "upsert": True
+            }
+        )
+        
+        if upload_response.error:
+            print(f"Storage 업로드 오류: {upload_response.error}")
+            raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {upload_response.error}")
+        
+        # 데이터베이스에서 문서 정보 업데이트
+        update_response = await client.table('pdf_documents').update({
+            'storage_path': storage_path,
+            'file_uploaded': True,
+            'embedding_status': 'processing'
+        }).eq('id', documentId).eq('account_id', user_id).execute()
+        
+        if update_response.error:
+            # 업로드 실패 시 Storage에서 파일 삭제
+            await client.storage.from_('pdf-documents').remove([storage_path])
+            raise HTTPException(status_code=500, detail=f"데이터베이스 업데이트 실패: {update_response.error}")
+        
+        # 임베딩 처리 시작 (백그라운드)
+        processor = OllamaEmbeddingProcessor()
+        import asyncio
+        asyncio.create_task(processor.process_document(documentId, storage_path))
         
         # 성공 응답
         return {
             "success": True,
-            "message": "파일이 성공적으로 업로드되었습니다.",
-            "file_path": str(file_path),
-            "file_size": file_size,
-            "safe_filename": safe_filename
+            "message": "파일이 성공적으로 업로드되었습니다. 임베딩 처리가 시작됩니다.",
+            "storage_path": storage_path,
+            "file_size": file_size
         }
         
     except Exception as e:
-        # 실패 시 파일 삭제
-        if 'file_path' in locals() and file_path.exists():
-            file_path.unlink()
-        
+        print(f"업로드 오류: {str(e)}")
         raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {str(e)}")
 
 @router.get("/{document_id}/download")
@@ -91,35 +90,47 @@ async def download_pdf(
     document_id: str,
     request: Request
 ):
-    """PDF 파일 다운로드"""
+    """PDF 파일 다운로드 (Supabase Storage에서)"""
     try:
         # JWT에서 사용자 ID 추출
         user_id = await get_current_user_id_from_jwt(request)
         
-        # Supabase 연결
+        # 데이터베이스 연결
         db = DBConnection()
         await db.initialize()
+        client = await db.client
         
         # 문서 정보 조회
-        query = "SELECT file_name, original_file_name FROM pdf_documents WHERE id = %s AND deleted_at IS NULL"
-        result = await db.fetch_one(query, [document_id])
+        document_response = await client.table('pdf_documents').select(
+            'storage_path, original_file_name'
+        ).eq('id', document_id).eq('account_id', user_id).is_('deleted_at', 'null').execute()
         
-        if not result:
+        if not document_response.data:
             raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
         
-        file_path = UPLOAD_DIR / result['file_name']
+        document = document_response.data[0]
+        storage_path = document['storage_path']
         
-        if not file_path.exists():
+        if not storage_path:
+            raise HTTPException(status_code=404, detail="파일이 업로드되지 않았습니다.")
+        
+        # Supabase Storage에서 파일 다운로드
+        file_response = await client.storage.from_('pdf-documents').download(storage_path)
+        
+        if file_response.error:
             raise HTTPException(status_code=404, detail="파일을 찾을 수 없습니다.")
         
         # 다운로드 카운트 증가
-        update_query = "UPDATE pdf_documents SET download_count = COALESCE(download_count, 0) + 1 WHERE id = %s"
-        await db.execute(update_query, [document_id])
+        await client.table('pdf_documents').update({
+            'download_count': client.rpc('increment_download_count', {'doc_id': document_id})
+        }).eq('id', document_id).execute()
         
-        return FileResponse(
-            path=file_path,
-            filename=result['original_file_name'],
-            media_type='application/pdf'
+        return Response(
+            content=file_response.data,
+            media_type='application/pdf',
+            headers={
+                'Content-Disposition': f'attachment; filename="{document["original_file_name"]}"'
+            }
         )
         
     except Exception as e:
@@ -138,31 +149,32 @@ async def process_embeddings(
         # 데이터베이스 연결
         db = DBConnection()
         await db.initialize()
+        client = await db.client
         
         # 문서 정보 조회
-        query = """
-            SELECT id, storage_path, file_uploaded 
-            FROM pdf_documents 
-            WHERE id = %s AND account_id = %s AND deleted_at IS NULL
-        """
-        result = await db.fetch_one(query, [document_id, user_id])
+        document_response = await client.table('pdf_documents').select(
+            'id, storage_path, file_uploaded'
+        ).eq('id', document_id).eq('account_id', user_id).is_('deleted_at', 'null').execute()
         
-        if not result:
+        if not document_response.data:
             raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
         
-        if not result['file_uploaded'] or not result['storage_path']:
+        document = document_response.data[0]
+        
+        if not document['file_uploaded'] or not document['storage_path']:
             raise HTTPException(status_code=400, detail="파일이 아직 업로드되지 않았습니다.")
         
         # 임베딩 상태를 processing으로 업데이트
-        update_query = "UPDATE pdf_documents SET embedding_status = %s WHERE id = %s"
-        await db.execute(update_query, ['processing', document_id])
+        await client.table('pdf_documents').update({
+            'embedding_status': 'processing'
+        }).eq('id', document_id).execute()
         
         # Ollama 임베딩 프로세서 초기화
         processor = OllamaEmbeddingProcessor()
         
         # 백그라운드에서 임베딩 처리
         import asyncio
-        asyncio.create_task(processor.process_document(document_id, result['storage_path']))
+        asyncio.create_task(processor.process_document(document_id, document['storage_path']))
         
         return {
             "success": True,
@@ -218,22 +230,22 @@ async def get_embedding_status(
         # 데이터베이스 연결
         db = DBConnection()
         await db.initialize()
+        client = await db.client
         
         # 문서 상태 조회
-        query = """
-            SELECT embedding_status, total_chunks 
-            FROM pdf_documents 
-            WHERE id = %s AND account_id = %s AND deleted_at IS NULL
-        """
-        result = await db.fetch_one(query, [document_id, user_id])
+        document_response = await client.table('pdf_documents').select(
+            'embedding_status, total_chunks'
+        ).eq('id', document_id).eq('account_id', user_id).is_('deleted_at', 'null').execute()
         
-        if not result:
+        if not document_response.data:
             raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
+        
+        document = document_response.data[0]
         
         return {
             "document_id": document_id,
-            "embedding_status": result['embedding_status'],
-            "total_chunks": result.get('total_chunks', 0)
+            "embedding_status": document.get('embedding_status'),
+            "total_chunks": document.get('total_chunks', 0)
         }
         
     except Exception as e:

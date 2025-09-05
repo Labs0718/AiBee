@@ -73,12 +73,29 @@ export async function POST(request: NextRequest) {
     // Ollama 임베딩 처리를 위한 백그라운드 작업 트리거
     // 백엔드 API 호출 (비동기로 처리)
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-    fetch(`${backendUrl}/pdf-documents/${documentId}/process-embeddings`, {
+    const embeddingUrl = `${backendUrl}/pdf-documents/${documentId}/process-embeddings`;
+    const authHeader = request.headers.get('Authorization') || '';
+    
+    console.log('임베딩 처리 요청:', { embeddingUrl, authHeader: authHeader ? '인증헤더있음' : '인증헤더없음' });
+    
+    fetch(embeddingUrl, {
       method: 'POST',
       headers: {
-        'Authorization': request.headers.get('Authorization') || ''
+        'Authorization': authHeader,
+        'Content-Type': 'application/json'
       }
-    }).catch(error => console.error('임베딩 처리 요청 실패:', error));
+    })
+    .then(response => {
+      console.log('임베딩 API 응답:', response.status, response.statusText);
+      if (!response.ok) {
+        return response.text().then(text => {
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        });
+      }
+      return response.json();
+    })
+    .then(data => console.log('임베딩 처리 시작됨:', data))
+    .catch(error => console.error('임베딩 처리 요청 실패:', error));
 
     return NextResponse.json({
       success: true,
