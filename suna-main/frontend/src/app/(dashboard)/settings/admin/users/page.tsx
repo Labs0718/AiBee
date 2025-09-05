@@ -151,7 +151,16 @@ export default function AdminUsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   
-  // Fetch users with current filters
+  // Fetch all users for statistics (without role filter)
+  const { data: allUsers, isLoading: allUsersLoading } = useAdminUsers({
+    page: 1,
+    limit: 1000, // Get all users for accurate statistics
+    search: searchQuery || undefined,
+    department: departmentFilter !== 'all' ? departmentFilter : undefined,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+  });
+
+  // Fetch users with current filters for table display
   const { data: users, isLoading, error, refetch } = useAdminUsers({
     page: currentPage,
     limit: itemsPerPage,
@@ -227,7 +236,7 @@ export default function AdminUsersPage() {
   const updateUserRoleMutation = useUpdateUserRole();
 
   // Loading state handling
-  const loadingState = profileLoading || isLoading;
+  const loadingState = profileLoading || isLoading || allUsersLoading;
 
   // 사용자 상태 변경
   const handleStatusChange = (userId: string, newStatus: 'active' | 'inactive') => {
@@ -322,11 +331,12 @@ export default function AdminUsersPage() {
     }
   };
 
-  // 통계 계산
-  const totalUsers = users?.length || 0;
-  const verifiedUsers = users?.filter(u => u.email_confirmed_at).length || 0;
-  const adminUsers = users?.filter(u => u.is_admin).length || 0;
-  const recentUsers = users?.filter(u => {
+  // 통계 계산 (전체 사용자 기준)
+  const totalUsers = allUsers?.length || 0;
+  const verifiedUsers = allUsers?.filter(u => u.email_confirmed_at).length || 0;
+  const adminUsers = allUsers?.filter(u => u.user_role === 'admin' || u.user_role === 'operator').length || 0;
+  const regularUsers = allUsers?.filter(u => u.user_role === 'user').length || 0;
+  const recentUsers = allUsers?.filter(u => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
     return new Date(u.created_at) > oneWeekAgo;
@@ -425,7 +435,7 @@ export default function AdminUsersPage() {
             />
             <AdvancedStatsCard 
               title="Regular Users" 
-              value={(totalUsers - adminUsers).toString()} 
+              value={regularUsers.toString()} 
               change={0}
               icon={UserCheck}
               color="purple"
@@ -447,9 +457,9 @@ export default function AdminUsersPage() {
               <nav className="flex space-x-8">
                 {[
                   { id: 'all', label: '전체 사용자', count: totalUsers },
-                  { id: 'admin', label: '관리자', count: users?.filter(u => u.user_role === 'admin').length || 0 },
-                  { id: 'operator', label: '운영자', count: users?.filter(u => u.user_role === 'operator').length || 0 },
-                  { id: 'user', label: '일반 사용자', count: users?.filter(u => u.user_role === 'user').length || 0 }
+                  { id: 'admin', label: '관리자', count: allUsers?.filter(u => u.user_role === 'admin').length || 0 },
+                  { id: 'operator', label: '운영자', count: allUsers?.filter(u => u.user_role === 'operator').length || 0 },
+                  { id: 'user', label: '일반 사용자', count: allUsers?.filter(u => u.user_role === 'user').length || 0 }
                 ].map(tab => (
                   <button
                     key={tab.id}
