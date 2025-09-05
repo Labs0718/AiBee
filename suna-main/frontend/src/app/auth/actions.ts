@@ -125,7 +125,8 @@ export async function signUp(prevState: any, formData: FormData) {
       p_user_id: data.user.id,
       p_display_name: name.trim(),
       p_department_id: departmentId,
-      p_user_role: 'user'  // 기본값: 일반사용자
+      p_user_role: 'user',  // 기본값: 일반사용자
+      p_email: email  // 이메일도 함께 전달
     });
 
     if (updateError) {
@@ -134,7 +135,8 @@ export async function signUp(prevState: any, formData: FormData) {
     } else {
       console.log('User profile updated successfully:', {
         display_name: name.trim(),
-        department_id: departmentId
+        department_id: departmentId,
+        email: email
       });
     }
 
