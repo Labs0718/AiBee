@@ -82,10 +82,13 @@ class OllamaEmbeddingProcessor:
             # 1. Supabase Storage에서 PDF 파일 다운로드
             file_response = self.supabase.storage.from_('pdf-documents').download(storage_path)
             
-            if file_response.error:
+            # 최신 Supabase Python 클라이언트는 직접 bytes를 반환함
+            if isinstance(file_response, bytes):
+                pdf_bytes = file_response
+            elif hasattr(file_response, 'error') and file_response.error:
                 return {"success": False, "error": f"PDF 파일을 다운로드할 수 없습니다: {file_response.error}"}
-            
-            pdf_bytes = file_response.data
+            else:
+                pdf_bytes = file_response.data if hasattr(file_response, 'data') else file_response
             
             if not pdf_bytes:
                 return {"success": False, "error": "PDF 파일이 비어있습니다."}
@@ -134,7 +137,8 @@ class OllamaEmbeddingProcessor:
                 print(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
                 result = self.supabase.table('pdf_embeddings').insert(embeddings_data).execute()
                 
-                if result.error:
+                # 최신 Supabase Python 클라이언트 응답 처리
+                if hasattr(result, 'error') and result.error:
                     print(f"임베딩 저장 오류: {result.error}")
                     return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
                 
@@ -144,7 +148,7 @@ class OllamaEmbeddingProcessor:
                     'total_chunks': len(embeddings_data)
                 }).eq('id', document_id).execute()
                 
-                if update_result.error:
+                if hasattr(update_result, 'error') and update_result.error:
                     print(f"문서 상태 업데이트 오류: {update_result.error}")
                 
                 print(f"임베딩 처리 완료: {len(embeddings_data)}개 임베딩 생성됨")
