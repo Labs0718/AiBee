@@ -179,19 +179,198 @@ class OllamaEmbeddingProcessor:
         match_count: int = 5,
         filter_department: str = None
     ) -> List[Dict[str, Any]]:
-        """쿼리와 유사한 문서 검색 (BGE Large 1024차원)"""
+        """최신 하이브리드 검색 (Dense + Sparse + Query Expansion + Reranking)"""
         try:
-            # 1. 쿼리 임베딩 생성
-            query_embedding = self.get_ollama_embedding(query)
+            # 1. Query Expansion - 다양한 표현으로 확장
+            expanded_queries = await self._expand_query_advanced(query)
+            print(f"확장된 쿼리: {expanded_queries}")
             
+            # 2. Multi-Query Dense Search
+            all_dense_results = []
+            for expanded_query in expanded_queries:
+                query_embedding = self.get_ollama_embedding(expanded_query)
+                if query_embedding and len(query_embedding) == 1024:
+                    dense_results = self.supabase.rpc(
+                        'search_documents',
+                        {
+                            'query_embedding': query_embedding,
+                            'match_count': match_count * 2,  # 더 많이 가져와서 재랭킹
+                            'filter_department': filter_department
+                        }
+                    ).execute()
+                    
+                    if dense_results.data:
+                        # 각 결과에 쿼리 정보 추가
+                        for result in dense_results.data:
+                            result['search_query'] = expanded_query
+                        all_dense_results.extend(dense_results.data)
+            
+            # 3. Sparse Search (키워드 기반) - PostgreSQL Full Text Search
+            sparse_results = await self._keyword_search(query, match_count * 2, filter_department)
+            
+            # 4. Hybrid Fusion - RRF (Reciprocal Rank Fusion)
+            fused_results = self._reciprocal_rank_fusion(all_dense_results, sparse_results)
+            
+            # 5. Semantic Reranking - 의미적 재랭킹
+            final_results = await self._semantic_rerank(query, fused_results[:match_count * 3])
+            
+            return final_results[:match_count]
+            
+        except Exception as e:
+            print(f"고급 검색 오류: {str(e)}")
+            # 실패시 기본 검색으로 폴백
+            return await self._fallback_search(query, match_count, filter_department)
+    
+    async def _expand_query_advanced(self, query: str) -> List[str]:
+        """고급 쿼리 확장 - 동의어, 관련어, 상위/하위 개념"""
+        base_query = query.strip()
+        expanded = [base_query]
+        
+        # 한국어 민원 도메인 특화 확장
+        expansion_map = {
+            "교통": ["교통체증", "교통난", "교통문제", "도로", "차량", "신호등"],
+            "정체": ["체증", "막힘", "지연", "느림"],
+            "소음": ["시끄러움", "소리", "騒音", "소음공해", "층간소음"],
+            "주차": ["주차장", "주차공간", "주차난", "주차문제"],
+            "민원": ["불만", "신고", "요청", "건의", "항의"]
+        }
+        
+        for keyword, synonyms in expansion_map.items():
+            if keyword in base_query:
+                for synonym in synonyms:
+                    expanded.append(base_query.replace(keyword, synonym))
+        
+        # 지역별 특화 확장
+        if "강남" in base_query:
+            expanded.extend([
+                base_query.replace("강남", "테헤란로"),
+                base_query.replace("강남", "역삼동"),
+                base_query + " CBD"
+            ])
+        
+        return list(set(expanded))[:5]  # 중복 제거, 최대 5개
+    
+    async def _keyword_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
+        """PostgreSQL Full Text Search를 이용한 키워드 검색"""
+        try:
+            # PostgreSQL의 한국어 전문 검색
+            search_query = f"""
+            SELECT 
+                document_id,
+                chunk_text,
+                document_title,
+                department,
+                ts_rank(to_tsvector('korean', chunk_text), plainto_tsquery('korean', %s)) as rank,
+                'keyword' as search_type
+            FROM pdf_embeddings pe
+            JOIN pdf_documents pd ON pe.document_id = pd.id
+            WHERE to_tsvector('korean', chunk_text) @@ plainto_tsquery('korean', %s)
+            AND pd.deleted_at IS NULL
+            AND pd.embedding_status = 'completed'
+            {}
+            ORDER BY rank DESC
+            LIMIT %s
+            """.format("AND pd.department = %s" if filter_department else "")
+            
+            params = [query, query]
+            if filter_department:
+                params.append(filter_department)
+            params.append(match_count)
+            
+            # 직접 SQL 실행 (supabase rpc 대신)
+            result = self.supabase.postgrest.rpc('execute_sql', {
+                'sql': search_query,
+                'params': params
+            }).execute()
+            
+            return result.data if result.data else []
+            
+        except Exception as e:
+            print(f"키워드 검색 오류: {str(e)}")
+            return []
+    
+    def _reciprocal_rank_fusion(self, dense_results: List[Dict], sparse_results: List[Dict], k: int = 60) -> List[Dict]:
+        """RRF를 이용한 하이브리드 검색 결과 융합"""
+        scores = {}
+        
+        # Dense 검색 결과 점수화
+        for rank, result in enumerate(dense_results):
+            doc_key = f"{result['document_id']}_{result.get('chunk_index', 0)}"
+            if doc_key not in scores:
+                scores[doc_key] = {'result': result, 'dense_score': 0, 'sparse_score': 0}
+            scores[doc_key]['dense_score'] += 1 / (k + rank + 1)
+        
+        # Sparse 검색 결과 점수화
+        for rank, result in enumerate(sparse_results):
+            doc_key = f"{result['document_id']}_{result.get('chunk_index', 0)}"
+            if doc_key not in scores:
+                scores[doc_key] = {'result': result, 'dense_score': 0, 'sparse_score': 0}
+            scores[doc_key]['sparse_score'] += 1 / (k + rank + 1)
+        
+        # 총 점수로 정렬
+        for item in scores.values():
+            item['total_score'] = item['dense_score'] + item['sparse_score']
+            item['result']['fusion_score'] = item['total_score']
+        
+        return [item['result'] for item in sorted(scores.values(), key=lambda x: x['total_score'], reverse=True)]
+    
+    async def _semantic_rerank(self, query: str, results: List[Dict]) -> List[Dict]:
+        """의미적 재랭킹 - 쿼리와 각 결과의 의미적 관련성 점수화"""
+        if not results:
+            return []
+        
+        try:
+            # 쿼리 임베딩
+            query_embedding = self.get_ollama_embedding(query)
+            if not query_embedding:
+                return results
+            
+            # 각 결과와 쿼리 간의 세밀한 유사도 계산
+            for result in results:
+                chunk_text = result.get('chunk_text', '')
+                if chunk_text:
+                    chunk_embedding = self.get_ollama_embedding(chunk_text[:500])  # 길이 제한
+                    if chunk_embedding:
+                        # 코사인 유사도 계산
+                        similarity = self._cosine_similarity(query_embedding, chunk_embedding)
+                        result['semantic_score'] = similarity
+                        
+                        # 기존 점수와 결합
+                        fusion_score = result.get('fusion_score', 0)
+                        result['final_score'] = fusion_score * 0.7 + similarity * 0.3
+                    else:
+                        result['semantic_score'] = 0
+                        result['final_score'] = result.get('fusion_score', 0)
+            
+            # 최종 점수로 정렬
+            return sorted(results, key=lambda x: x.get('final_score', 0), reverse=True)
+            
+        except Exception as e:
+            print(f"의미적 재랭킹 오류: {str(e)}")
+            return results
+    
+    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+        """코사인 유사도 계산"""
+        import numpy as np
+        vec1_np = np.array(vec1)
+        vec2_np = np.array(vec2)
+        
+        dot_product = np.dot(vec1_np, vec2_np)
+        norm1 = np.linalg.norm(vec1_np)
+        norm2 = np.linalg.norm(vec2_np)
+        
+        if norm1 == 0 or norm2 == 0:
+            return 0
+        
+        return dot_product / (norm1 * norm2)
+    
+    async def _fallback_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
+        """기본 검색 (고급 검색 실패시 폴백)"""
+        try:
+            query_embedding = self.get_ollama_embedding(query)
             if not query_embedding:
                 return []
             
-            # BGE Large는 1024차원이므로 확인
-            if len(query_embedding) != 1024:
-                print(f"경고: 예상 차원 1024, 실제 차원 {len(query_embedding)}")
-            
-            # 2. 벡터 검색 실행
             result = self.supabase.rpc(
                 'search_documents',
                 {
@@ -204,5 +383,5 @@ class OllamaEmbeddingProcessor:
             return result.data if result.data else []
             
         except Exception as e:
-            print(f"검색 오류: {str(e)}")
+            print(f"폴백 검색 오류: {str(e)}")
             return []
