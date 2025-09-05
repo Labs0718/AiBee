@@ -9,16 +9,23 @@ import numpy as np
 from supabase import create_client
 import asyncio
 
-# Ollama API 설정 (Docker Compose 환경 고려)
-OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://host.docker.internal:11435")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-large")  # BGE Large 모델
+# Ollama API 설정 (로컬 환경 우선)
+OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11435")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-m3")  # BGE-M3 다국어 모델
 
 class OllamaEmbeddingProcessor:
     def __init__(self):
-        self.supabase = create_client(
-            os.getenv("NEXT_PUBLIC_SUPABASE_URL"),
-            os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-        )
+        # Backend uses SUPABASE_URL instead of NEXT_PUBLIC_SUPABASE_URL
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        
+        print(f"Supabase 연결: URL={supabase_url[:50]}..." if supabase_url else "URL=None")
+        print(f"Supabase Key: {'설정됨' if supabase_key else '없음'}")
+        
+        if not supabase_url or not supabase_key:
+            raise Exception(f"Supabase 환경 변수 누락: URL={bool(supabase_url)}, Key={bool(supabase_key)}")
+            
+        self.supabase = create_client(supabase_url, supabase_key)
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=1500,
             chunk_overlap=200,
@@ -41,6 +48,7 @@ class OllamaEmbeddingProcessor:
     def get_ollama_embedding(self, text: str) -> List[float]:
         """Ollama를 사용하여 텍스트 임베딩 생성"""
         try:
+            print(f"Ollama 임베딩 요청: URL={OLLAMA_API_URL}, 모델={EMBEDDING_MODEL}")
             response = requests.post(
                 f"{OLLAMA_API_URL}/api/embeddings",
                 json={
@@ -52,10 +60,16 @@ class OllamaEmbeddingProcessor:
             
             if response.status_code == 200:
                 result = response.json()
-                return result.get("embedding", [])
+                embedding = result.get("embedding", [])
+                print(f"임베딩 성공: 차원 {len(embedding)}")
+                return embedding
             else:
-                print(f"Ollama 임베딩 오류: {response.status_code}")
+                print(f"Ollama 임베딩 오류: {response.status_code}, 응답: {response.text}")
                 return None
+        except requests.exceptions.ConnectionError as e:
+            print(f"Ollama 서버 연결 실패: {str(e)}")
+            print(f"Ollama URL 확인: {OLLAMA_API_URL}")
+            return None
         except Exception as e:
             print(f"Ollama 연결 오류: {str(e)}")
             return None
@@ -68,10 +82,13 @@ class OllamaEmbeddingProcessor:
             # 1. Supabase Storage에서 PDF 파일 다운로드
             file_response = self.supabase.storage.from_('pdf-documents').download(storage_path)
             
-            if file_response.error:
+            # 최신 Supabase Python 클라이언트는 직접 bytes를 반환함
+            if isinstance(file_response, bytes):
+                pdf_bytes = file_response
+            elif hasattr(file_response, 'error') and file_response.error:
                 return {"success": False, "error": f"PDF 파일을 다운로드할 수 없습니다: {file_response.error}"}
-            
-            pdf_bytes = file_response.data
+            else:
+                pdf_bytes = file_response.data if hasattr(file_response, 'data') else file_response
             
             if not pdf_bytes:
                 return {"success": False, "error": "PDF 파일이 비어있습니다."}
@@ -120,7 +137,8 @@ class OllamaEmbeddingProcessor:
                 print(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
                 result = self.supabase.table('pdf_embeddings').insert(embeddings_data).execute()
                 
-                if result.error:
+                # 최신 Supabase Python 클라이언트 응답 처리
+                if hasattr(result, 'error') and result.error:
                     print(f"임베딩 저장 오류: {result.error}")
                     return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
                 
@@ -130,7 +148,7 @@ class OllamaEmbeddingProcessor:
                     'total_chunks': len(embeddings_data)
                 }).eq('id', document_id).execute()
                 
-                if update_result.error:
+                if hasattr(update_result, 'error') and update_result.error:
                     print(f"문서 상태 업데이트 오류: {update_result.error}")
                 
                 print(f"임베딩 처리 완료: {len(embeddings_data)}개 임베딩 생성됨")

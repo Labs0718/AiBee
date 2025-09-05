@@ -5,11 +5,15 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
     
-    // 사용자 인증 확인
+    // 사용자 인증 확인 및 토큰 가져오기
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
+
+    // JWT 토큰 가져오기
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const jwt = session?.access_token;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -73,15 +77,14 @@ export async function POST(request: NextRequest) {
     // Ollama 임베딩 처리를 위한 백그라운드 작업 트리거
     // 백엔드 API 호출 (비동기로 처리)
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-    const embeddingUrl = `${backendUrl}/pdf-documents/${documentId}/process-embeddings`;
-    const authHeader = request.headers.get('Authorization') || '';
+    const embeddingUrl = `${backendUrl}/api/pdf-documents/${documentId}/process-embeddings`;
     
-    console.log('임베딩 처리 요청:', { embeddingUrl, authHeader: authHeader ? '인증헤더있음' : '인증헤더없음' });
+    console.log('임베딩 처리 요청:', { embeddingUrl, jwt: jwt ? '토큰있음' : '토큰없음' });
     
     fetch(embeddingUrl, {
       method: 'POST',
       headers: {
-        'Authorization': authHeader,
+        'Authorization': `Bearer ${jwt}`,
         'Content-Type': 'application/json'
       }
     })

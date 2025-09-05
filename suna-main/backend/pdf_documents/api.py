@@ -6,7 +6,7 @@ from utils.auth_utils import get_current_user_id_from_jwt
 from services.supabase import DBConnection
 from .ollama_embeddings import OllamaEmbeddingProcessor
 
-router = APIRouter()
+router = APIRouter(prefix="/pdf-documents")
 
 @router.post("/upload")
 async def upload_pdf(
@@ -40,33 +40,52 @@ async def upload_pdf(
         await db.initialize()
         client = await db.client
         
-        # Supabase Storage에 업로드 (사용자별 폴더 구조: {user_id}/{document_id}/{filename})
-        storage_path = f"{user_id}/{documentId}/{fileName}"
+        # Supabase Storage에 업로드 (사용자별 폴더 구조: {user_id}/{document_id}/document.pdf)
+        # 한글 파일명 문제 해결을 위해 간단한 파일명 사용, 원본명은 DB에 저장
+        storage_path = f"{user_id}/{documentId}/document.pdf"
+        
+        # 기존 파일이 있으면 삭제 후 업로드 (upsert 대신)
+        try:
+            await client.storage.from_('pdf-documents').remove([storage_path])
+        except:
+            pass  # 파일이 없으면 무시
         
         upload_response = await client.storage.from_('pdf-documents').upload(
             storage_path,
             content,
             file_options={
-                "content-type": "application/pdf",
-                "upsert": True
+                "content-type": "application/pdf"
             }
         )
         
-        if upload_response.error:
+        # 업로드 성공 여부 확인 (최신 Supabase Python 클라이언트 대응)
+        if hasattr(upload_response, 'error') and upload_response.error:
             print(f"Storage 업로드 오류: {upload_response.error}")
             raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {upload_response.error}")
         
-        # 데이터베이스에서 문서 정보 업데이트
+        print(f"Storage 업로드 성공: {upload_response}")
+        
+        # 데이터베이스에서 문서 정보 업데이트 (원본 파일명도 함께 저장)
         update_response = await client.table('pdf_documents').update({
             'storage_path': storage_path,
+            'original_file_name': fileName,  # 원본 파일명 저장
             'file_uploaded': True,
             'embedding_status': 'processing'
         }).eq('id', documentId).eq('account_id', user_id).execute()
         
-        if update_response.error:
+        # 데이터베이스 업데이트 응답 확인 (최신 Supabase Python 클라이언트 대응)
+        if hasattr(update_response, 'error') and update_response.error:
             # 업로드 실패 시 Storage에서 파일 삭제
             await client.storage.from_('pdf-documents').remove([storage_path])
             raise HTTPException(status_code=500, detail=f"데이터베이스 업데이트 실패: {update_response.error}")
+        
+        # 업데이트된 데이터 확인
+        if not update_response.data:
+            # 업로드 실패 시 Storage에서 파일 삭제
+            await client.storage.from_('pdf-documents').remove([storage_path])
+            raise HTTPException(status_code=500, detail="문서 정보 업데이트에 실패했습니다.")
+        
+        print(f"데이터베이스 업데이트 성공: {update_response.data}")
         
         # 임베딩 처리 시작 (백그라운드)
         processor = OllamaEmbeddingProcessor()
@@ -82,6 +101,9 @@ async def upload_pdf(
         }
         
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"업로드 오류 상세: {error_details}")
         print(f"업로드 오류: {str(e)}")
         raise HTTPException(status_code=500, detail=f"파일 업로드 실패: {str(e)}")
 
@@ -183,6 +205,10 @@ async def process_embeddings(
         }
         
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"임베딩 처리 오류 상세: {error_details}")
+        print(f"임베딩 처리 오류: {str(e)}")
         raise HTTPException(status_code=500, detail=f"임베딩 처리 실패: {str(e)}")
 
 @router.post("/search")
