@@ -90,7 +90,47 @@ async def upload_pdf(
         # 임베딩 처리 시작 (백그라운드)
         processor = OllamaEmbeddingProcessor()
         import asyncio
-        asyncio.create_task(processor.process_document(documentId, storage_path))
+        
+        async def process_and_complete(doc_id, path):
+            """임베딩 처리 후 자동으로 completed 상태로 변경"""
+            try:
+                result = await processor.process_document(doc_id, path)
+                print(f"임베딩 처리 결과: {result}")
+                
+                # 처리 완료되었는데 상태가 processing이면 completed로 변경
+                if result.get("success"):
+                    # 처리된 청크 수 확인
+                    chunks_processed = result.get("chunks_processed", 0)
+                    if chunks_processed > 0:
+                        await client.table('pdf_documents').update({
+                            'embedding_status': 'completed',
+                            'total_chunks': chunks_processed
+                        }).eq('id', doc_id).execute()
+                        print(f"문서 {doc_id} 상태를 completed로 변경 완료 ({chunks_processed}개 청크)")
+                
+            except Exception as e:
+                print(f"백그라운드 처리 중 오류: {e}")
+                
+                # 오류 발생해도 저장된 청크가 있는지 확인
+                try:
+                    saved_chunks_result = await client.table('pdf_embeddings').select('id').eq('document_id', doc_id).execute()
+                    saved_count = len(saved_chunks_result.data) if saved_chunks_result.data else 0
+                    
+                    if saved_count > 0:
+                        await client.table('pdf_documents').update({
+                            'embedding_status': 'completed',
+                            'total_chunks': saved_count
+                        }).eq('id', doc_id).execute()
+                        print(f"오류 발생했지만 {saved_count}개 청크 저장되어 completed 처리")
+                    else:
+                        await client.table('pdf_documents').update({
+                            'embedding_status': 'failed'
+                        }).eq('id', doc_id).execute()
+                        print(f"저장된 청크가 없어서 failed 처리")
+                except Exception as update_error:
+                    print(f"상태 업데이트 실패: {update_error}")
+        
+        asyncio.create_task(process_and_complete(documentId, storage_path))
         
         # 성공 응답
         return {
