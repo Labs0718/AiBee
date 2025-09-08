@@ -707,6 +707,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# AI 정책 브리핑 생성기')[0].trim();
                                                 }
                                                 
+                                                if (fullContent.includes('# 정책 홍보 콘텐츠 초안 자동 생성')) {
+                                                    return fullContent.split('# 정책 홍보 콘텐츠 초안 자동 생성')[0].trim();
+                                                }
                                                 
                                                 return fullContent;
                                             } catch {
