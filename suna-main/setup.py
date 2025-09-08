@@ -167,6 +167,9 @@ def load_existing_env_vars():
         "kortix": {
             "KORTIX_ADMIN_API_KEY": backend_env.get("KORTIX_ADMIN_API_KEY", ""),
         },
+        "composio": {
+            "COMPOSIO_API_KEY": backend_env.get("COMPOSIO_API_KEY", ""),
+        },
         "mailtrap": {
             "MAILTRAP_API_TOKEN": backend_env.get("MAILTRAP_API_TOKEN", ""),
             "MAILTRAP_SENDER_EMAIL": backend_env.get("MAILTRAP_SENDER_EMAIL", ""),
@@ -281,6 +284,7 @@ class SetupWizard:
             "mcp": existing_env_vars["mcp"],
             "pipedream": existing_env_vars["pipedream"],
             "kortix": existing_env_vars["kortix"],
+            "composio": existing_env_vars.get("composio", {}),
             "mailtrap": existing_env_vars.get("mailtrap", {}),
         }
 
@@ -1192,6 +1196,7 @@ class SetupWizard:
             **self.env_vars["pipedream"],
             **self.env_vars["daytona"],
             **self.env_vars["kortix"],
+            **self.env_vars.get("composio", {}),
             **self.env_vars.get("mailtrap", {}),
             "NEXT_PUBLIC_URL": "http://localhost:3000",
             "GROUPWARE_ENCRYPTION_KEY": groupware_key,
