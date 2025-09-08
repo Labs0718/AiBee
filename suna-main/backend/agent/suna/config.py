@@ -16,6 +16,7 @@ class SunaConfig:
         "sb_deploy_tool": True,
         "sb_expose_tool": True,
         "web_search_tool": True,
+        "pdf_search_tool": True,
         "sb_vision_tool": True,
         "sb_image_edit_tool": True,
         "data_providers_tool": True,

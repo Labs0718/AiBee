@@ -48,13 +48,21 @@ class SandboxPdfSearchTool(SandboxToolsBase):
     async def search_internal_documents(self, query: str, max_results: int = 5, filter_department: str = None) -> ToolResult:
         """Search internal PDF documents using vector similarity"""
         try:
+            # 프롬프트 전처리: "→" 이후의 텍스트만 추출
+            if "→" in query:
+                # "→" 이후의 텍스트만 추출 (공백 제거)
+                actual_query = query.split("→")[-1].strip()
+                print(f"[PDF_SEARCH] 프롬프트 전처리: '{query}' → '{actual_query}'")
+            else:
+                actual_query = query.strip()
+            
             print("[PDF_SEARCH] 내부문서 검색 시작")
-            print(f"[PDF_SEARCH] 검색 키워드: {query}")
+            print(f"[PDF_SEARCH] 검색 키워드: {actual_query}")
             print("[PDF_SEARCH] search_internal_documents 도구 호출 중...")
             
             # 검색 실행
             results = await self.processor.search_similar_documents(
-                query=query,
+                query=actual_query,
                 match_count=max_results,
                 filter_department=filter_department
             )
@@ -67,8 +75,7 @@ class SandboxPdfSearchTool(SandboxToolsBase):
                 print("[PDF_SEARCH] 발견된 문서: 0개")
                 return ToolResult(
                     success=True,
-                    content="내부 문서에서 관련 자료를 찾지 못했습니다. 다른 키워드로 검색하거나 웹 검색을 활용해보세요.",
-                    metadata={"total_results": 0}
+                    output="내부 문서에서 관련 자료를 찾지 못했습니다. 다른 키워드로 검색하거나 웹 검색을 활용해보세요."
                 )
             
             # 검색 성공 로그
@@ -97,18 +104,12 @@ class SandboxPdfSearchTool(SandboxToolsBase):
             
             return ToolResult(
                 success=True,
-                content=formatted_content,
-                metadata={
-                    "total_results": len(results),
-                    "query": query,
-                    "search_type": "internal_documents"
-                }
+                output=formatted_content
             )
             
         except Exception as e:
             print(f"[PDF_SEARCH] 오류 발생: {str(e)}")
             return ToolResult(
                 success=False,
-                content=f"내부 문서 검색 중 오류가 발생했습니다: {str(e)}",
-                metadata={"error": str(e)}
+                output=f"내부 문서 검색 중 오류가 발생했습니다: {str(e)}"
             )
