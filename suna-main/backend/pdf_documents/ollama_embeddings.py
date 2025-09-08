@@ -132,30 +132,48 @@ class OllamaEmbeddingProcessor:
                 else:
                     print(f"청크 {i} 임베딩 생성 실패")
             
-            # 6. 배치로 임베딩 저장
+            # 6. 작은 배치로 나누어서 임베딩 저장 (대용량 데이터 처리)
             if embeddings_data:
                 print(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
-                result = self.supabase.table('pdf_embeddings').insert(embeddings_data).execute()
                 
-                # 최신 Supabase Python 클라이언트 응답 처리
-                if hasattr(result, 'error') and result.error:
-                    print(f"임베딩 저장 오류: {result.error}")
-                    return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
+                # 배치 크기 설정 (너무 크면 Supabase 저장 실패)
+                BATCH_SIZE = 10  # 한번에 10개씩 저장
+                saved_count = 0
+                
+                for i in range(0, len(embeddings_data), BATCH_SIZE):
+                    batch = embeddings_data[i:i + BATCH_SIZE]
+                    print(f"배치 {i//BATCH_SIZE + 1}/{(len(embeddings_data) + BATCH_SIZE - 1)//BATCH_SIZE}: {len(batch)}개 저장 중...")
+                    
+                    try:
+                        result = self.supabase.table('pdf_embeddings').insert(batch).execute()
+                        
+                        # 최신 Supabase Python 클라이언트 응답 처리
+                        if hasattr(result, 'error') and result.error:
+                            print(f"배치 저장 오류: {result.error}")
+                            return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
+                        
+                        saved_count += len(batch)
+                        print(f"배치 저장 완료: {saved_count}/{len(embeddings_data)}")
+                        
+                    except Exception as batch_error:
+                        print(f"배치 저장 중 예외 발생: {batch_error}")
+                        return {"success": False, "error": f"배치 저장 실패: {str(batch_error)}"}
                 
                 # 7. 문서 상태 업데이트
                 update_result = self.supabase.table('pdf_documents').update({
                     'embedding_status': 'completed',
-                    'total_chunks': len(embeddings_data)
+                    'total_chunks': saved_count,
+                    'actual_chunks': saved_count  # 실제 저장된 청크 수
                 }).eq('id', document_id).execute()
                 
                 if hasattr(update_result, 'error') and update_result.error:
                     print(f"문서 상태 업데이트 오류: {update_result.error}")
                 
-                print(f"임베딩 처리 완료: {len(embeddings_data)}개 임베딩 생성됨")
+                print(f"임베딩 처리 완료: {saved_count}개 임베딩 생성됨")
                 return {
                     "success": True,
-                    "message": f"{len(embeddings_data)}개의 임베딩이 생성되었습니다.",
-                    "chunks_processed": len(embeddings_data)
+                    "message": f"{saved_count}개의 임베딩이 생성되었습니다.",
+                    "chunks_processed": saved_count
                 }
             else:
                 return {"success": False, "error": "임베딩을 생성할 수 없습니다."}
@@ -163,15 +181,39 @@ class OllamaEmbeddingProcessor:
         except Exception as e:
             print(f"문서 처리 오류: {str(e)}")
             
-            # 오류 상태 업데이트
+            # 오류 발생해도 저장된 청크가 있으면 completed로, 없으면 failed로 처리
             try:
-                self.supabase.table('pdf_documents').update({
-                    'embedding_status': 'failed'
-                }).eq('id', document_id).execute()
+                # 저장된 청크 개수 확인
+                saved_chunks_result = self.supabase.table('pdf_embeddings').select('id').eq('document_id', document_id).execute()
+                saved_count = len(saved_chunks_result.data) if saved_chunks_result.data else 0
+                
+                if saved_count > 0:
+                    # 저장된 청크가 있으면 completed로 처리
+                    print(f"오류 발생했지만 {saved_count}개 청크가 저장되어 completed 처리")
+                    self.supabase.table('pdf_documents').update({
+                        'embedding_status': 'completed',
+                        'total_chunks': saved_count,
+                        'actual_chunks': saved_count
+                    }).eq('id', document_id).execute()
+                    
+                    return {
+                        "success": True,
+                        "message": f"처리 중 오류가 발생했지만 {saved_count}개의 임베딩이 성공적으로 저장되었습니다.",
+                        "chunks_processed": saved_count,
+                        "error_details": str(e)
+                    }
+                else:
+                    # 저장된 청크가 없으면 failed 처리
+                    print(f"저장된 청크가 없어서 failed 처리")
+                    self.supabase.table('pdf_documents').update({
+                        'embedding_status': 'failed'
+                    }).eq('id', document_id).execute()
+                    
+                    return {"success": False, "error": str(e)}
+                    
             except Exception as update_error:
                 print(f"오류 상태 업데이트 실패: {update_error}")
-            
-            return {"success": False, "error": str(e)}
+                return {"success": False, "error": f"처리 오류: {str(e)}, 상태 업데이트 오류: {str(update_error)}"}
     
     async def search_similar_documents(
         self,
