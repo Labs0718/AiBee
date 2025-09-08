@@ -162,8 +162,7 @@ class OllamaEmbeddingProcessor:
                 # 7. 문서 상태 업데이트
                 update_result = self.supabase.table('pdf_documents').update({
                     'embedding_status': 'completed',
-                    'total_chunks': saved_count,
-                    'actual_chunks': saved_count  # 실제 저장된 청크 수
+                    'total_chunks': saved_count
                 }).eq('id', document_id).execute()
                 
                 if hasattr(update_result, 'error') and update_result.error:
@@ -192,8 +191,7 @@ class OllamaEmbeddingProcessor:
                     print(f"오류 발생했지만 {saved_count}개 청크가 저장되어 completed 처리")
                     self.supabase.table('pdf_documents').update({
                         'embedding_status': 'completed',
-                        'total_chunks': saved_count,
-                        'actual_chunks': saved_count
+                        'total_chunks': saved_count
                     }).eq('id', document_id).execute()
                     
                     return {
