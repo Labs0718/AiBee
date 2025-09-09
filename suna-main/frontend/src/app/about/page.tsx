@@ -26,12 +26,9 @@ export default function AboutPage() {
         <section className="py-24 bg-white">
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
-              <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full text-lg font-bold mb-8">
+              <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full text-lg font-bold">
                 AiBee Workflow
               </div>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                사용자 요청부터 결과 도출까지의 지능형 워크플로우
-              </p>
             </div>
             
             {/* Main Workflow Diagram */}
@@ -212,12 +209,9 @@ export default function AboutPage() {
         <section className="py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
-              <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full text-lg font-bold mb-8">
+              <div className="inline-block bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full text-lg font-bold">
                 AiBee Architecture
               </div>
-              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                확장 가능하고 안전한 4계층 아키텍처
-              </p>
             </div>
             
             {/* Architecture Visual */}
