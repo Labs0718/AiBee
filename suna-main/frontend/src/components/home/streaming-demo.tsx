@@ -351,7 +351,7 @@ export function StreamingDemo() {
           }, 200);
         }, 300);
       }
-    }, 5);
+    }, 50);
   };
   
   const startChatDemo = () => {
@@ -542,7 +542,7 @@ export function StreamingDemo() {
 
   if (showInputDemo) {
     return (
-      <div ref={demoRef} className="w-full px-24 lg:px-40">
+      <div ref={demoRef} className="w-full px-32 lg:px-48 xl:px-56">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
             <img src="/logo2.png" alt="AiBee Logo" className="w-12 h-12" />
@@ -585,7 +585,7 @@ export function StreamingDemo() {
   }
 
   return (
-    <div ref={demoRef} className="w-full px-24 lg:px-40">
+    <div ref={demoRef} className="w-full px-32 lg:px-48 xl:px-56">
       <div className="text-center mb-12">
         <div className="flex items-center justify-center gap-4 mb-4">
           <img src="/logo2.png" alt="AiBee Logo" className="w-12 h-12" />

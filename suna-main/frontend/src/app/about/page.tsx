@@ -95,30 +95,27 @@ export default function AboutPage() {
         </section>
 
         {/* Workflow Section */}
-        <section className="py-24 bg-gradient-to-br from-purple-50 to-blue-50">
+        <section className="py-24 bg-gray-50">
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
-                How Suna Works
+                Suna 작동 방식
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto font-light">
-                Intelligent AI assistant process from user request to result delivery
+                사용자 요청부터 결과 전달까지의 지능형 AI 어시스턴트 처리 과정
               </p>
             </div>
             
             {/* Main Workflow Diagram */}
-            <div className="bg-white rounded-2xl p-8 lg:p-12 border-2 border-purple-200 shadow-xl mb-16 relative overflow-hidden">
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
-              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full -ml-12 -mb-12 opacity-50"></div>
+            <div className="bg-white rounded-lg p-8 lg:p-12 border border-gray-300 shadow-sm mb-16 relative overflow-hidden">
               
               <div className="relative">
                 {/* Top Row - User to AI */}
                 <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 mb-12">
                   {/* User */}
                   <div className="flex flex-col items-center group">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 border-2 border-blue-300 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                      <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-20 h-20 bg-gray-100 rounded-xl flex items-center justify-center mb-4 border border-gray-300 shadow-sm group-hover:shadow-md transition-shadow duration-300">
+                      <svg className="w-10 h-10 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
@@ -129,12 +126,11 @@ export default function AboutPage() {
                   </div>
                   
                   {/* Arrow */}
-                  <div className="flex items-center text-purple-400">
+                  <div className="flex items-center text-gray-500">
                     <div className="hidden lg:flex items-center">
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
-                        <div className="w-16 h-1 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></div>
-                        <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-16 h-1 bg-gray-400 rounded-full"></div>
+                        <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -143,26 +139,25 @@ export default function AboutPage() {
                   
                   {/* AI Core */}
                   <div className="relative group">
-                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-white p-8 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:-translate-y-1">
+                    <div className="bg-gray-800 text-white p-8 rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
                       <div className="text-center">
                         <div className="flex items-center justify-center mb-3">
                           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
-                            <span className="text-blue-600 text-lg font-bold">S</span>
+                            <span className="text-gray-800 text-lg font-bold">S</span>
                           </div>
                           <div className="text-2xl font-bold">AiBee</div>
                         </div>
-                        <div className="text-sm text-blue-200">Agent Runtime</div>
+                        <div className="text-sm text-gray-300">Agent Runtime</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Arrow */}
-                  <div className="flex items-center text-purple-400">
+                  <div className="flex items-center text-gray-500">
                     <div className="hidden lg:flex items-center">
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
-                        <div className="w-16 h-1 bg-gradient-to-r from-purple-400 to-green-400 rounded-full"></div>
-                        <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="w-16 h-1 bg-gray-400 rounded-full"></div>
+                        <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -171,13 +166,22 @@ export default function AboutPage() {
 
                   {/* Results */}
                   <div className="flex flex-col items-center">
-                    <div className="bg-gradient-to-br from-green-100 to-teal-100 p-6 rounded-2xl border-2 border-green-300 shadow-lg mb-4">
+                    <div className="bg-gray-100 p-6 rounded-xl border border-gray-300 shadow-sm mb-4">
                       <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">자료 및 결과</h3>
-                        <div className="flex items-center justify-center space-x-3 text-sm">
-                          <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs">SupabaseDB</span>
-                          <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">Storage</span>
-                          <span className="px-2 py-1 bg-red-200 text-red-800 rounded-full text-xs">WebSocket</span>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">자료 및 결과</h3>
+                        <div className="flex flex-col items-center space-y-2 text-sm">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-gray-700">SupabaseDB</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span className="text-gray-700">Storage</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span className="text-gray-700">WebSocket</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -191,10 +195,10 @@ export default function AboutPage() {
                     <p className="text-sm text-gray-600">다양한 업무를 처리하는 스마트 도구들</p>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200 hover:shadow-md transition-all duration-300 group">
+                  <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div className="bg-gray-100 p-4 rounded-lg border border-gray-300 hover:shadow-md transition-all duration-300 group">
                       <div className="text-center">
-                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
                           </svg>
@@ -204,9 +208,9 @@ export default function AboutPage() {
                       </div>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 hover:shadow-md transition-all duration-300 group">
+                    <div className="bg-gray-100 p-4 rounded-lg border border-gray-300 hover:shadow-md transition-all duration-300 group">
                       <div className="text-center">
-                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                           </svg>
@@ -216,9 +220,9 @@ export default function AboutPage() {
                       </div>
                     </div>
                     
-                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200 hover:shadow-md transition-all duration-300 group">
+                    <div className="bg-gray-100 p-4 rounded-lg border border-gray-300 hover:shadow-md transition-all duration-300 group">
                       <div className="text-center">
-                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                        <div className="w-8 h-8 bg-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -228,56 +232,32 @@ export default function AboutPage() {
                         <div className="text-xs text-gray-600">이미지 분석</div>
                       </div>
                     </div>
-                    
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 hover:shadow-md transition-all duration-300 group">
-                      <div className="text-center">
-                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <div className="font-semibold text-gray-900 text-sm">Files Tool</div>
-                        <div className="text-xs text-gray-600">파일 관리</div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200 hover:shadow-md transition-all duration-300 group">
-                      <div className="text-center">
-                        <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                        </div>
-                        <div className="font-semibold text-gray-900 text-sm">Sheets Tool</div>
-                        <div className="text-xs text-gray-600">데이터 처리</div>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl border border-red-200 hover:shadow-md transition-all duration-300 group">
-                      <div className="text-center">
-                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                        </div>
-                        <div className="font-semibold text-gray-900 text-sm">Deploy Tool</div>
-                        <div className="text-xs text-gray-600">배포 관리</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 
                 {/* Process Description */}
                 <div className="mt-12 pt-8 border-t border-gray-200">
-                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border border-blue-200">
+                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                     <div className="text-center">
-                      <h4 className="font-semibold text-gray-900 mb-2">처리 과정</h4>
-                      <p className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                        1. 사용자 요청을 자연어로 분석하고 의도를 파악합니다 <br/>
-                        2. 최적의 도구를 자동 선택하여 실시간으로 작업을 수행합니다 <br/>
-                        3. 처리 결과를 안전하게 저장하고 실시간으로 전달합니다 <br/>
-                        4. 지속적인 모니터링을 통해 품질을 보장합니다
-                      </p>
+                      <h4 className="font-semibold text-gray-900 mb-4">처리 과정</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-left">
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs font-bold">1</div>
+                          <p className="text-sm text-gray-700">사용자 요청을 자연어로 분석하고 의도를 파악합니다</p>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs font-bold">2</div>
+                          <p className="text-sm text-gray-700">최적의 도구를 자동 선택하여 실시간으로 작업을 수행합니다</p>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                          <p className="text-sm text-gray-700">처리 결과를 안전하게 저장하고 실시간으로 전달합니다</p>
+                        </div>
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 w-6 h-6 bg-gray-700 text-white rounded-full flex items-center justify-center text-xs font-bold">4</div>
+                          <p className="text-sm text-gray-700">지속적인 모니터링을 통해 품질을 보장합니다</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -292,8 +272,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Request Processing</h4>
-                <p className="text-gray-600 text-sm">Natural language understanding and intent analysis with automated tool selection</p>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">요청 처리</h4>
+                <p className="text-gray-600 text-sm">자연어 이해와 의도 분석을 통한 자동 도구 선택</p>
               </div>
               
               <div className="text-center">
@@ -302,8 +282,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Real-time Execution</h4>
-                <p className="text-gray-600 text-sm">Browser automation, web search, and image analysis with instant processing</p>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">실시간 실행</h4>
+                <p className="text-gray-600 text-sm">브라우저 자동화, 웹 검색, 이미지 분석을 통한 즉시 처리</p>
               </div>
               
               <div className="text-center">
@@ -312,8 +292,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h4 className="text-lg font-medium text-gray-900 mb-2">Response Delivery</h4>
-                <p className="text-gray-600 text-sm">Secure database storage with WebSocket-based real-time result transmission</p>
+                <h4 className="text-lg font-medium text-gray-900 mb-2">결과 전달</h4>
+                <p className="text-gray-600 text-sm">WebSocket 기반 실시간 결과 전송과 보안 데이터베이스 저장</p>
               </div>
             </div>
           </div>
@@ -324,10 +304,10 @@ export default function AboutPage() {
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
-                System Architecture
+                시스템 아키텍처
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto font-light">
-                Four-layer enterprise architecture for scalable AI operations
+                확장 가능한 AI 운영을 위한 4계층 엔터프라이즈 아키텍처
               </p>
             </div>
             
@@ -343,7 +323,7 @@ export default function AboutPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">Application Layer</h3>
-                        <p className="text-gray-600 text-sm">User interface and security management</p>
+                        <p className="text-gray-600 text-sm">사용자 인터페이스 및 보안 관리</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -367,7 +347,7 @@ export default function AboutPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">Agent Orchestration Layer</h3>
-                        <p className="text-gray-600 text-sm">Intelligent agent coordination and execution</p>
+                        <p className="text-gray-600 text-sm">지능형 에이전트 조정 및 실행</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -391,7 +371,7 @@ export default function AboutPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">Model Serving Layer</h3>
-                        <p className="text-gray-600 text-sm">AI model serving and inference engine</p>
+                        <p className="text-gray-600 text-sm">AI 모델 서빙 및 추론 엔진</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -415,7 +395,7 @@ export default function AboutPage() {
                       </div>
                       <div>
                         <h3 className="text-lg font-medium text-gray-900">Data & Platform Layer</h3>
-                        <p className="text-gray-600 text-sm">Data management and infrastructure platform</p>
+                        <p className="text-gray-600 text-sm">데이터 관리 및 인프라 플랫폼</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -434,8 +414,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="font-medium text-gray-900 mb-2">Scalability</h4>
-                <p className="text-gray-600 text-sm">Modular architecture for flexible expansion</p>
+                <h4 className="font-medium text-gray-900 mb-2">확장성</h4>
+                <p className="text-gray-600 text-sm">유연한 확장을 위한 모듈형 아키텍처</p>
               </div>
               
               <div className="text-center">
@@ -444,8 +424,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
-                <h4 className="font-medium text-gray-900 mb-2">Security</h4>
-                <p className="text-gray-600 text-sm">Enterprise-grade security framework</p>
+                <h4 className="font-medium text-gray-900 mb-2">보안</h4>
+                <p className="text-gray-600 text-sm">엔터프라이즈급 보안 프레임워크</p>
               </div>
               
               <div className="text-center">
@@ -454,8 +434,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h4 className="font-medium text-gray-900 mb-2">Accuracy</h4>
-                <p className="text-gray-600 text-sm">Context-based precise processing</p>
+                <h4 className="font-medium text-gray-900 mb-2">정확성</h4>
+                <p className="text-gray-600 text-sm">컨텍스트 기반 정밀 처리</p>
               </div>
               
               <div className="text-center">
@@ -465,8 +445,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <h4 className="font-medium text-gray-900 mb-2">Efficiency</h4>
-                <p className="text-gray-600 text-sm">Optimized resource management</p>
+                <h4 className="font-medium text-gray-900 mb-2">효율성</h4>
+                <p className="text-gray-600 text-sm">최적화된 리소스 관리</p>
               </div>
             </div>
           </div>
@@ -477,10 +457,10 @@ export default function AboutPage() {
           <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
-                Key Strengths
+                주요 장점
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto font-light">
-                Differentiated AI solutions for enterprises and public institutions
+                기업 및 공공기관을 위한 차별화된 AI 솔루션
               </p>
             </div>
             
@@ -491,8 +471,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-medium text-gray-900 mb-4">Smart Orchestration</h4>
-                <p className="text-gray-600">Coordinate multiple AI agents to intelligently automate complex business tasks</p>
+                <h4 className="text-xl font-medium text-gray-900 mb-4">스마트 오케스트레이션</h4>
+                <p className="text-gray-600">복잡한 비즈니스 작업을 지능적으로 자동화하기 위한 다중 AI 에이전트 조정</p>
               </div>
               
               <div className="bg-white p-8 rounded-lg border border-gray-200">
@@ -501,8 +481,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-medium text-gray-900 mb-4">Enterprise Ready</h4>
-                <p className="text-gray-600">Support both on-premises and cloud environments for secure enterprise deployment</p>
+                <h4 className="text-xl font-medium text-gray-900 mb-4">엔터프라이즈 준비 완료</h4>
+                <p className="text-gray-600">보안 엔터프라이즈 배포를 위한 온프레미스 및 클라우드 환경 모두 지원</p>
               </div>
               
               <div className="bg-white p-8 rounded-lg border border-gray-200">
@@ -511,8 +491,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-medium text-gray-900 mb-4">Domain Customization</h4>
-                <p className="text-gray-600">Integration with groupware and enterprise systems for optimized organizational services</p>
+                <h4 className="text-xl font-medium text-gray-900 mb-4">도메인 맞춤화</h4>
+                <p className="text-gray-600">최적화된 조직 서비스를 위한 그룹웨어 및 엔터프라이즈 시스템 통합</p>
               </div>
               
               <div className="bg-white p-8 rounded-lg border border-gray-200">
@@ -521,8 +501,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-medium text-gray-900 mb-4">Real-time AI Processing</h4>
-                <p className="text-gray-600">Stable data processing with PostgreSQL and real-time AI analysis capabilities</p>
+                <h4 className="text-xl font-medium text-gray-900 mb-4">실시간 AI 처리</h4>
+                <p className="text-gray-600">PostgreSQL을 통한 안정적인 데이터 처리 및 실시간 AI 분석 기능</p>
               </div>
               
               <div className="bg-white p-8 rounded-lg border border-gray-200 md:col-span-2">
@@ -531,8 +511,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
                   </svg>
                 </div>
-                <h4 className="text-xl font-medium text-gray-900 mb-4">On-Premise & Hybrid Cloud Support</h4>
-                <p className="text-gray-600">Flexible integration with existing infrastructure based on VMware, Kubernetes, and OpenShift. Safe operation in security-critical government and enterprise environments.</p>
+                <h4 className="text-xl font-medium text-gray-900 mb-4">온프레미스 및 하이브리드 클라우드 지원</h4>
+                <p className="text-gray-600">VMware, Kubernetes, OpenShift 기반 기존 인프라와의 유연한 통합. 보안이 중요한 정부 및 기업 환경에서의 안전한 운영.</p>
               </div>
             </div>
           </div>

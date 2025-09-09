@@ -373,6 +373,60 @@ export function HeroSection() {
               {/* Additional subtle splashes for more organic feel */}
               <div className="absolute -bottom-8 left-1/4 w-8 h-6 bg-blue-200/8 blur-xl rounded-full -z-10 opacity-40"></div>
               <div className="absolute -bottom-8 right-1/4 w-8 h-6 bg-blue-200/8 blur-xl rounded-full -z-10 opacity-40"></div>
+              
+              {/* Agent Robot Figure - Left side */}
+              <div className="absolute -left-24 -bottom-12 w-16 h-20 -z-20 opacity-30">
+                {/* Robot body */}
+                <div className="absolute bottom-2 left-4 w-8 h-12 bg-gradient-to-b from-blue-400/20 to-blue-600/25 rounded-lg border border-blue-300/15"></div>
+                {/* Robot head */}
+                <div className="absolute bottom-12 left-5 w-6 h-6 bg-gradient-to-b from-blue-300/20 to-blue-500/25 rounded-full border border-blue-300/15"></div>
+                {/* Robot eyes */}
+                <div className="absolute bottom-14 left-6 w-1 h-1 bg-blue-500/40 rounded-full"></div>
+                <div className="absolute bottom-14 left-8 w-1 h-1 bg-blue-500/40 rounded-full"></div>
+                {/* Robot arms */}
+                <div className="absolute bottom-8 left-2 w-3 h-1 bg-blue-400/20 rounded-full"></div>
+                <div className="absolute bottom-8 right-2 w-3 h-1 bg-blue-400/20 rounded-full"></div>
+                {/* Robot legs */}
+                <div className="absolute bottom-0 left-5 w-1 h-3 bg-blue-400/20 rounded-full"></div>
+                <div className="absolute bottom-0 left-8 w-1 h-3 bg-blue-400/20 rounded-full"></div>
+                {/* Agent glow */}
+                <div className="absolute -inset-2 bg-blue-400/5 blur-lg rounded-full"></div>
+              </div>
+              
+              {/* Agent Robot Figure - Right side */}
+              <div className="absolute -right-24 -bottom-12 w-16 h-20 -z-20 opacity-25">
+                {/* Robot body */}
+                <div className="absolute bottom-2 left-4 w-8 h-12 bg-gradient-to-b from-indigo-400/20 to-indigo-600/25 rounded-lg border border-indigo-300/15"></div>
+                {/* Robot head */}
+                <div className="absolute bottom-12 left-5 w-6 h-6 bg-gradient-to-b from-indigo-300/20 to-indigo-500/25 rounded-full border border-indigo-300/15"></div>
+                {/* Robot eyes */}
+                <div className="absolute bottom-14 left-6 w-1 h-1 bg-indigo-500/40 rounded-full"></div>
+                <div className="absolute bottom-14 left-8 w-1 h-1 bg-indigo-500/40 rounded-full"></div>
+                {/* Robot arms */}
+                <div className="absolute bottom-8 left-2 w-3 h-1 bg-indigo-400/20 rounded-full"></div>
+                <div className="absolute bottom-8 right-2 w-3 h-1 bg-indigo-400/20 rounded-full"></div>
+                {/* Robot legs */}
+                <div className="absolute bottom-0 left-5 w-1 h-3 bg-indigo-400/20 rounded-full"></div>
+                <div className="absolute bottom-0 left-8 w-1 h-3 bg-indigo-400/20 rounded-full"></div>
+                {/* Agent glow */}
+                <div className="absolute -inset-2 bg-indigo-400/5 blur-lg rounded-full"></div>
+              </div>
+              
+              {/* Floating AI elements */}
+              <div className="absolute -top-8 left-8 w-4 h-4 -z-20 opacity-20">
+                <div className="w-full h-full bg-gradient-to-br from-cyan-300/30 to-blue-400/30 rounded-full border border-cyan-300/20"></div>
+                <div className="absolute inset-1 bg-cyan-400/20 rounded-full animate-pulse"></div>
+              </div>
+              
+              <div className="absolute -top-12 right-12 w-3 h-3 -z-20 opacity-15">
+                <div className="w-full h-full bg-gradient-to-br from-sky-300/30 to-indigo-400/30 rounded-full border border-sky-300/20"></div>
+                <div className="absolute inset-0.5 bg-sky-400/20 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+              </div>
+              
+              <div className="absolute -top-6 left-1/3 w-2 h-2 -z-20 opacity-18">
+                <div className="w-full h-full bg-gradient-to-br from-blue-300/30 to-purple-400/30 rounded-full border border-blue-300/20"></div>
+                <div className="absolute inset-0.5 bg-blue-400/20 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+              </div>
             </div>
             
             {/* Examples section - right after chat input */}
