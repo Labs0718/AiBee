@@ -22,7 +22,7 @@ export function FooterSection() {
   const logoSrc = '/ability-logo.png';
 
   return (
-    <footer id="footer" className="w-full pb-0 px-6">
+    <footer id="footer" className="w-full pb-0 px-6 bg-white">
         <div className="w-full mx-auto">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between p-10">
@@ -135,7 +135,7 @@ export function FooterSection() {
         rel="noopener noreferrer"
         className="block w-full h-48 md:h-64 relative mt-24 z-0 cursor-pointer"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-background z-10 from-40%" />
+        <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white z-10 from-40%" />
         <div className="absolute inset-0 ">
           <FlickeringGrid
             text={tablet ? 'Agents' : 'Agents Agents Agents'}

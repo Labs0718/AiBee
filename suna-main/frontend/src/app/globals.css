@@ -320,7 +320,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-foreground;
     font-feature-settings: 'palt'; /* Adjusts spacing for CJK text */
   }
 

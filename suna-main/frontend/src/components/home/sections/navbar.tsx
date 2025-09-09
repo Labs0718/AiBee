@@ -122,8 +122,8 @@ export function Navbar() {
           className={cn(
             'mx-auto max-w-7xl rounded-2xl transition-all duration-300 xl:px-0',
             hasScrolled
-              ? 'px-2 md:px-2 border border-border backdrop-blur-lg bg-background/75'
-              : 'shadow-none px-3 md:px-7',
+              ? 'px-2 md:px-2 border border-border backdrop-blur-lg bg-white/95'
+              : 'shadow-none px-3 md:px-7 bg-white',
           )}
         >
           <div className="flex h-[56px] items-center p-2 md:p-4">

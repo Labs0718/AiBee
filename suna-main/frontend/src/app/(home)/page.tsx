@@ -15,10 +15,8 @@ export default function Home() {
         <main className="flex flex-col items-center justify-center min-h-screen w-full">
           <div className="w-full">
             <HeroSection />
-            <div className="py-16 px-4 bg-gray-50 dark:bg-gray-900">
-              <div className="max-w-7xl mx-auto">
-                <StreamingDemo />
-              </div>
+            <div className="py-16 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/20">
+              <StreamingDemo />
             </div>
             <FooterSection />
           </div>

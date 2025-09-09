@@ -34,7 +34,9 @@ import {
   ArrowDownRight,
   Eye,
   Shield,
-  Gauge
+  Gauge,
+  ArrowLeft,
+  ArrowRight
 } from 'lucide-react';
 
 // Fake chart data
@@ -445,22 +447,85 @@ export function StreamingDemo() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [messageRef, setMessageRef] = useState<any>(null);
+  const [currentResultIndex, setCurrentResultIndex] = useState(0);
+  const [showInputDemo, setShowInputDemo] = useState(true);
+  const [typedText, setTypedText] = useState('');
+  const [showChat, setShowChat] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
+
+  const searchResults = [
+    {
+      title: "2024년도 주요시장지수 - 투자정보",
+      url: "marketwatch.com/investing/index/comp",
+      description: "투자 전략에 따른 수익률 차이 발생 경우...",
+      icon: "G",
+      color: "blue"
+    },
+    {
+      title: "예상수익 2024년 주식 투자 전략 - 나스닥",
+      url: "investing.com/indices/nasdaq-composite-technical", 
+      description: "finance.naver.com/world/sise/world_detail.nhn...",
+      icon: "W",
+      color: "green"
+    },
+    {
+      title: "「대형주 전대 상한 논란」 어디까지 공",
+      url: "evaluation.go.kr/web/intro/detail/Download.do",
+      description: "article.com에서 제공하는 시장 분석...",
+      icon: "A", 
+      color: "red"
+    }
+  ];
+
+  const nextResult = () => {
+    setCurrentResultIndex((prev) => (prev + 1) % searchResults.length);
+  };
+
+  const prevResult = () => {
+    setCurrentResultIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+  };
 
   const startDemo = () => {
     setVisibleMessages([]);
     setCurrentTyping(null);
     setIsPlaying(true);
     setHasStarted(true);
+    setShowInputDemo(true);
+    setShowChat(false);
+    setTypedText('');
+    
+    // Step 1: Show typing animation
+    const inputText = '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 엑셀 파일로 다운로드할 수 있게 정리해줘';
+    let currentIndex = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (currentIndex <= inputText.length) {
+        setTypedText(inputText.slice(0, currentIndex));
+        currentIndex++;
+      } else {
+        clearInterval(typeInterval);
+        // Step 2: Wait a moment then show chat interface
+        setTimeout(() => {
+          setShowInputDemo(false);
+          setShowChat(true);
+          // Step 3: Start chat messages
+          setTimeout(() => {
+            startChatDemo();
+          }, 500);
+        }, 1000);
+      }
+    }, 50);
 
+  };
+  
+  const startChatDemo = () => {
     streamingMessages.forEach((message, index) => {
       setTimeout(() => {
         setVisibleMessages(prev => [...prev, message.id]);
         setCurrentTyping(message.id);
         
-        // Enhanced streaming speeds for more messages
         const typingDuration = message.type === 'thinking' ? 1200 : 
                              message.type === 'tool' ? 1800 : 
                              message.type === 'user' ? 0 : 2500;
@@ -536,25 +601,16 @@ export function StreamingDemo() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex items-start gap-3 max-w-4xl"
+          className="flex items-center gap-2 max-w-lg"
         >
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-xl">
-            <Brain className="w-5 h-5 text-white" />
-          </div>
-          <div className="flex-1 pt-2">
-            <div className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-              </motion.div>
-              {currentTyping === message.id ? (
-                <TypingText text={message.content} speed={60} />
-              ) : (
-                message.content
-              )}
-            </div>
+          <Search className="w-4 h-4 text-gray-400" />
+          <div className="bg-gray-100 rounded-full px-3 py-2 text-sm text-gray-600">
+            {currentTyping === message.id ? (
+              <TypingText text="Searching Web" speed={100} />
+            ) : (
+              "Searching Web"
+            )}
+            <span className="ml-1 text-gray-400">대략과 다른 정보를 위해 웹을 검색하는 중...</span>
           </div>
         </motion.div>
       );
@@ -670,15 +726,12 @@ export function StreamingDemo() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex items-start gap-3 justify-end"
+          className="flex justify-end"
         >
           <div className="max-w-3xl">
-            <div className="bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 text-gray-800 dark:text-gray-900 rounded-2xl rounded-br-sm px-5 py-3.5 shadow-lg">
-              <p className="text-sm leading-relaxed">{message.content}</p>
+            <div className="bg-white border border-gray-200 rounded-2xl rounded-br-sm px-4 py-3 shadow-sm">
+              <p className="text-sm leading-relaxed text-gray-800">{message.content}</p>
             </div>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-300 to-gray-400 dark:from-gray-600 dark:to-gray-700 flex items-center justify-center flex-shrink-0 shadow-lg">
-            <User className="w-5 h-5 text-gray-700 dark:text-gray-300" />
           </div>
         </motion.div>
       );
@@ -692,11 +745,11 @@ export function StreamingDemo() {
           transition={{ duration: 0.5 }}
           className="flex items-start gap-3"
         >
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-xl">
-            <Bot className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <img src="/logo2.png" alt="AiBee" className="w-6 h-6" />
           </div>
           <div className="flex-1 space-y-3">
-            <div className="max-w-none text-gray-700 dark:text-gray-300">
+            <div className="max-w-none text-gray-800 dark:text-gray-300">
               {currentTyping === message.id ? (
                 <div className="space-y-2">
                   <StreamingText 
@@ -798,33 +851,72 @@ export function StreamingDemo() {
   };
 
   return (
-    <div ref={demoRef} className="w-full px-1 flex justify-center">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800 w-full max-w-none" style={{width: 'calc(100vw - 2rem)'}}>
-        {/* Refined Chat Header */}
-        <div className="bg-gradient-to-r from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-850 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+    <div ref={demoRef} className="w-full px-24 lg:px-40">
+      {/* Demo Section Title */}
+      <div className="text-center mb-12 relative">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-32 bg-gradient-to-r from-blue-100/30 via-indigo-50/20 to-purple-100/30 rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Title with logo */}
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <img src="/logo2.png" alt="AiBee Logo" className="w-12 h-12" />
+          <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
+            AiBee in Action
+          </h2>
+          <div className="flex gap-1">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+          </div>
+        </div>
+        
+        {/* Description with enhanced styling */}
+        <div className="relative">
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-3xl mx-auto leading-relaxed">
+            AiBee가 실시간으로 금융 데이터를 분석하고 인사이트를 제공하는 과정을 확인해보세요
+          </p>
+          <div className="mt-4 flex items-center justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+              <span>실시간 분석</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>AI 인사이트</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span>데이터 시각화</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="bg-white dark:bg-gray-900 overflow-hidden w-full rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+        {/* Clean Chat Header */}
+        <div className="bg-white dark:bg-gray-800 px-6 py-3 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
+                <img src="/logo2.png" alt="AiBee" className="w-11 h-11" />
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white dark:border-gray-800 shadow-sm"></div>
               </div>
               <div>
-                <h3 className="text-gray-900 dark:text-white font-semibold text-lg">
+                <h3 className="text-gray-900 dark:text-white font-semibold text-base">
                   AiBee
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs flex items-center gap-1.5">
+                <p className="text-gray-500 dark:text-gray-400 text-xs flex items-center gap-1.5">
                   <Shield className="w-3 h-3" />
                   Financial AI Assistant
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-1.5 border border-emerald-200 dark:border-emerald-700/30">
+              <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm"></div>
-                  <span className="text-emerald-700 dark:text-emerald-400 text-xs font-medium">Live Analytics</span>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600 dark:text-gray-400 text-xs">온라인</span>
                 </div>
               </div>
             </div>
@@ -834,8 +926,8 @@ export function StreamingDemo() {
         {/* Two-Panel Layout */}
         <div className="flex h-[800px]">
           {/* Left Panel - AI Conversation */}
-          <div ref={leftPanelRef} className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
-            <div className="p-6 space-y-6">
+          <div ref={leftPanelRef} className="w-[60%] overflow-y-auto bg-white dark:bg-gray-900">
+            <div className="p-4 space-y-3">
               <AnimatePresence mode="popLayout">
                 {streamingMessages
                   .filter(message => visibleMessages.includes(message.id))
@@ -887,22 +979,19 @@ export function StreamingDemo() {
           </div>
 
           {/* Right Panel - AI Thinking & Analysis */}
-          <div ref={rightPanelRef} className="w-[500px] bg-slate-50 dark:bg-slate-900 overflow-y-auto">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+          <div ref={rightPanelRef} className="w-[40%] bg-white dark:bg-gray-800 overflow-y-auto border-l border-gray-200 dark:border-gray-700" style={{display: hasStarted ? 'block' : 'none'}}>
+            <div className="p-4 bg-gray-50 dark:bg-gray-750 border-b border-gray-100 dark:border-gray-700">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  <Brain className="w-4 h-4 text-blue-600" />
-                  AI 사고 과정
+                <div className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  <Search className="w-4 h-4 text-blue-600" />
+                  검색 결과
                 </div>
-                <div className="flex items-center gap-1 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-green-700 dark:text-green-300">실시간</span>
-                </div>
+                <span className="text-xs text-gray-500 dark:text-gray-400">95개 결과</span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">머신러닝 모델을 통한 실시간 분석</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">2025년 8월 9일 오전 10:15</p>
             </div>
             
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               {/* Show different content based on demo state */}
               {!hasStarted ? (
                 /* Before demo starts - Empty/waiting state */
@@ -1560,7 +1649,7 @@ export function StreamingDemo() {
         </div>
 
         {/* Premium Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 px-6 py-4">
+        <div className="bg-gray-100 dark:bg-gray-800 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
