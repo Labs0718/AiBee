@@ -43,11 +43,29 @@ class FeatureFlagManager:
             flag_key = f"{self.flag_prefix}{key}"
             redis_client = await redis.get_client()
             enabled = await redis_client.hget(flag_key, 'enabled')
-            return enabled == 'true' if enabled else False
+            if enabled is not None:
+                return enabled == 'true'
+            # If not found in Redis, use hardcoded defaults
+            return self._get_hardcoded_default(key)
         except Exception as e:
             logger.error(f"Failed to check feature flag {key}: {e}")
-            # Return False by default if Redis is unavailable
-            return False
+            # If Redis is unavailable, use hardcoded defaults
+            return self._get_hardcoded_default(key)
+    
+    def _get_hardcoded_default(self, key: str) -> bool:
+        """Get hardcoded default values for feature flags"""
+        defaults = {
+            'custom_agents': True,
+            'mcp_module': True,
+            'templates_api': True,
+            'triggers_api': True,
+            'workflows_api': True,
+            'knowledge_base': True,
+            'pipedream': True,
+            'credentials_api': True,
+            'suna_default_agent': True,
+        }
+        return defaults.get(key, False)
     
     async def get_flag(self, key: str) -> Optional[Dict[str, str]]:
         """Get feature flag details"""
