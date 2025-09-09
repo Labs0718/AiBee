@@ -8,7 +8,7 @@ const demoMessages = [
   {
     id: 1,
     type: 'user',
-    content: '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 상세 보고서로 정리해줘',
+    content: '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 마크다운 보고서로 정리해줘',
     delay: 0
   },
   {
@@ -162,7 +162,7 @@ const demoMessages = [
   {
     id: 15,
     type: 'thinking',
-    content: 'Excel Report Generation',
+    content: 'Markdown Report Generation',
     delay: 19000
   },
   {
@@ -300,11 +300,6 @@ export function StreamingDemo() {
     setCurrentResultIndex(newIndex);
   };
 
-  const downloadAsPDF = () => {
-    // Demo mode - 실제 다운로드는 실행하지 않음
-    // 클릭 효과만 보여주고 실제 동작은 막음
-    return;
-  };
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -334,7 +329,7 @@ export function StreamingDemo() {
     setCurrentResultIndex(0);
     
     // Step 1: Show typing animation in input
-    const inputText = '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 엑셀 파일로 다운로드할 수 있게 정리해줘';
+    const inputText = '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 마크다운 보고서로 정리해줘';
     let currentIndex = 0;
     
     const typeInterval = setInterval(() => {
@@ -613,7 +608,7 @@ export function StreamingDemo() {
         </div>
 
         {/* Split View */}
-        <div className="flex h-[800px]">
+        <div className="flex h-[900px]">
           {/* Left Panel - Chat */}
           <div className="w-1/2 flex flex-col bg-gray-50">
             <div className="flex-1 overflow-y-auto p-6">
@@ -929,12 +924,13 @@ export function StreamingDemo() {
                   </span>
                   {searchResults[currentResultIndex]?.type === 'markdown_report' && (
                     <button 
-                      onClick={downloadAsPDF}
-                      className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full flex items-center gap-1 transition-colors"
-                      title="PDF로 다운로드"
+                      className="text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-full flex items-center gap-1 transition-colors cursor-default opacity-50"
+                      title="마크다운 보고서 보기"
                     >
-                      <Download className="w-3 h-3" />
-                      PDF 다운로드
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Markdown
                     </button>
                   )}
                   <button className="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-full">

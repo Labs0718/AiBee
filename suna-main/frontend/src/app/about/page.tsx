@@ -19,10 +19,107 @@ export default function AboutPage() {
       <Navbar />
       <main className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="pt-32 pb-24 bg-white relative overflow-hidden">
+        <section className="pt-32 pb-32 bg-white relative overflow-hidden">
           {/* Background gradients - same as main home */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-white to-blue-100/30 -z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-100/20 via-transparent to-blue-50/30 -z-10"></div>
+          
+          {/* Watercolor Bee Decorations */}
+          <div className="absolute inset-0 -z-5 pointer-events-none">
+            {/* Top left bee */}
+            <div className="absolute top-[15%] left-[10%] opacity-20 transform rotate-12">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="25" ry="20" fill="#4A90E2" opacity="0.3"/>
+                <ellipse cx="40" cy="40" rx="22" ry="18" fill="#5FA0F2" opacity="0.4"/>
+                <path d="M25 40 Q30 35 35 40 T45 40 Q50 35 55 40" stroke="#3B82F6" strokeWidth="2" fill="none" opacity="0.5"/>
+                <circle cx="30" cy="38" r="3" fill="#2563EB" opacity="0.6"/>
+                <circle cx="50" cy="38" r="3" fill="#2563EB" opacity="0.6"/>
+                <ellipse cx="25" cy="35" rx="12" ry="8" fill="#60A5FA" opacity="0.25" transform="rotate(-20 25 35)"/>
+                <ellipse cx="55" cy="35" rx="12" ry="8" fill="#60A5FA" opacity="0.25" transform="rotate(20 55 35)"/>
+              </svg>
+            </div>
+            
+            {/* Top right bee */}
+            <div className="absolute top-[20%] right-[15%] opacity-25 transform -rotate-6">
+              <svg width="60" height="60" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="20" ry="16" fill="#60A5FA" opacity="0.35"/>
+                <ellipse cx="40" cy="40" rx="18" ry="14" fill="#3B82F6" opacity="0.3"/>
+                <path d="M28 40 Q32 37 36 40 T44 40 Q48 37 52 40" stroke="#1E40AF" strokeWidth="1.5" fill="none" opacity="0.4"/>
+                <ellipse cx="25" cy="35" rx="10" ry="6" fill="#93C5FD" opacity="0.3" transform="rotate(-25 25 35)"/>
+                <ellipse cx="55" cy="35" rx="10" ry="6" fill="#93C5FD" opacity="0.3" transform="rotate(25 55 35)"/>
+              </svg>
+            </div>
+            
+            {/* Middle left bee */}
+            <div className="absolute top-[45%] left-[5%] opacity-15 transform rotate-45">
+              <svg width="70" height="70" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="23" ry="18" fill="#3B82F6" opacity="0.25"/>
+                <ellipse cx="40" cy="40" rx="20" ry="15" fill="#60A5FA" opacity="0.35"/>
+                <path d="M27 40 Q31 36 35 40 T43 40 Q47 36 51 40" stroke="#2563EB" strokeWidth="1.8" fill="none" opacity="0.45"/>
+                <ellipse cx="26" cy="36" rx="11" ry="7" fill="#93C5FD" opacity="0.2" transform="rotate(-30 26 36)"/>
+                <ellipse cx="54" cy="36" rx="11" ry="7" fill="#93C5FD" opacity="0.2" transform="rotate(30 54 36)"/>
+              </svg>
+            </div>
+            
+            {/* Middle right bee */}
+            <div className="absolute top-[35%] right-[8%] opacity-20 transform -rotate-15">
+              <svg width="75" height="75" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="24" ry="19" fill="#5FA0F2" opacity="0.3"/>
+                <ellipse cx="40" cy="40" rx="21" ry="17" fill="#4A90E2" opacity="0.35"/>
+                <path d="M26 40 Q31 35 36 40 T44 40 Q49 35 54 40" stroke="#3B82F6" strokeWidth="2" fill="none" opacity="0.5"/>
+                <circle cx="32" cy="38" r="2.5" fill="#1E40AF" opacity="0.5"/>
+                <circle cx="48" cy="38" r="2.5" fill="#1E40AF" opacity="0.5"/>
+                <ellipse cx="24" cy="34" rx="13" ry="8" fill="#60A5FA" opacity="0.25" transform="rotate(-18 24 34)"/>
+                <ellipse cx="56" cy="34" rx="13" ry="8" fill="#60A5FA" opacity="0.25" transform="rotate(18 56 34)"/>
+              </svg>
+            </div>
+            
+            {/* Bottom left bee */}
+            <div className="absolute bottom-[25%] left-[12%] opacity-18 transform rotate-30">
+              <svg width="65" height="65" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="22" ry="17" fill="#4A90E2" opacity="0.28"/>
+                <ellipse cx="40" cy="40" rx="19" ry="15" fill="#60A5FA" opacity="0.32"/>
+                <path d="M27 40 Q32 36 37 40 T45 40 Q50 36 55 40" stroke="#2563EB" strokeWidth="1.6" fill="none" opacity="0.42"/>
+                <ellipse cx="26" cy="35" rx="10" ry="6" fill="#93C5FD" opacity="0.22" transform="rotate(-22 26 35)"/>
+                <ellipse cx="54" cy="35" rx="10" ry="6" fill="#93C5FD" opacity="0.22" transform="rotate(22 54 35)"/>
+              </svg>
+            </div>
+            
+            {/* Bottom right bee */}
+            <div className="absolute bottom-[30%] right-[10%] opacity-22 transform -rotate-20">
+              <svg width="68" height="68" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="21" ry="17" fill="#3B82F6" opacity="0.32"/>
+                <ellipse cx="40" cy="40" rx="19" ry="15" fill="#5FA0F2" opacity="0.38"/>
+                <path d="M28 40 Q33 37 38 40 T46 40 Q51 37 56 40" stroke="#1E40AF" strokeWidth="1.7" fill="none" opacity="0.48"/>
+                <circle cx="31" cy="38" r="2.8" fill="#2563EB" opacity="0.55"/>
+                <circle cx="49" cy="38" r="2.8" fill="#2563EB" opacity="0.55"/>
+                <ellipse cx="25" cy="35" rx="11" ry="7" fill="#60A5FA" opacity="0.28" transform="rotate(-28 25 35)"/>
+                <ellipse cx="55" cy="35" rx="11" ry="7" fill="#60A5FA" opacity="0.28" transform="rotate(28 55 35)"/>
+              </svg>
+            </div>
+            
+            {/* Small accent bee - top center */}
+            <div className="absolute top-[10%] left-[50%] opacity-12 transform -translate-x-1/2 rotate-8">
+              <svg width="50" height="50" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="18" ry="14" fill="#93C5FD" opacity="0.3"/>
+                <ellipse cx="40" cy="40" rx="15" ry="12" fill="#60A5FA" opacity="0.35"/>
+                <path d="M30 40 Q34 38 38 40 T46 40 Q50 38 54 40" stroke="#3B82F6" strokeWidth="1.2" fill="none" opacity="0.4"/>
+                <ellipse cx="28" cy="36" rx="8" ry="5" fill="#BFDBFE" opacity="0.25" transform="rotate(-15 28 36)"/>
+                <ellipse cx="52" cy="36" rx="8" ry="5" fill="#BFDBFE" opacity="0.25" transform="rotate(15 52 36)"/>
+              </svg>
+            </div>
+            
+            {/* Small accent bee - bottom center */}
+            <div className="absolute bottom-[15%] left-[45%] opacity-14 transform rotate-35">
+              <svg width="55" height="55" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="40" cy="40" rx="19" ry="15" fill="#60A5FA" opacity="0.28"/>
+                <ellipse cx="40" cy="40" rx="17" ry="13" fill="#4A90E2" opacity="0.32"/>
+                <path d="M29 40 Q33 37 37 40 T45 40 Q49 37 53 40" stroke="#2563EB" strokeWidth="1.4" fill="none" opacity="0.38"/>
+                <ellipse cx="27" cy="36" rx="9" ry="5.5" fill="#93C5FD" opacity="0.2" transform="rotate(-20 27 36)"/>
+                <ellipse cx="53" cy="36" rx="9" ry="5.5" fill="#93C5FD" opacity="0.2" transform="rotate(20 53 36)"/>
+              </svg>
+            </div>
+          </div>
           
           {/* Left side flickering grid */}
           <div className="hidden sm:block absolute left-0 top-0 h-full w-1/4 sm:w-1/3 -z-10 overflow-hidden">
@@ -60,7 +157,7 @@ export default function AboutPage() {
 
           {/* Center content background */}
           <div className="absolute inset-x-0 sm:inset-x-1/6 md:inset-x-1/4 top-0 h-full -z-20 bg-background"></div>
-          <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
+          <div className="container mx-auto px-8 lg:px-12 max-w-5xl">
             <div className="text-center">
               <div className="flex justify-center mb-8">
                 <div className="w-16 h-16 bg-gray-900 rounded-lg flex items-center justify-center">
@@ -95,8 +192,8 @@ export default function AboutPage() {
         </section>
 
         {/* Workflow Section */}
-        <section className="py-24 bg-gray-50">
-          <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
+        <section className="py-32 bg-gray-50">
+          <div className="container mx-auto px-8 lg:px-12 max-w-5xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
                 AiBee 작동 방식
@@ -300,8 +397,8 @@ export default function AboutPage() {
         </section>
 
         {/* Architecture Section */}
-        <section className="py-24 bg-white">
-          <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
+        <section className="py-32 bg-white">
+          <div className="container mx-auto px-8 lg:px-12 max-w-5xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
                 시스템 아키텍처
@@ -453,8 +550,8 @@ export default function AboutPage() {
         </section>
 
         {/* Key Strengths Section */}
-        <section className="py-24 bg-gray-50">
-          <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
+        <section className="py-32 bg-gray-50">
+          <div className="container mx-auto px-8 lg:px-12 max-w-5xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
                 주요 장점
