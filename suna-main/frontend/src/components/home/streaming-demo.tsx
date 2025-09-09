@@ -546,7 +546,7 @@ export function StreamingDemo() {
             </h2>
           </div>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            AiBee가 데이터를 분석하고 인사이트를 제공하는 과정을 확인해보세요
+            아이비가 데이터를 분석하고 인사이트를 제공하는 과정을 확인해보세요
           </p>
         </div>
         
@@ -589,7 +589,7 @@ export function StreamingDemo() {
           </h2>
         </div>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-          AiBee가 데이터를 분석하고 인사이트를 제공하는 과정을 확인해보세요
+          아이비가 데이터를 분석하고 인사이트를 제공하는 과정을 확인해보세요
         </p>
       </div>
 

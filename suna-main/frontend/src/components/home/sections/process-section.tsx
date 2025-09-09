@@ -77,7 +77,7 @@ export function ProcessSection() {
       <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            AiBee Agent의 이런 기능을 제공합니다
+            AiBee Agent는 이런 기능을 제공합니다
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
             정부기관과 공공부문을 위한 AI 기반 업무 자동화 솔루션
