@@ -132,7 +132,7 @@ export function NavMenu() {
 
       // Calculate exact scroll position
       const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - 100; // 100px offset
+      const offsetPosition = elementPosition + window.pageYOffset - 50; // 50px offset for better visibility
 
       // Smooth scroll to exact position
       window.scrollTo({

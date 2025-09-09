@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Globe, ArrowLeft, ArrowRight, RefreshCw, ListTodo, CheckCircle, Circle, Clock } from 'lucide-react';
+import { Search, Globe, ArrowLeft, ArrowRight, RefreshCw, ListTodo, CheckCircle, Circle, Clock, Download } from 'lucide-react';
 
 const demoMessages = [
   {
     id: 1,
     type: 'user',
-    content: '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 엑셀 파일로 다운로드할 수 있게 정리해줘',
+    content: '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 상세 보고서로 정리해줘',
     delay: 0
   },
   {
@@ -24,7 +24,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'pending' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'pending' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'pending' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'pending' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'pending' }
         ]
       }],
       total_tasks: 5
@@ -40,7 +40,7 @@ const demoMessages = [
   {
     id: 4,
     type: 'assistant',
-    content: '나스닥 종합 금융 분석을 시작하겠습니다. 실시간 시장 데이터 수집부터 엑셀 보고서 생성까지 체계적으로 진행하겠습니다.\n\n**STEP 1: 실시간 시장 데이터 수집 (필수 첫 단계)**\n먼저 나스닥 종합지수와 주요 구성 종목들의 실시간 데이터를 수집하겠습니다.',
+    content: '나스닥 종합 금융 분석을 시작하겠습니다. 실시간 시장 데이터 수집부터 상세 분석 보고서 생성까지 체계적으로 진행하겠습니다.\n\n**STEP 1: 실시간 시장 데이터 수집 (필수 첫 단계)**\n먼저 나스닥 종합지수와 주요 구성 종목들의 실시간 데이터를 수집하겠습니다.',
     delay: 2500
   },
   {
@@ -56,7 +56,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'pending' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'pending' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'pending' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'pending' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'pending' }
         ]
       }],
       total_tasks: 5
@@ -88,7 +88,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'completed' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'pending' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'pending' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'pending' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'pending' }
         ]
       }],
       total_tasks: 5
@@ -120,7 +120,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'completed' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'completed' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'pending' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'pending' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'pending' }
         ]
       }],
       total_tasks: 5
@@ -136,7 +136,7 @@ const demoMessages = [
   {
     id: 13,
     type: 'assistant',
-    content: '⚠️ **시장 리스크 및 기회 요인 분석**\n\n**긍정적 요인:**\n✅ AI 혁신 지속: 생성AI, 자율주행, 로보틱스 분야 투자 급증\n✅ 금리 안정화: Fed 기준금리 동결로 성장주 밸류에이션 회복\n✅ 소비 회복세: 개인소비지출 +0.8% MoM, 고용지표 개선\n✅ 기업 실적 개선: S&P 500 EPS 성장률 +8.2% 예상\n\n**위험 요인:**\n⚠️ 지정학적 리스크: 중국 반도체 규제, 대만 해협 긴장\n⚠️ 인플레이션 압력: 핵심 PCE 3.2% 유지, 서비스업 인플레이션\n⚠️ 기술주 과열: 나스닥 PER 28.5배로 역사적 고평가\n⚠️ 유동성 우려: 10년 국채수익률 4.8% 상승\n\n**투자 전략 권고:**\n🎯 단기 (1-3개월): 실적 발표 시즌 대비 포지션 조정\n🎯 중기 (3-12개월): AI 테마주 선별 투자, 밸류에이션 고려\n🎯 장기 (12개월+): 구조적 성장 테마 중심 포트폴리오\n\n이제 상세한 엑셀 보고서를 생성하겠습니다.',
+    content: '⚠️ **시장 리스크 및 기회 요인 분석**\n\n**긍정적 요인:**\n✅ AI 혁신 지속: 생성AI, 자율주행, 로보틱스 분야 투자 급증\n✅ 금리 안정화: Fed 기준금리 동결로 성장주 밸류에이션 회복\n✅ 소비 회복세: 개인소비지출 +0.8% MoM, 고용지표 개선\n✅ 기업 실적 개선: S&P 500 EPS 성장률 +8.2% 예상\n\n**위험 요인:**\n⚠️ 지정학적 리스크: 중국 반도체 규제, 대만 해협 긴장\n⚠️ 인플레이션 압력: 핵심 PCE 3.2% 유지, 서비스업 인플레이션\n⚠️ 기술주 과열: 나스닥 PER 28.5배로 역사적 고평가\n⚠️ 유동성 우려: 10년 국채수익률 4.8% 상승\n\n**투자 전략 권고:**\n🎯 단기 (1-3개월): 실적 발표 시즌 대비 포지션 조정\n🎯 중기 (3-12개월): AI 테마주 선별 투자, 밸류에이션 고려\n🎯 장기 (12개월+): 구조적 성장 테마 중심 포트폴리오\n\n이제 상세한 분석 보고서를 생성하겠습니다.',
     delay: 15500
   },
   {
@@ -152,7 +152,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'completed' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'completed' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'completed' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'pending' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'pending' }
         ]
       }],
       total_tasks: 5
@@ -168,7 +168,7 @@ const demoMessages = [
   {
     id: 16,
     type: 'assistant',
-    content: '📊 **나스닥 종합 분석 보고서 생성 완료**\n\n**생성된 Excel 파일 구성:**\n\n**📋 Sheet 1: Executive Summary**\n• 시장 개요 및 핵심 지표\n• 투자 등급 및 목표 수익률\n• 리스크 요약 및 투자 전략\n\n**📈 Sheet 2: Index Performance**\n• 나스닥 종합지수 30일 성과 추이\n• 섹터별 기여도 분석\n• 거래량 패턴 및 변동성 지표\n\n**🏢 Sheet 3: Top 100 Stocks Detail**\n• 종목별 실시간 가격 및 변동률\n• 밸류에이션 지표 (P/E, P/B, PEG)\n• 기술적 분석 (RSI, MACD, 볼린저밴드)\n• 애널리스트 목표주가 컨센서스\n\n**🏭 Sheet 4: Sector Analysis**\n• 11개 섹터별 성과 매트릭스\n• 섹터 로테이션 트렌드 분석\n• 업종별 PER/PBR 밴드 분석\n\n**📊 Sheet 5: Technical Charts**\n• 주요 지수 차트 (일봉, 주봉, 월봉)\n• 이동평균선 분석\n• 지지/저항 구간 표시\n\n**⚖️ Sheet 6: Risk Metrics**\n• VaR (Value at Risk) 계산\n• 상관관계 매트릭스\n• 베타 계수 및 샤프 비율\n\n**💡 Sheet 7: Investment Recommendations**\n• Buy/Hold/Sell 종목 리스트\n• 포트폴리오 최적화 제안\n• 리밸런싱 타이밍 가이드\n\n**📁 NASDAQ_Professional_Analysis_2025_0909.xlsx**\n📏 파일 크기: 3.2MB\n📊 차트 수: 24개\n📋 데이터 포인트: 50,000+개\n\n✅ **다운로드 준비 완료**',
+    content: '📊 **나스닥 종합 분석 보고서 생성 완료**\n\n**생성된 마크다운 보고서 구성:**\n\n**📋 Section 1: Executive Summary**\n• 시장 개요 및 핵심 지표\n• 투자 등급 및 목표 수익률\n• 리스크 요약 및 투자 전략\n\n**📈 Section 2: Index Performance**\n• 나스닥 종합지수 30일 성과 추이\n• 섹터별 기여도 분석\n• 거래량 패턴 및 변동성 지표\n\n**🏢 Section 3: Top 100 Stocks Detail**\n• 종목별 실시간 가격 및 변동률\n• 밸류에이션 지표 (P/E, P/B, PEG)\n• 기술적 분석 (RSI, MACD, 볼린저밴드)\n• 애널리스트 목표주가 컨센서스\n\n**🏭 Section 4: Sector Analysis**\n• 11개 섹터별 성과 매트릭스\n• 섹터 로테이션 트렌드 분석\n• 업종별 PER/PBR 밴드 분석\n\n**📊 Section 5: Technical Charts**\n• 주요 지수 차트 (일봉, 주봉, 월봉)\n• 이동평균선 분석\n• 지지/저항 구간 표시\n\n**⚖️ Section 6: Risk Metrics**\n• VaR (Value at Risk) 계산\n• 상관관계 매트릭스\n• 베타 계수 및 샤프 비율\n\n**💡 Section 7: Investment Recommendations**\n• Buy/Hold/Sell 종목 리스트\n• 포트폴리오 최적화 제안\n• 리밸런싱 타이밍 가이드\n\n**📁 NASDAQ_Professional_Analysis_2025_0909.md**\n📏 파일 크기: 1.2MB\n📊 차트 수: 24개\n📋 데이터 포인트: 50,000+개\n\n✅ **마크다운 보고서 준비 완료**',
     delay: 21000
   },
   {
@@ -184,7 +184,7 @@ const demoMessages = [
           { id: 'market-analysis', content: '시장 동향 및 섹터 분석 수행', status: 'completed' },
           { id: 'stock-screening', content: '상위 종목 스크리닝 및 기초 분석', status: 'completed' },
           { id: 'risk-assessment', content: '시장 리스크 및 변동성 평가', status: 'completed' },
-          { id: 'report-generation', content: '종합 분석 엑셀 보고서 생성', status: 'completed' }
+          { id: 'report-generation', content: '종합 분석 마크다운 보고서 생성', status: 'completed' }
         ]
       }],
       total_tasks: 5
@@ -234,6 +234,7 @@ export function StreamingDemo() {
   const [showInputDemo, setShowInputDemo] = useState(true);
   const [typedText, setTypedText] = useState('');
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
+  const [availableResults, setAvailableResults] = useState(1); // Start with only 1 result available
   const [isDragging, setIsDragging] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -258,10 +259,10 @@ export function StreamingDemo() {
       type: "tool_execution"
     },
     {
-      title: "나스닥 분석 완료 | 전문 리포트 준비됨",
-      url: "https://reports.aibee.com/nasdaq/professional/",
-      content: "🎉 **나스닥 전문 분석 리포트 - 생성 완료**\n\n📁 **나스닥_전문분석_2025_0909.xlsx**\n📏 파일 크기: 3.24 MB\n⏰ 생성 시간: 2025-09-09 오후 4:05:47\n🔐 보안: 암호 보호 (무결성 검증 완료)\n\n**📚 완성된 워크북 구조:**\n\n**📋 시트 1: 경영진 대시보드**\n• 시장 맥박 지표\n• 핵심 위험 지표 요약  \n• 투자 등급 평가\n• 성과 기여도 분석\n\n**📈 시트 2: 지수 분석**\n• 나스닥 종합지수 성과 (1년, 3개월, 1개월, 1주)\n• 섹터 기여도 분석\n• 변동성 국면 분류\n• 시장 폭 지표 (등락선, 신고가/신저가)\n\n**🏢 시트 3: 상위 100개 종목**\n• 실시간 가격 매트릭스\n• 가치평가 지표 (PER, PBR, PEG, 매출배수)\n• 질적 점수 (자기자본수익률, 자산수익률, 부채비율)\n• 성장 지표 (매출, 순이익, 잉여현금흐름 성장률)\n• 기술적 지표 (RSI, MACD, 볼린저밴드)\n• 애널리스트 컨센서스 (목표가, 투자의견)\n\n**🏭 시트 4: 섹터 심층분석**\n• 11개 업종 성과 매트릭스\n• 과거 평균 대비 상대 가치평가\n• 섹터 로테이션 모멘텀 지표\n• 업종 그룹 선도/후행주\n• 테마 노출도 (AI, 클라우드, 전기차 등)\n\n**📊 시트 5: 기술적 차트 (24개 차트)**\n• 지수 가격 차트 (일봉, 주봉, 월봉)\n• 이동평균선 분석 (20일, 50일, 200일)\n• 거래량 프로파일 및 축적/분산선\n• 확률 기반 지지/저항선\n• 돌파 후보군 및 패턴 인식\n\n**⚖️ 시트 6: 위험 관리**\n• 포트폴리오 위험가치 (95%, 99% 신뢰구간)\n• 스트레스 테스트 시나리오\n• 상관관계 매트릭스 및 팩터 노출도\n• 베타 안정성 분석\n• 최대 낙폭 시나리오\n\n**💡 시트 7: 투자 전략**\n• 매수/보유/매도 추천 및 근거\n• 포트폴리오 최적화 제안\n• 리밸런싱 신호 및 타이밍\n• 위험조정 수익 기대치\n• 전술적 자산배분 프레임워크\n\n**🎯 시트 8: 성과 추적**\n• 벤치마크 비교 프레임워크\n• 기여도 분석 방법론\n• 모니터링용 핵심성과지표\n• 중요 변화에 대한 알림 설정\n\n**📊 주요 인사이트 하이라이트:**\n✅ 73개 종목이 50일 이평선 위에서 거래\n✅ AI/반도체 모멘텀 지속\n✅ 실적 수정 추세 긍정적 (+2.8%)\n⚠️ 성장주 섹터 밸류에이션 부담\n⚠️ 대형주 집중도 위험\n\n**🔗 다운로드 옵션:**\n📊 엑셀 파일 (3.24MB) - 완전 상호작용\n📈 PDF 요약본 (1.8MB) - 경영진 브리프  \n📱 웹 대시보드 - 실시간 업데이트\n💾 CSV 데이터 내보내기 - 원시 데이터\n\n**⚡ 자동 새로고침 설정:**\n• 장중: 15분마다\n• 장후: 1시간마다\n• 주말: 일일 기초 데이터 업데이트\n\n**📞 지원 및 업데이트:**\n• 리포트 버전: 2.1.4\n• 다음 업데이트: 2025-09-10 장전\n• 기술 지원: 24시간 7일 이용 가능\n• 맞춤 분석: 요청 시 제공",
-      type: "download_ready"
+      title: "나스닥 종합 분석 보고서 | 마크다운 형식",
+      url: "https://reports.aibee.com/nasdaq/analysis-report.md",
+      content: "# 나스닥 종합 분석 보고서\n\n📄 **나스닥_전문분석_2025_0909.md**\n⏰ 생성 시간: 2025-09-09 오후 4:05:47\n\n## 📊 Executive Summary\n\n### 시장 개요\n- **현재 지수**: 21,700.39 (+1.22%)\n- **시장 상태**: 상승 추세 지속\n- **투자 등급**: **매수 적극 권고**\n- **목표 수익률**: 12-15% (12개월)\n\n## 📈 나스닥 지수 분석\n\n### 성과 지표 (2025년 기준)\n| 구분 | 1주일 | 1개월 | 3개월 | YTD |\n|------|-------|-------|-------|-----|\n| 수익률 | +2.4% | +5.8% | +12.3% | +28.7% |\n| 변동성 | 14.2% | 16.8% | 19.1% | 22.4% |\n| 샤프비율 | 1.45 | 1.38 | 1.41 | 1.52 |\n\n### 섹터 기여도 분석\n```\n기술주        ████████████████ 60.0% (+156pt)\n통신서비스    ████             16.1% (+42pt)\n소비재        ███              10.7% (+28pt)\n헬스케어      ██               6.9% (+18pt)\n산업재        █                4.6% (+12pt)\n기타          █                1.7% (+4pt)\n```\n\n## 🏢 상위 구성 종목 분석\n\n### Big Tech 7 종목\n\n#### 🥇 Apple (AAPL) - $234.85 (+2.27%)\n- **투자의견**: 매수 유지\n- **목표주가**: $245\n- **핵심 동력**: iPhone 16 시리즈 성공, 서비스 매출 1,000억 돌파 임박\n- **리스크**: 중국 시장 규제 불확실성\n\n#### 🥈 NVIDIA (NVDA) - $138.77 (+3.83%)\n- **투자의견**: 매수 적극 권고\n- **목표주가**: $165\n- **핵심 동력**: H100/H200 대기주문 600억달러, 데이터센터 매출 성장\n- **밸류에이션**: PER 32.8배 (프리미엄 정당화)\n\n#### 🥉 Microsoft (MSFT) - $441.28 (+1.81%)\n- **투자의견**: 매수\n- **목표주가**: $480\n- **핵심 동력**: Azure 29% 성장, Copilot 가입자 300만명\n- **경쟁 우위**: 클라우드 + AI 통합 솔루션\n\n## 📊 섹터별 심층 분석\n\n### 반도체 섹터 (⭐⭐⭐⭐⭐)\n**모멘텀 점수: 9.2/10**\n\n**긍정 요인:**\n- AI 칩 수요 폭발적 증가\n- 데이터센터 인프라 투자 확대\n- 메모리 반도체 가격 상승세\n\n**위험 요인:**\n- 중국 반도체 규제 강화\n- 공급망 지정학적 리스크\n- 과도한 기대감으로 인한 밸류에이션 부담\n\n### 소프트웨어 섹터 (⭐⭐⭐⭐)\n**모멘텀 점수: 8.7/10**\n\n**핵심 트렌드:**\n- SaaS 모델 확산 지속\n- AI 통합 솔루션 프리미엄\n- 구독 경제 안정성\n\n## ⚠️ 리스크 분석\n\n### 주요 위험 요인\n1. **밸류에이션 리스크** (High)\n   - 나스닥 PER 28.5배 (역사적 고평가)\n   - 성장주 집중도 과도\n\n2. **거시경제 리스크** (Medium)\n   - 금리 인상 압력\n   - 인플레이션 재점화 가능성\n\n3. **지정학적 리스크** (Medium)\n   - 미중 기술 패권 경쟁\n   - 대만 해협 긴장\n\n### 포트폴리오 위험 지표\n- **VaR (95% 신뢰구간)**: -8.4%\n- **최대 손실 예상**: -15.2%\n- **베타 계수**: 1.15\n\n## 💡 투자 전략 권고\n\n### 단기 전략 (1-3개월)\n```markdown\n🎯 **포지션 조정**\n- 실적 발표 시즌 대비 선별 투자\n- 변동성 증가 대비 현금 보유 비중 확대\n- 기술적 지지선 근처 매수 기회 포착\n```\n\n### 중기 전략 (3-12개월)\n```markdown\n📈 **성장 테마 중심**\n- AI 인프라 관련주 비중 확대\n- 클라우드 선도 기업 장기 보유\n- 밸류에이션 매력적인 2차 수혜주 발굴\n```\n\n### 장기 전략 (12개월+)\n```markdown\n🚀 **구조적 성장 투자**\n- 디지털 전환 가속화 수혜주\n- ESG 및 지속가능성 테마\n- 신흥 기술 (양자컴퓨팅, 로보틱스) 선점\n```\n\n## 📋 결론 및 요약\n\n### 핵심 투자 포인트\n✅ **강세 요인들이 우세**: AI 혁신, 금리 안정화, 기업 실적 개선\n✅ **기술주 모멘텀 지속**: 구조적 성장 동력 확보\n✅ **선별적 접근 필요**: 밸류에이션 고려한 종목 선택\n\n### 최종 투자 의견\n**🎯 투자등급: 매수 (BUY)**\n**📈 12개월 목표 수익률: 12-15%**\n**⚖️ 리스크 수준: 중간**\n\n---\n*본 보고서는 2025년 9월 9일 오후 4시 05분 기준으로 작성되었습니다.*\n*투자 결정은 개인의 책임이며, 본 보고서는 참고용으로만 활용하시기 바랍니다.*",
+      type: "markdown_report"
     }
   ];
 
@@ -296,6 +297,109 @@ export function StreamingDemo() {
     if (!isDragging) return;
     const newIndex = calculateIndexFromPosition(event.clientX);
     setCurrentResultIndex(newIndex);
+  };
+
+  const downloadAsPDF = () => {
+    const currentResult = searchResults[currentResultIndex];
+    if (currentResult?.type !== 'markdown_report') return;
+    
+    // Create a new window with the markdown content formatted for PDF
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>나스닥 종합 분석 보고서</title>
+          <style>
+            body {
+              font-family: 'Malgun Gothic', sans-serif;
+              line-height: 1.6;
+              color: #333;
+              max-width: 210mm;
+              margin: 0 auto;
+              padding: 20mm;
+              background: white;
+            }
+            h1, h2, h3, h4 { 
+              color: #2563eb;
+              margin-top: 1.5em;
+              margin-bottom: 0.5em;
+            }
+            h1 { font-size: 24px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+            h2 { font-size: 20px; }
+            h3 { font-size: 18px; }
+            h4 { font-size: 16px; }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin: 1em 0;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+            }
+            th {
+              background-color: #f8fafc;
+              font-weight: bold;
+            }
+            pre {
+              background: #f8fafc;
+              padding: 1em;
+              border-radius: 4px;
+              overflow-x: auto;
+              font-family: 'Courier New', monospace;
+            }
+            ul, ol {
+              margin: 1em 0;
+              padding-left: 2em;
+            }
+            li {
+              margin: 0.5em 0;
+            }
+            .footer {
+              margin-top: 3em;
+              padding-top: 1em;
+              border-top: 1px solid #ddd;
+              font-size: 12px;
+              color: #666;
+            }
+            @media print {
+              body { margin: 0; padding: 15mm; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          ${currentResult.content
+            .replace(/\n/g, '<br>')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            .replace(/```[\s\S]*?```/g, '<pre>$&</pre>')
+            .replace(/```/g, '')
+          }
+          <div class="footer">
+            <p>이 문서는 AiBee AI 시스템에 의해 자동 생성되었습니다.</p>
+            <p>생성 시간: ${new Date().toLocaleString('ko-KR')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    
+    // Wait for content to load, then trigger print dialog
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
   };
 
   const handleMouseUp = () => {
@@ -349,14 +453,26 @@ export function StreamingDemo() {
         setVisibleMessages(prev => [...prev, message.id]);
         
         // Auto advance right panel based on message progression
-        if (message.id === 3) { // After first assistant response
-          setCurrentResultIndex(0); // Market data from Bloomberg
-        } else if (message.id === 7) { // After detailed stock analysis
-          setCurrentResultIndex(1); // Stock analysis from Morningstar
-        } else if (message.id === 10) { // Excel report generation starts
-          setCurrentResultIndex(2); // Tool execution from FactSet
-        } else if (message.id === 11) { // Final response - report complete
-          setCurrentResultIndex(3); // Download ready
+        if (message.id === 4) { // After first assistant response (나스닥 종합 금융 분석 시작)
+          setTimeout(() => {
+            setAvailableResults(1); // Show first result
+            setCurrentResultIndex(0);
+          }, 1000);
+        } else if (message.id === 10) { // After detailed stock analysis (Magnificent 7 분석)
+          setTimeout(() => {
+            setAvailableResults(2); // Now show 2 results
+            setCurrentResultIndex(1);
+          }, 1200);
+        } else if (message.id === 15) { // Excel report generation starts
+          setTimeout(() => {
+            setAvailableResults(3); // Now show 3 results
+            setCurrentResultIndex(2);
+          }, 1500);
+        } else if (message.id === 16) { // Final response - report complete
+          setTimeout(() => {
+            setAvailableResults(4); // Show all 4 results
+            setCurrentResultIndex(3);
+          }, 2000);
         }
         
         if (message.type === 'thinking' || message.type === 'assistant') {
@@ -542,11 +658,11 @@ export function StreamingDemo() {
                   type="text"
                   value={typedText}
                   placeholder="어떤 도움이 필요하신지 설명해주세요..."
-                  className="w-full px-6 py-4 text-base border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full px-6 py-5 text-base border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
                   readOnly
                 />
                 <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-400 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
@@ -617,7 +733,7 @@ export function StreamingDemo() {
                   className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors text-sm"
                   readOnly
                 />
-                <button className="px-4 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors text-sm">
+                <button className="px-4 py-3 bg-gray-400 text-white rounded-xl hover:bg-gray-500 transition-colors text-sm">
                   전송
                 </button>
               </div>
@@ -654,23 +770,165 @@ export function StreamingDemo() {
             </div>
 
             {/* Content Area with Scrollbar */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4">
               <motion.div
                 key={currentResultIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  {searchResults[currentResultIndex]?.title}
-                </h3>
-                
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <pre className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {searchResults[currentResultIndex]?.content}
-                  </pre>
+                {/* Search Status */}
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Search className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium">Web Search</span>
+                  <div className="ml-auto">
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                      Search completed successfully
+                    </span>
+                  </div>
                 </div>
 
+                {/* Images Section for market data */}
+                {searchResults[currentResultIndex]?.type === 'market_data' && (
+                  <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
+                        <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700">Charts</span>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
+                      <div className="space-y-3">
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/%5EIXIC/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">NASDAQ</div>
+                              <div className="text-sm text-gray-500">Composite</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">21,700.39</div>
+                              <div className="text-xs text-green-600">+260.45 (+1.22%)</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/AAPL/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">AAPL</div>
+                              <div className="text-sm text-gray-500">Apple Inc.</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">$234.85</div>
+                              <div className="text-xs text-green-600">+5.21 (+2.27%)</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/NVDA/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">NVDA</div>
+                              <div className="text-sm text-gray-500">NVIDIA Corp.</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">$138.77</div>
+                              <div className="text-xs text-green-600">+5.12 (+3.83%)</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/MSFT/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">MSFT</div>
+                              <div className="text-sm text-gray-500">Microsoft Corp.</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">$441.28</div>
+                              <div className="text-xs text-green-600">+7.84 (+1.81%)</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/GOOGL/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">GOOGL</div>
+                              <div className="text-sm text-gray-500">Alphabet Class A</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">$178.42</div>
+                              <div className="text-xs text-red-600">-0.89 (-0.50%)</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="group cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors" onClick={() => window.open('https://finance.yahoo.com/quote/AMZN/', '_blank')}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="text-sm font-medium text-gray-900">AMZN</div>
+                              <div className="text-sm text-gray-500">Amazon.com Inc.</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-gray-900">$189.45</div>
+                              <div className="text-xs text-green-600">+2.98 (+1.60%)</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Search Results */}
+                <div className="mb-4">
+                  <div className="text-sm text-gray-600 mb-3">
+                    Search Results ({availableResults})
+                    <span className="ml-auto text-xs text-gray-500 float-right">
+                      2025. 9. 9.
+                    </span>
+                  </div>
+                </div>
+
+                {/* Individual Search Result */}
+                <div className="space-y-3">
+                  <div 
+                    className="group cursor-pointer p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all"
+                    onClick={() => window.open(searchResults[currentResultIndex]?.url, '_blank')}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Globe className="w-3 h-3 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 mb-1">
+                          <span className="text-xs text-gray-500">Website</span>
+                        </div>
+                        <h3 className="text-sm font-medium text-blue-600 group-hover:text-blue-700 mb-1 line-clamp-2">
+                          {searchResults[currentResultIndex]?.title}
+                        </h3>
+                        <div className="text-xs text-gray-500 mb-2 truncate">
+                          {searchResults[currentResultIndex]?.url}
+                        </div>
+                        <div className="text-xs text-gray-700 line-clamp-3 leading-relaxed">
+                          {searchResults[currentResultIndex]?.content.split('\n')[0]}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Preview */}
+                <div className="mt-4 text-sm text-gray-800 leading-relaxed">
+                  <div className="bg-gray-50 rounded-lg p-4 whitespace-pre-line max-h-96 overflow-y-auto">
+                    {searchResults[currentResultIndex]?.content}
+                  </div>
+                </div>
               </motion.div>
             </div>
 
@@ -685,10 +943,8 @@ export function StreamingDemo() {
                   <ArrowLeft className="w-4 h-4 text-gray-600" />
                 </button>
                 
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {currentResultIndex + 1}/{searchResults.length}
-                  </span>
+                <div className="text-xs text-gray-600">
+                  {currentResultIndex + 1}/{searchResults.length}
                 </div>
 
                 <button 
@@ -723,11 +979,26 @@ export function StreamingDemo() {
               </div>
 
               <div className="text-right">
-                <div className="text-xs text-gray-500">
-                  {currentResultIndex === searchResults.length - 1 ? 'Task Completion' : 'Processing'}
+                <div className="flex items-center gap-2 justify-end">
+                  <span className="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full">
+                    {searchResults.length} results
+                  </span>
+                  {searchResults[currentResultIndex]?.type === 'markdown_report' && (
+                    <button 
+                      onClick={downloadAsPDF}
+                      className="text-xs text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-full flex items-center gap-1 transition-colors"
+                      title="PDF로 다운로드"
+                    >
+                      <Download className="w-3 h-3" />
+                      PDF 다운로드
+                    </button>
+                  )}
+                  <button className="text-xs text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+                    🔄 Jump to Latest
+                  </button>
                 </div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {currentResultIndex === searchResults.length - 1 ? 'Latest Tool' : 'Web Search'}
+                <div className="text-xs text-gray-500 mt-1">
+                  2025. 9. 9. 오전 10:09:20
                 </div>
               </div>
             </div>
