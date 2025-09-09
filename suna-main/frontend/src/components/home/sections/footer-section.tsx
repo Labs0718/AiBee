@@ -25,8 +25,8 @@ export function FooterSection() {
     <footer id="footer" className="w-full pb-0 px-6 bg-white">
         <div className="w-full mx-auto">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between p-10">
-            <div className="flex flex-col items-start justify-start gap-y-5 max-w-xs mx-0">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between p-10 gap-8">
+            <div className="flex flex-col items-start justify-start gap-y-5 max-w-xs mx-0 md:flex-shrink-0">
               <Link href="/" className="flex items-center gap-2">
                 <Image
                   src={logoSrc}
@@ -104,8 +104,8 @@ export function FooterSection() {
                 <Icons.gdprDark className="size-12" />
               </div> */}
             </div>
-            <div className="pt-5 md:w-1/2">
-          <div className="flex flex-col items-start justify-start md:flex-row md:items-center md:justify-between gap-y-5 lg:pl-10">
+            <div className="pt-5 md:pt-0 flex-1 md:max-w-none">
+          <div className="flex flex-col items-start justify-start md:flex-row md:items-start md:justify-end gap-y-5 gap-x-12 xl:gap-x-16">
             {siteConfig.footerLinks.map((column, columnIndex) => (
               <ul key={columnIndex} className="flex flex-col gap-y-2">
                 <li className="mb-2 text-sm font-semibold text-primary">

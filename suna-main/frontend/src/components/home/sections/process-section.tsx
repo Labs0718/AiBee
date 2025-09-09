@@ -101,7 +101,6 @@ export function ProcessSection() {
                     className="w-8 h-8 object-contain"
                   />
                 </div>
-                <span className="text-2xl mb-2 block">{item.icon}</span>
               </div>
 
               {/* Title */}

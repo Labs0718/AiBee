@@ -328,14 +328,14 @@ export function HeroSection() {
           </Link> */}
           <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 pt-8 sm:pt-12 max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance text-center px-2">
-              <span className="text-primary">Create, Deploy and Manage your </span>
-              <span className="text-secondary">AI Workers.</span>
+              <span className="text-primary">Meet </span>
+              <span className="text-secondary">AiBee</span>
             </h1>
             <h2 className="text-lg md:text-xl lg:text-2xl text-center text-gray-600 font-medium px-2 mt-2">
-              AI를 활용하여 업무를 자동화하고 효율성을 극대화하세요
+              AI 워커로 업무를 자동화하세요
             </h2>
             <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight max-w-2xl px-2">
-            The most efficient way to automate your workflow with AI.
+            Your intelligent AI assistant that gets work done.
             </p>
           </div>
 
@@ -356,8 +356,23 @@ export function HeroSection() {
                   autoFocus={false}
                 />
               </div>
-              {/* Subtle glow effect */}
+              {/* Watercolor-like blue glow effects */}
+              {/* Main glow under input */}
               <div className="absolute -bottom-4 inset-x-0 h-6 bg-secondary/20 blur-xl rounded-full -z-10 opacity-70"></div>
+              
+              {/* Left side watercolor splashes */}
+              <div className="absolute -bottom-2 -left-12 w-16 h-4 bg-blue-400/10 blur-lg rounded-full -z-10 opacity-60"></div>
+              <div className="absolute -bottom-6 -left-20 w-10 h-8 bg-indigo-300/15 blur-xl rounded-full -z-10 opacity-50"></div>
+              <div className="absolute -bottom-3 -left-32 w-12 h-5 bg-sky-300/12 blur-lg rounded-full -z-10 opacity-45"></div>
+              
+              {/* Right side watercolor splashes */}
+              <div className="absolute -bottom-2 -right-12 w-16 h-4 bg-blue-400/10 blur-lg rounded-full -z-10 opacity-60"></div>
+              <div className="absolute -bottom-6 -right-20 w-10 h-8 bg-indigo-300/15 blur-xl rounded-full -z-10 opacity-50"></div>
+              <div className="absolute -bottom-3 -right-32 w-12 h-5 bg-sky-300/12 blur-lg rounded-full -z-10 opacity-45"></div>
+              
+              {/* Additional subtle splashes for more organic feel */}
+              <div className="absolute -bottom-8 left-1/4 w-8 h-6 bg-blue-200/8 blur-xl rounded-full -z-10 opacity-40"></div>
+              <div className="absolute -bottom-8 right-1/4 w-8 h-6 bg-blue-200/8 blur-xl rounded-full -z-10 opacity-40"></div>
             </div>
             
             {/* Examples section - right after chat input */}

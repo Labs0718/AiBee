@@ -234,7 +234,8 @@ export function StreamingDemo() {
   const [showInputDemo, setShowInputDemo] = useState(true);
   const [typedText, setTypedText] = useState('');
   const [currentResultIndex, setCurrentResultIndex] = useState(0);
-  const [availableResults, setAvailableResults] = useState(1); // Start with only 1 result available
+  const [availableResults, setAvailableResults] = useState(0); // Start with no results available
+  const [showNoActivity, setShowNoActivity] = useState(true); // Show "No tool activity" initially
   const [isDragging, setIsDragging] = useState(false);
   const demoRef = useRef<HTMLDivElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
@@ -300,106 +301,9 @@ export function StreamingDemo() {
   };
 
   const downloadAsPDF = () => {
-    const currentResult = searchResults[currentResultIndex];
-    if (currentResult?.type !== 'markdown_report') return;
-    
-    // Create a new window with the markdown content formatted for PDF
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>나스닥 종합 분석 보고서</title>
-          <style>
-            body {
-              font-family: 'Malgun Gothic', sans-serif;
-              line-height: 1.6;
-              color: #333;
-              max-width: 210mm;
-              margin: 0 auto;
-              padding: 20mm;
-              background: white;
-            }
-            h1, h2, h3, h4 { 
-              color: #2563eb;
-              margin-top: 1.5em;
-              margin-bottom: 0.5em;
-            }
-            h1 { font-size: 24px; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
-            h2 { font-size: 20px; }
-            h3 { font-size: 18px; }
-            h4 { font-size: 16px; }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin: 1em 0;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 8px;
-              text-align: left;
-            }
-            th {
-              background-color: #f8fafc;
-              font-weight: bold;
-            }
-            pre {
-              background: #f8fafc;
-              padding: 1em;
-              border-radius: 4px;
-              overflow-x: auto;
-              font-family: 'Courier New', monospace;
-            }
-            ul, ol {
-              margin: 1em 0;
-              padding-left: 2em;
-            }
-            li {
-              margin: 0.5em 0;
-            }
-            .footer {
-              margin-top: 3em;
-              padding-top: 1em;
-              border-top: 1px solid #ddd;
-              font-size: 12px;
-              color: #666;
-            }
-            @media print {
-              body { margin: 0; padding: 15mm; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          ${currentResult.content
-            .replace(/\n/g, '<br>')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
-            .replace(/```[\s\S]*?```/g, '<pre>$&</pre>')
-            .replace(/```/g, '')
-          }
-          <div class="footer">
-            <p>이 문서는 AiBee AI 시스템에 의해 자동 생성되었습니다.</p>
-            <p>생성 시간: ${new Date().toLocaleString('ko-KR')}</p>
-          </div>
-        </body>
-      </html>
-    `;
-    
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-    // Wait for content to load, then trigger print dialog
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+    // Demo mode - 실제 다운로드는 실행하지 않음
+    // 클릭 효과만 보여주고 실제 동작은 막음
+    return;
   };
 
   const handleMouseUp = () => {
@@ -425,6 +329,9 @@ export function StreamingDemo() {
     setHasStarted(true);
     setShowInputDemo(true);
     setTypedText('');
+    setAvailableResults(0);
+    setShowNoActivity(true);
+    setCurrentResultIndex(0);
     
     // Step 1: Show typing animation in input
     const inputText = '현재 나스닥 주요 지수와 상위 종목들의 실시간 데이터를 분석해서 엑셀 파일로 다운로드할 수 있게 정리해줘';
@@ -453,11 +360,12 @@ export function StreamingDemo() {
         setVisibleMessages(prev => [...prev, message.id]);
         
         // Auto advance right panel based on message progression
-        if (message.id === 4) { // After first assistant response (나스닥 종합 금융 분석 시작)
+        if (message.id === 3) { // When search starts (thinking: "Searching Web")
           setTimeout(() => {
+            setShowNoActivity(false);
             setAvailableResults(1); // Show first result
             setCurrentResultIndex(0);
-          }, 1000);
+          }, 800);
         } else if (message.id === 10) { // After detailed stock analysis (Magnificent 7 분석)
           setTimeout(() => {
             setAvailableResults(2); // Now show 2 results
@@ -741,7 +649,16 @@ export function StreamingDemo() {
           </div>
 
           {/* Right Panel - AiBee's Computer */}
-          <div className="w-1/2 bg-white border-l border-gray-200 flex flex-col">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              className="w-1/2 bg-white border-l border-gray-200 flex flex-col"
+              initial={{ opacity: showNoActivity ? 0.3 : 0, x: showNoActivity ? 0 : 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ 
+                opacity: { duration: 0.3 },
+                x: { duration: 0.4, ease: "easeOut" }
+              }}
+            >
             <div className="bg-gray-100 px-4 py-3 border-b border-gray-200">
               <div className="flex items-center gap-2">
                 <Globe className="w-4 h-4 text-gray-600" />
@@ -771,12 +688,36 @@ export function StreamingDemo() {
 
             {/* Content Area with Scrollbar */}
             <div className="flex-1 overflow-y-auto p-4">
-              <motion.div
-                key={currentResultIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5 }}
-              >
+              <AnimatePresence mode="wait">
+                {showNoActivity ? (
+                  // No tool activity state
+                  <motion.div 
+                    key="no-activity"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center justify-center h-full"
+                  >
+                    <div className="text-center">
+                      <div className="text-gray-400 text-lg font-medium mb-2">No tool activity</div>
+                      <div className="text-gray-400 text-sm">AiBee가 도구를 사용하면 여기에 표시됩니다</div>
+                    </div>
+                  </motion.div>
+                ) : (
+                <motion.div
+                  key="search-results"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                >
+                  <motion.div
+                    key={currentResultIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
                 {/* Search Status */}
                 <div className="flex items-center gap-2 mb-4">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -929,7 +870,10 @@ export function StreamingDemo() {
                     {searchResults[currentResultIndex]?.content}
                   </div>
                 </div>
-              </motion.div>
+                  </motion.div>
+                </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Bottom Navigation Bar - Fixed at bottom */}
@@ -1002,7 +946,8 @@ export function StreamingDemo() {
                 </div>
               </div>
             </div>
-          </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
