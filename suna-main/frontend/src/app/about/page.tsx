@@ -69,7 +69,7 @@ export default function AboutPage() {
               </div>
 
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 mb-6 tracking-tight">
-                Suna AI Platform
+                AiBee AI Platform
               </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed font-light">
                 Enterprise-grade AI assistant platform designed for intelligent automation <br/>
@@ -99,7 +99,7 @@ export default function AboutPage() {
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
-                Suna 작동 방식
+                AiBee 작동 방식
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto font-light">
                 사용자 요청부터 결과 전달까지의 지능형 AI 어시스턴트 처리 과정
