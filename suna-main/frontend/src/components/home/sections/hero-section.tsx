@@ -345,7 +345,7 @@ export function HeroSection() {
                 <ChatInput
                   ref={chatInputRef}
                   onSubmit={handleChatInputSubmit}
-                  placeholder="Describe the agent you want to build or the task you want completed..."
+                  placeholder="만들고 싶은 에이전트나 완료하고 싶은 작업을 설명해주세요..."
                   loading={isSubmitting}
                   disabled={isSubmitting}
                   value={inputValue}

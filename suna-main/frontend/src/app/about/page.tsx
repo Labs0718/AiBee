@@ -2,14 +2,64 @@
 
 import { Navbar } from '@/components/home/sections/navbar';
 import { FooterSection } from '@/components/home/sections/footer-section';
+import { FlickeringGrid } from '@/components/home/ui/flickering-grid';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useEffect, useState } from 'react';
 
 export default function AboutPage() {
+  const tablet = useMediaQuery('(max-width: 1024px)');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-white">
         {/* Hero Section */}
-        <section className="pt-32 pb-24 bg-white border-b border-gray-100">
+        <section className="pt-32 pb-24 bg-white relative overflow-hidden">
+          {/* Background gradients - same as main home */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-white to-blue-100/30 -z-10"></div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-100/20 via-transparent to-blue-50/30 -z-10"></div>
+          
+          {/* Left side flickering grid */}
+          <div className="hidden sm:block absolute left-0 top-0 h-full w-1/4 sm:w-1/3 -z-10 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background z-10" />
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
+            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
+            {mounted && (
+              <FlickeringGrid
+                className="h-full w-full"
+                squareSize={tablet ? 2 : 2.5}
+                gridGap={tablet ? 2 : 2.5}
+                color="var(--secondary)"
+                maxOpacity={tablet ? 0.2 : 0.4}
+                flickerChance={tablet ? 0.015 : 0.03}
+              />
+            )}
+          </div>
+
+          {/* Right side flickering grid */}
+          <div className="hidden sm:block absolute right-0 top-0 h-full w-1/4 sm:w-1/3 -z-10 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background z-10" />
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
+            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
+            {mounted && (
+              <FlickeringGrid
+                className="h-full w-full"
+                squareSize={tablet ? 2 : 2.5}
+                gridGap={tablet ? 2 : 2.5}
+                color="var(--secondary)"
+                maxOpacity={tablet ? 0.2 : 0.4}
+                flickerChance={tablet ? 0.015 : 0.03}
+              />
+            )}
+          </div>
+
+          {/* Center content background */}
+          <div className="absolute inset-x-0 sm:inset-x-1/6 md:inset-x-1/4 top-0 h-full -z-20 bg-background"></div>
           <div className="container mx-auto px-6 lg:px-8 max-w-6xl">
             <div className="text-center">
               <div className="flex justify-center mb-8">
@@ -45,7 +95,7 @@ export default function AboutPage() {
         </section>
 
         {/* Workflow Section */}
-        <section className="py-24 bg-gray-50">
+        <section className="py-24 bg-gradient-to-br from-purple-50 to-blue-50">
           <div className="container mx-auto px-6 lg:px-8 max-w-7xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
@@ -56,103 +106,179 @@ export default function AboutPage() {
               </p>
             </div>
             
-            {/* Process Flow */}
-            <div className="bg-white rounded-lg p-8 lg:p-12 border border-gray-200 mb-16">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-12 mb-12">
-                {/* User */}
-                <div className="flex flex-col items-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4 border border-gray-200">
-                    <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">User</h3>
-                    <p className="text-sm text-gray-500">Request & Analysis</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center text-gray-300">
-                  <div className="hidden lg:flex items-center">
-                    <div className="w-12 h-px bg-gray-300"></div>
-                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-                
-                {/* AI Processing */}
-                <div className="relative">
-                  <div className="bg-gray-900 text-white p-6 rounded-lg">
+            {/* Main Workflow Diagram */}
+            <div className="bg-white rounded-2xl p-8 lg:p-12 border-2 border-purple-200 shadow-xl mb-16 relative overflow-hidden">
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full -mr-16 -mt-16 opacity-50"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-100 to-purple-100 rounded-full -ml-12 -mb-12 opacity-50"></div>
+              
+              <div className="relative">
+                {/* Top Row - User to AI */}
+                <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12 mb-12">
+                  {/* User */}
+                  <div className="flex flex-col items-center group">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mb-4 border-2 border-blue-300 shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                      <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
                     <div className="text-center">
-                      <div className="text-xl font-medium mb-1">Suna AI</div>
-                      <div className="text-sm text-gray-300">Processing Engine</div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">사용자</h3>
+                      <p className="text-sm text-gray-600">요청 → 분석</p>
                     </div>
                   </div>
                   
-                  {/* Integrated Tools */}
-                  <div className="mt-8 grid grid-cols-2 lg:grid-cols-3 gap-3 max-w-lg mx-auto">
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Browser</div>
-                        <div className="text-xs text-gray-500">Automation</div>
+                  {/* Arrow */}
+                  <div className="flex items-center text-purple-400">
+                    <div className="hidden lg:flex items-center">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
+                        <div className="w-16 h-1 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"></div>
+                        <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                  </div>
+                  
+                  {/* AI Core */}
+                  <div className="relative group">
+                    <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-white p-8 rounded-2xl shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:-translate-y-1">
                       <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Search</div>
-                        <div className="text-xs text-gray-500">Web Search</div>
+                        <div className="flex items-center justify-center mb-3">
+                          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+                            <span className="text-blue-600 text-lg font-bold">S</span>
+                          </div>
+                          <div className="text-2xl font-bold">AiBee</div>
+                        </div>
+                        <div className="text-sm text-blue-200">Agent Runtime</div>
                       </div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Vision</div>
-                        <div className="text-xs text-gray-500">Analysis</div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="flex items-center text-purple-400">
+                    <div className="hidden lg:flex items-center">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
+                        <div className="w-16 h-1 bg-gradient-to-r from-purple-400 to-green-400 rounded-full"></div>
+                        <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
                     </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                  </div>
+
+                  {/* Results */}
+                  <div className="flex flex-col items-center">
+                    <div className="bg-gradient-to-br from-green-100 to-teal-100 p-6 rounded-2xl border-2 border-green-300 shadow-lg mb-4">
                       <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Files</div>
-                        <div className="text-xs text-gray-500">Management</div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Sheets</div>
-                        <div className="text-xs text-gray-500">Data</div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                      <div className="text-center">
-                        <div className="text-xs font-medium text-gray-700">Deploy</div>
-                        <div className="text-xs text-gray-500">Release</div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">자료 및 결과</h3>
+                        <div className="flex items-center justify-center space-x-3 text-sm">
+                          <span className="px-2 py-1 bg-green-200 text-green-800 rounded-full text-xs">SupabaseDB</span>
+                          <span className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-xs">Storage</span>
+                          <span className="px-2 py-1 bg-red-200 text-red-800 rounded-full text-xs">WebSocket</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                <div className="flex items-center text-gray-300">
-                  <div className="hidden lg:flex items-center">
-                    <div className="w-12 h-px bg-gray-300"></div>
-                    <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
+
+                {/* Tools Section */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <div className="text-center mb-8">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">통합된 AI 도구들</h4>
+                    <p className="text-sm text-gray-600">다양한 업무를 처리하는 스마트 도구들</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl border border-orange-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Browser Tool</div>
+                        <div className="text-xs text-gray-600">웹 자동화</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Search Tool</div>
+                        <div className="text-xs text-gray-600">실시간 API 검색</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Vision Tool</div>
+                        <div className="text-xs text-gray-600">이미지 분석</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border border-green-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Files Tool</div>
+                        <div className="text-xs text-gray-600">파일 관리</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Sheets Tool</div>
+                        <div className="text-xs text-gray-600">데이터 처리</div>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl border border-red-200 hover:shadow-md transition-all duration-300 group">
+                      <div className="text-center">
+                        <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                        </div>
+                        <div className="font-semibold text-gray-900 text-sm">Deploy Tool</div>
+                        <div className="text-xs text-gray-600">배포 관리</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                
-                {/* Results */}
-                <div className="flex flex-col items-center">
-                  <div className="bg-gray-800 text-white p-6 rounded-lg mb-4">
+
+                {/* Process Description */}
+                <div className="mt-12 pt-8 border-t border-gray-200">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border border-blue-200">
                     <div className="text-center">
-                      <div className="text-lg font-medium mb-1">Results</div>
-                      <div className="text-sm text-gray-300">
-                        Report & Storage
-                      </div>
+                      <h4 className="font-semibold text-gray-900 mb-2">처리 과정</h4>
+                      <p className="text-sm text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                        1. 사용자 요청을 자연어로 분석하고 의도를 파악합니다 <br/>
+                        2. 최적의 도구를 자동 선택하여 실시간으로 작업을 수행합니다 <br/>
+                        3. 처리 결과를 안전하게 저장하고 실시간으로 전달합니다 <br/>
+                        4. 지속적인 모니터링을 통해 품질을 보장합니다
+                      </p>
                     </div>
-                  </div>
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">Output</h3>
-                    <p className="text-sm text-gray-500">Real-time • Auto-save</p>
                   </div>
                 </div>
               </div>
