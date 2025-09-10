@@ -165,7 +165,9 @@ api_router.include_router(api_keys_api.router)
 api_router.include_router(account_deletion_api.router)
 
 from services import user_profile_api
+from services import simple_chat_api
 api_router.include_router(user_profile_api.router)
+api_router.include_router(simple_chat_api.router)
 
 from mcp_module import api as mcp_api
 from credentials import api as credentials_api

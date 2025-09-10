@@ -185,7 +185,7 @@ export function DashboardContent() {
         },
         body: JSON.stringify({
           message,
-          model_name: options?.model_name || 'claude-3-5-sonnet-20241022',
+          model_name: options?.model_name || 'gpt-3.5-turbo',
           enable_thinking: options?.enable_thinking || false,
           reasoning_effort: options?.reasoning_effort || 'low'
         }),
@@ -383,12 +383,12 @@ export function DashboardContent() {
               {/* 단순 모드 토글 버튼 */}
               <button
                 onClick={() => setIsSimpleMode(!isSimpleMode)}
-                className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full border transition-all duration-200 flex items-center justify-center text-xs font-semibold ${
+                className={`absolute top-2 right-2 z-50 w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-sm font-bold shadow-lg hover:shadow-xl ${
                   isSimpleMode 
-                    ? 'bg-primary text-primary-foreground border-primary' 
-                    : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                    ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600' 
+                    : 'bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:text-blue-600'
                 }`}
-                title={isSimpleMode ? "고급 모드로 전환" : "단순 모드로 전환"}
+                title={isSimpleMode ? "고급 모드로 전환 (현재: 단순 모드)" : "단순 모드로 전환 (현재: 고급 모드)"}
               >
                 {isSimpleMode ? 'S' : 'A'}
               </button>
