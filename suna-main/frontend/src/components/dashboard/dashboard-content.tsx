@@ -33,6 +33,8 @@ import { CustomAgentsSection } from './custom-agents-section';
 import { toast } from 'sonner';
 import { ReleaseBadge } from '../auth/release-badge';
 import { createClient } from '@/lib/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
@@ -41,6 +43,9 @@ export function DashboardContent() {
   const [hiddenPrompt, setHiddenPrompt] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
+  const [isSimpleMode, setIsSimpleMode] = useState(false);
+  const [simpleResponse, setSimpleResponse] = useState<string | null>(null);
+  const [showSimpleResponse, setShowSimpleResponse] = useState(false);
   const { 
     selectedAgentId, 
     setSelectedAgent, 
@@ -149,6 +154,64 @@ export function DashboardContent() {
       setInitiatedThreadId(null);
     }
   }, [threadQuery.data, initiatedThreadId, router]);
+
+  const handleSimpleModeSubmit = async (
+    message: string,
+    options?: {
+      model_name?: string;
+      enable_thinking?: boolean;
+      reasoning_effort?: string;
+    }
+  ) => {
+    if (!message.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+      const supabase = createClient();
+      const { data: session } = await supabase.auth.getSession();
+      const token = session.session?.access_token;
+
+      if (!token) {
+        throw new Error('인증이 필요합니다.');
+      }
+
+      const response = await fetch(`${backendUrl}/simple-chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message,
+          model_name: options?.model_name || 'claude-3-5-sonnet-20241022',
+          enable_thinking: options?.enable_thinking || false,
+          reasoning_effort: options?.reasoning_effort || 'low'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API 호출 실패: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // 응답을 상태에 저장하고 모달로 표시
+      setSimpleResponse(result.response || result.content || JSON.stringify(result));
+      setShowSimpleResponse(true);
+      
+      // 입력창 초기화
+      setInputValue('');
+      
+    } catch (error: any) {
+      console.error('Simple mode error:', error);
+      const errorMessage = error instanceof Error ? error.message : '요청 처리 중 오류가 발생했습니다.';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (
     message: string,
@@ -313,13 +376,25 @@ export function DashboardContent() {
           <div className="w-full max-w-[650px] flex flex-col items-center justify-center space-y-4 md:space-y-6">
             <div className="flex flex-col items-center text-center w-full">
               <p className="tracking-tight text-2xl md:text-3xl font-normal text-muted-foreground/80">
-                오늘 무엇을 도와드릴까요?
+                {isSimpleMode ? '간단한 질문을 해보세요' : '오늘 무엇을 도와드릴까요?'}
               </p>
             </div>
-            <div className="w-full">
+            <div className="w-full relative">
+              {/* 단순 모드 토글 버튼 */}
+              <button
+                onClick={() => setIsSimpleMode(!isSimpleMode)}
+                className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full border transition-all duration-200 flex items-center justify-center text-xs font-semibold ${
+                  isSimpleMode 
+                    ? 'bg-primary text-primary-foreground border-primary' 
+                    : 'bg-background text-muted-foreground border-border hover:border-primary/50 hover:text-foreground'
+                }`}
+                title={isSimpleMode ? "고급 모드로 전환" : "단순 모드로 전환"}
+              >
+                {isSimpleMode ? 'S' : 'A'}
+              </button>
               <ChatInput
                 ref={chatInputRef}
-                onSubmit={handleSubmit}
+                onSubmit={isSimpleMode ? handleSimpleModeSubmit : handleSubmit}
                 loading={isSubmitting}
                 placeholder="어떤 도움이 필요하신지 설명해 주세요..."
                 value={inputValue}
@@ -327,20 +402,23 @@ export function DashboardContent() {
                   setInputValue(value);
                   setHasUserModified(true);
                 }}
-                hideAttachments={false}
-                selectedAgentId={selectedAgentId}
-                onAgentSelect={setSelectedAgent}
-                enableAdvancedConfig={true}
+                hideAttachments={isSimpleMode}
+                selectedAgentId={isSimpleMode ? undefined : selectedAgentId}
+                onAgentSelect={isSimpleMode ? undefined : setSelectedAgent}
+                enableAdvancedConfig={!isSimpleMode}
                 onConfigureAgent={(agentId) => router.push(`/agents/config/${agentId}`)}
+                hideAgentSelection={isSimpleMode}
               />
             </div>
-            <div className="w-full">
-              <Examples onSelectPrompt={(query, hidden) => {
-                setInputValue(query);
-                setHiddenPrompt(hidden);
-                setHasUserModified(true); // Examples에서 선택했음을 표시
-              }} count={isMobile ? 3 : 5} />
-            </div>
+            {!isSimpleMode && (
+              <div className="w-full">
+                <Examples onSelectPrompt={(query, hidden) => {
+                  setInputValue(query);
+                  setHiddenPrompt(hidden);
+                  setHasUserModified(true); // Examples에서 선택했음을 표시
+                }} count={isMobile ? 3 : 5} />
+              </div>
+            )}
           </div>
           
           {/* {customAgentsEnabled && (
@@ -370,6 +448,23 @@ export function DashboardContent() {
           projectId={undefined}
         />
       )}
+
+      {/* 단순 모드 응답 모달 */}
+      <Dialog open={showSimpleResponse} onOpenChange={setShowSimpleResponse}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>AI 응답</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4 p-4 bg-muted rounded-lg">
+            <pre className="whitespace-pre-wrap text-sm">{simpleResponse}</pre>
+          </div>
+          <div className="mt-4 flex justify-end">
+            <Button onClick={() => setShowSimpleResponse(false)}>
+              닫기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
