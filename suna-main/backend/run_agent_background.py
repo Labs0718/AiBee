@@ -67,6 +67,7 @@ async def run_agent_background(
     is_agent_builder: Optional[bool] = False,
     target_agent_id: Optional[str] = None,
     request_id: Optional[str] = None,
+    is_simple_mode: Optional[bool] = False,
 ):
     """Run the agent in the background using Redis for state."""
     structlog.contextvars.clear_contextvars()
@@ -113,7 +114,13 @@ async def run_agent_background(
         "agent_config": agent_config,
         "is_agent_builder": is_agent_builder,
         "target_agent_id": target_agent_id,
+        "is_simple_mode": is_simple_mode,
     })
+    
+    if is_simple_mode:
+        logger.info("🔴 SIMPLE MODE ENABLED - Should use simple prompt")
+    else:
+        logger.info("🟡 NORMAL MODE - Using default system prompt")
     
     effective_model = model_name
     if model_name == "anthropic/claude-sonnet-4-20250514" and agent_config and agent_config.get('model'):
@@ -198,7 +205,8 @@ async def run_agent_background(
             agent_config=agent_config,
             trace=trace,
             is_agent_builder=is_agent_builder,
-            target_agent_id=target_agent_id
+            target_agent_id=target_agent_id,
+            is_simple_mode=is_simple_mode
         )
 
         final_status = "running"

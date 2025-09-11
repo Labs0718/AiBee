@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
+import { useSimpleModeStore } from '@/lib/stores/simple-mode-store';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { handleFiles } from './file-upload-handler';
@@ -43,6 +44,7 @@ export interface ChatInputProps {
       model_name?: string;
       enable_thinking?: boolean;
       agent_id?: string;
+      is_simple_mode?: boolean;
     },
   ) => void;
   placeholder?: string;
@@ -132,6 +134,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
     const value = isControlled ? controlledValue : uncontrolledValue;
 
     const isSunaAgent = agentMetadata?.is_suna_default || false;
+    const { isSimpleMode } = useSimpleModeStore();
 
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -248,10 +251,13 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
 
       posthog.capture("task_prompt_submitted", { message });
 
+      console.log('🚀 DEBUG: Submitting with Simple Mode:', isSimpleMode);
+      
       onSubmit(message, {
         agent_id: selectedAgentId,
         model_name: baseModelName,
         enable_thinking: thinkingEnabled,
+        is_simple_mode: isSimpleMode,
       });
 
       if (!isControlled) {

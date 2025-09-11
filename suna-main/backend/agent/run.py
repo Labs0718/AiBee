@@ -22,6 +22,7 @@ from agent.tools.data_providers_tool import DataProvidersTool
 from agent.tools.expand_msg_tool import ExpandMessageTool
 from agent.prompt import get_system_prompt
 from agent.custom_prompt import render_prompt_template
+from agent.simple_prompt import get_simple_prompt
 from utils.logger import logger
 from utils.auth_utils import get_account_id_from_thread
 from services.billing import check_billing_status
@@ -53,6 +54,7 @@ class AgentConfig:
     trace: Optional[StatefulTraceClient] = None
     is_agent_builder: Optional[bool] = False
     target_agent_id: Optional[str] = None
+    is_simple_mode: Optional[bool] = False
 
 
 class ToolManager:
@@ -229,7 +231,8 @@ class PromptManager:
     @staticmethod
     async def build_system_prompt(model_name: str, agent_config: Optional[dict], 
                                   is_agent_builder: bool, thread_id: str, 
-                                  mcp_wrapper_instance: Optional[MCPToolWrapper]) -> dict:
+                                  mcp_wrapper_instance: Optional[MCPToolWrapper],
+                                  is_simple_mode: Optional[bool] = False) -> dict:
         
         if "gemini-2.5-flash" in model_name.lower() and "gemini-2.5-pro" not in model_name.lower():
             default_system_content = get_gemini_system_prompt()
@@ -242,11 +245,15 @@ class PromptManager:
                 sample_response = file.read()
             default_system_content = default_system_content + "\n\n <sample_assistant_response>" + sample_response + "</sample_assistant_response>"
         
-        if is_agent_builder:
+        if is_simple_mode:
+            logger.info("🟢 USING SIMPLE MODE PROMPT")
+            system_content = get_simple_prompt()
+        elif is_agent_builder:
             system_content = get_agent_builder_prompt()
         elif agent_config and agent_config.get('system_prompt'):
             system_content = render_prompt_template(agent_config['system_prompt'].strip())
         else:
+            logger.info("🔵 USING DEFAULT SYSTEM PROMPT")
             system_content = default_system_content
         
         if agent_config and (agent_config.get('configured_mcps') or agent_config.get('custom_mcps')) and mcp_wrapper_instance and mcp_wrapper_instance._initialized:
@@ -492,7 +499,7 @@ class AgentRunner:
         system_message = await PromptManager.build_system_prompt(
             self.config.model_name, self.config.agent_config, 
             self.config.is_agent_builder, self.config.thread_id, 
-            mcp_wrapper_instance
+            mcp_wrapper_instance, self.config.is_simple_mode
         )
 
         iteration_count = 0
@@ -675,7 +682,8 @@ async def run_agent(
     agent_config: Optional[dict] = None,    
     trace: Optional[StatefulTraceClient] = None,
     is_agent_builder: Optional[bool] = False,
-    target_agent_id: Optional[str] = None
+    target_agent_id: Optional[str] = None,
+    is_simple_mode: Optional[bool] = False
 ):
     effective_model = model_name
     if model_name == "anthropic/claude-sonnet-4-20250514" and agent_config and agent_config.get('model'):
@@ -699,7 +707,8 @@ async def run_agent(
         agent_config=agent_config,
         trace=trace,
         is_agent_builder=is_agent_builder,
-        target_agent_id=target_agent_id
+        target_agent_id=target_agent_id,
+        is_simple_mode=is_simple_mode
     )
     
     runner = AgentRunner(config)

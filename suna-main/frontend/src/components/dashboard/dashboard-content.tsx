@@ -158,6 +158,7 @@ export function DashboardContent() {
       reasoning_effort?: string;
       stream?: boolean;
       enable_context_manager?: boolean;
+      is_simple_mode?: boolean;
     },
   ) => {
     if (
@@ -247,6 +248,7 @@ export function DashboardContent() {
       formData.append('reasoning_effort', options?.reasoning_effort ?? 'low');
       formData.append('stream', String(options?.stream ?? true));
       formData.append('enable_context_manager', String(options?.enable_context_manager ?? false));
+      formData.append('is_simple_mode', String(options?.is_simple_mode ?? false));
 
       const result = await initiateAgentMutation.mutateAsync(formData);
 

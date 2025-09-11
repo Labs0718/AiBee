@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Square, Loader2, ArrowUp } from 'lucide-react';
+import { Square, Loader2, ArrowUp, Zap, ZapOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UploadedFile } from './chat-input';
 import { FileUploadHandler } from './file-upload-handler';
@@ -15,6 +15,7 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip';
 import { BillingModal } from '@/components/billing/billing-modal';
 import { handleFiles } from './file-upload-handler';
+import { useSimpleModeStore } from '@/lib/stores/simple-mode-store';
 
 interface MessageInputProps {
   value: string;
@@ -95,6 +96,7 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
     const [billingModalOpen, setBillingModalOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const { enabled: customAgentsEnabled, loading: flagsLoading } = useFeatureFlag('custom_agents');
+    const { isSimpleMode, toggleSimpleMode } = useSimpleModeStore();
 
     useEffect(() => {
       setMounted(true);
@@ -242,6 +244,37 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
               onOpenChange={setBillingModalOpen}
               returnUrl={typeof window !== 'undefined' ? window.location.href : '/'}
             />
+
+            {/* Simple Mode Toggle Button */}
+            {isLoggedIn && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={toggleSimpleMode}
+                      className={cn(
+                        'w-8 h-8 flex-shrink-0 rounded-xl transition-colors',
+                        isSimpleMode 
+                          ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          : 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900'
+                      )}
+                      disabled={loading || (disabled && !isAgentRunning)}
+                    >
+                      {isSimpleMode ? <ZapOff className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isSimpleMode ? '심플 모드 (활성화)' : '일반 모드 (활성화)'}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {isSimpleMode ? '간단하고 직접적인 답변' : '상세한 분석과 추론 기능'}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
 
             {isLoggedIn && <VoiceRecorder
               onTranscription={onTranscription}

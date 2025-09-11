@@ -52,6 +52,7 @@ class AgentStartRequest(BaseModel):
     stream: Optional[bool] = True
     enable_context_manager: Optional[bool] = False
     agent_id: Optional[str] = None  # Custom agent to use
+    is_simple_mode: Optional[bool] = False  # Simple mode toggle
 
 class InitiateAgentResponse(BaseModel):
     thread_id: str
@@ -525,6 +526,7 @@ async def start_agent(
         is_agent_builder=is_agent_builder,
         target_agent_id=target_agent_id,
         request_id=request_id,
+        is_simple_mode=body.is_simple_mode,
     )
 
     return {"agent_run_id": agent_run_id, "status": "running"}
@@ -971,6 +973,7 @@ async def initiate_agent_with_files(
     files: List[UploadFile] = File(default=[]),
     is_agent_builder: Optional[bool] = Form(False),
     target_agent_id: Optional[str] = Form(None),
+    is_simple_mode: Optional[bool] = Form(False),  # Simple mode parameter
     user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """
@@ -1325,6 +1328,7 @@ async def initiate_agent_with_files(
             is_agent_builder=is_agent_builder,
             target_agent_id=target_agent_id,
             request_id=request_id,
+            is_simple_mode=is_simple_mode,
         )
 
         return {"thread_id": thread_id, "agent_run_id": agent_run_id}
