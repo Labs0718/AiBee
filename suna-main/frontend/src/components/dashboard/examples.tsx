@@ -36,49 +36,9 @@ type PromptExample = {
 
 const allPrompts: PromptExample[] = [
   {
-    title: '최고의 베이커리 지도 찾기',
-    query: '1. {{city}}의 "최고의 베이커리"를 구글 지도에서 검색하세요\n2. 상위 {{number}}개 베이커리 맞춤 목록을 만드세요\n3. 각 베이커리에 대해 다음 정보를 수집하세요:\n   - 고객 평점 및 인기 메뉴\n   - 영업시간, 위치, 전문 분야\n   - 가격대 및 꼭 먹어봐야 할 페이스트리\n4. 추천사항이 포함된 요약본을 생성하세요',
-    icon: <Globe className="text-blue-700 dark:text-blue-400" size={16} />,
-  },
-  {
-    title: '교육 데이터 조사',
-    query: '1. {{topic}} 교육 통계를 위해 UNESCO 데이터베이스에 접근하세요\n2. 다음 데이터를 수집하세요:\n   - 지역별 학생 등록률\n   - 전 세계 교사 대비 학생 비율\n   - GDP 대비 교육비 지출 비율\n3. 트렌드가 포함된 구조화된 스프레드시트를 만드세요\n4. 주요 통찰력을 담은 요약 보고서를 생성하세요',
-    icon: <BarChart3 className="text-purple-700 dark:text-purple-400" size={16} />,
-  },
-  {
     title: '여행 일정 계획하기',
     query: '1. {{duration}}일 여행을 위해 TripAdvisor에서 {{destination}}을 조사하세요\n2. 최고의 명소, 레스토랑, 액티비티를 찾으세요\n3. 위치와 시간을 고려하여 일일 일정을 최적화하세요\n4. 교통편, 날씨, 대안 계획을 포함하세요\n5. 시간대별로 일일 여행 계획표를 만드세요',
     icon: <Calendar className="text-rose-700 dark:text-rose-400" size={16} />,
-  },
-  {
-    title: '뉴스 보도 분석하기',
-    query: '1. 지난 {{time_period}} 기간의 {{topic}} 기사를 {{news_outlet}}에서 검색하세요\n2. 보도를 범주화하고 핵심 주제를 파악하세요\n3. 전문가 소스와 데이터 포인트를 추적하세요\n4. 주요 발전 사항의 타임라인을 만드세요\n5. 통찰력과 보도 공백이 포함된 보고서를 생성하세요',
-    icon: <PenTool className="text-indigo-700 dark:text-indigo-400" size={16} />,
-  },
-  {
-    title: '재무 모델 구축하기',
-    query: '1. {{company_type}} 비즈니스를 위한 {{model_type}} 모델을 만드세요\n2. 과거 데이터와 업계 벤치마크를 수집하세요\n3. 수익 예측과 비용 전망을 구축하세요\n4. DCF, LTV/CAC 또는 NPV 분석을 포함하세요\n5. 시나리오가 포함된 Excel 대시보드를 설계하세요',
-    icon: <DollarSign className="text-orange-700 dark:text-orange-400" size={16} />,
-  },
-  {
-    title: '마켓 전략 개발하기',
-    query: '1. {{product_type}} 출시를 위한 시장진출 전략을 수립하세요\n2. 목표 시장과 경쟁 환경을 분석하세요\n3. 시장 진입 및 가격 책정 전략을 설계하세요\n4. 재무 전망과 일정을 수립하세요\n5. 권장사항이 포함된 프레젠테이션을 만드세요',
-    icon: <Target className="text-cyan-700 dark:text-cyan-400" size={16} />,
-  },
-  {
-    title: '기업 정보 조사',
-    query: '1. {{company_name}}을 종합적으로 조사하세요\n2. 최신 뉴스, 투자 정보, 경영진 정보를 수집하세요\n3. 경쟁 위치와 시장 점유율을 분석하세요\n4. 핵심 인력의 배경을 조사하세요\n5. 실행 가능한 통찰력이 포함된 상세한 프로필을 만드세요',
-    icon: <Briefcase className="text-teal-700 dark:text-teal-400" size={16} />,
-  },
-  {
-    title: '산업 동향 조사하기',
-    query: '1. {{data_sources}}에서 {{industry}} 동향을 조사하세요\n2. 투자 활동과 기술 발전 사항을 수집하세요\n3. 시장 동력과 기회를 분석하세요\n4. 새로운 주제와 격차를 식별하세요\n5. 권장사항이 포함된 포괄적인 보고서를 만드세요',
-    icon: <TrendingUp className="text-pink-700 dark:text-pink-400" size={16} />,
-  },
-  {
-    title: '고객지원 티켓 자동화',
-    query: '1. {{support_platform}}에서 들어오는 티켓을 모니터링하세요\n2. 문제를 분류하고 긴급도를 평가하세요\n3. {{knowledge_base}}에서 해결책을 검색하세요\n4. 신뢰도에 따라 자동 응답하거나 에스컬레이션하세요\n5. 지표를 추적하고 일일 보고서를 생성하세요',
-    icon: <Shield className="text-yellow-600 dark:text-yellow-300" size={16} />,
   },
   {
     title: '법적 컴플라이언스 조사',
@@ -89,21 +49,6 @@ const allPrompts: PromptExample[] = [
     title: '데이터 분석 컴파일',
     query: '1. {{data_sources}}에서 {{data_topic}}을 수집하세요\n2. 데이터셋을 정리하고 표준화하세요\n3. 패턴을 분석하고 트렌드를 계산하세요\n4. 시각화가 포함된 스프레드시트를 만드세요\n5. 전략적 권장사항을 제공하세요',
     icon: <BarChart3 className="text-slate-700 dark:text-slate-400" size={16} />,
-  },
-  {
-    title: '소셜미디어 콘텐츠 계획',
-    query: '1. {{brand}}를 위한 {{duration}} 소셜 전략을 수립하세요\n2. 트렌딩 주제와 경쟁사 콘텐츠를 조사하세요\n3. 주당 {{posts_per_week}}개 게시물이 포함된 콘텐츠 캘린더를 개발하세요\n4. 플랫폼별 콘텐츠와 스케줄링을 만드세요\n5. 분석 도구와 월간 보고서를 설정하세요',
-    icon: <Camera className="text-stone-700 dark:text-stone-400" size={16} />,
-  },
-  {
-    title: '제품 비교 분석',
-    query: '1. {{product_category}} 옵션을 포괄적으로 조사하세요\n2. 과학적 연구와 전문가 의견을 수집하세요\n3. 장점, 단점 및 비용을 분석하세요\n4. 현재 전문가 합의를 조사하세요\n5. 개인화된 권장사항이 포함된 비교 보고서를 만드세요',
-    icon: <Brain className="text-fuchsia-700 dark:text-fuchsia-400" size={16} />,
-  },
-  {
-    title: '시장 기회 분석하기',
-    query: '1. 투자 기회를 위해 {{market_topic}}을 조사하세요\n2. 시장 규모, 성장률 및 주요 업체를 분석하세요\n3. 투자 테마와 위험을 식별하세요\n4. 시장 도전과 장벽을 평가하세요\n5. 권장사항이 포함된 투자 프레젠테이션을 만드세요',
-    icon: <Rocket className="text-green-600 dark:text-green-300" size={16} />,
   },
   {
     title: '인재 및 후보자 소싱',

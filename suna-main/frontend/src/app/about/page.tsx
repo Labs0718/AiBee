@@ -17,9 +17,9 @@ export default function AboutPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-white">
+      <main className="min-h-screen bg-background">
         {/* Hero Section */}
-        <section className="pt-32 pb-32 bg-white relative overflow-hidden">
+        <section className="pt-32 pb-32 bg-background relative overflow-hidden">
           {/* Background gradients - same as main home */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-white to-blue-100/30 -z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-tr from-blue-100/20 via-transparent to-blue-50/30 -z-10"></div>
@@ -397,7 +397,7 @@ export default function AboutPage() {
         </section>
 
         {/* Architecture Section */}
-        <section className="py-32 bg-white">
+        <section className="py-32 bg-background">
           <div className="container mx-auto px-8 lg:px-12 max-w-5xl">
             <div className="text-center mb-16">
               <h2 className="text-3xl font-light text-gray-900 mb-4">
