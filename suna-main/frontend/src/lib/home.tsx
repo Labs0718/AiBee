@@ -106,12 +106,12 @@ export const siteConfig = {
         />
       </svg>
     ),
-    badge: '100% OPEN SOURCE',
+    badge: 'ENTERPRISE AI AGENT',
     githubUrl: 'https://github.com/kortix-ai/suna',
-    title: 'AIBee – Your Intelligent AI Assistant for Every Task.',
+    title: 'AIBee – Enterprise-Grade AI Agent Platform',
     description:
-      'AIBee – Advanced AI assistant powered by cutting-edge technology to enhance your productivity and streamline your workflow.',
-    inputPlaceholder: 'Ask Suna to...',
+      'Deploy autonomous AI agents that analyze, decide, and execute complex business operations with enterprise-level precision and reliability.',
+    inputPlaceholder: 'Deploy AI agent to analyze quarterly revenue trends and generate executive summary...',
   },
   cloudPricingItems: [
     {
@@ -502,62 +502,62 @@ export const siteConfig = {
     ],
   },
   featureSection: {
-    title: 'How Kortix Suna Works',
+    title: 'Enterprise AI Agent Architecture',
     description:
-      'Discover how Kortix Suna transforms your commands into action in four easy steps',
+      'Advanced multi-layered AI system designed for complex business operations and autonomous decision-making',
     items: [
       {
         id: 1,
-        title: 'Request an Action',
+        title: 'Strategic Input Processing',
         content:
-          'Speak or type your command—let Kortix Suna capture your intent. Your request instantly sets the process in motion.',
+          'AIBee analyzes complex business requirements, market conditions, and operational constraints to understand strategic objectives and execute accordingly.',
         image:
           'https://images.unsplash.com/photo-1720371300677-ba4838fa0678?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 2,
-        title: 'AI Understanding & Planning',
+        title: 'Autonomous Intelligence Engine',
         content:
-          'Suna analyzes your request, understands the context, and develops a structured plan to complete the task efficiently.',
+          'Advanced neural networks process multi-dimensional data streams, generating predictive models and strategic execution frameworks in real-time.',
         image:
           'https://images.unsplash.com/photo-1686170287433-c95faf6d3608?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwzfHx8ZW58MHx8fHx8fA%3D%3D',
       },
       {
         id: 3,
-        title: 'Autonomous Execution',
+        title: 'Enterprise Integration Layer',
         content:
-          'Using its capabilities and integrations, Suna executes the task independently, handling any complexities along the way.',
+          'Seamlessly connects with enterprise systems, APIs, and databases to execute complex workflows while maintaining security and compliance standards.',
         image:
           'https://images.unsplash.com/photo-1720378042271-60aff1e1c538?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxMHx8fGVufDB8fHx8fA%3D%3D',
       },
       {
         id: 4,
-        title: 'Results & Learning',
+        title: 'Continuous Optimization & Analytics',
         content:
-          'Suna delivers results and learns from each interaction, continuously improving its performance to better serve your needs.',
+          'Machine learning algorithms continuously analyze performance metrics, optimize processes, and provide detailed analytics for strategic decision-making.',
         image:
           'https://images.unsplash.com/photo-1666882990322-e7f3b8df4f75?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDF8fHxlbnwwfHx8fHw%3D',
       },
     ],
   },
   bentoSection: {
-    title: 'Empower Your Workflow with Kortix Suna',
+    title: 'Enterprise AI Agent Capabilities',
     description:
-      'Let Kortix Suna act on your behalf with advanced AI capabilities, seamless integrations, and autonomous task execution.',
+      'Advanced autonomous systems with real-time analytics, enterprise integrations, and intelligent decision-making frameworks for complex business operations.',
     items: [
       {
         id: 1,
         content: <FirstBentoAnimation />,
-        title: 'Autonomous Task Execution',
+        title: 'Autonomous Decision Engine',
         description:
-          'Experience true automation with Suna. Ask your AI Worker to complete tasks, research information, and handle complex workflows with minimal supervision.',
+          'Enterprise-grade AI agents analyze multi-dimensional business data, execute strategic decisions, and manage complex operational workflows with minimal human intervention.',
       },
       {
         id: 2,
         content: <SecondBentoAnimation />,
-        title: 'Seamless Integrations',
+        title: 'Enterprise System Integration',
         description:
-          'Connect Suna to your existing tools for a unified workflow. Boost productivity through AI-powered interconnected systems.',
+          'Secure API connections with CRM, ERP, and business intelligence platforms. Real-time data synchronization across enterprise infrastructure with 99.9% uptime.',
       },
       {
         id: 3,
@@ -569,33 +569,33 @@ export const siteConfig = {
             ]}
           />
         ),
-        title: 'Intelligent Data Analysis',
+        title: 'Real-Time Business Intelligence',
         description:
-          "Transform raw data into actionable insights in seconds. Make better decisions with Suna's real-time, adaptive intelligence.",
+          'Advanced analytics engine processes terabytes of data, generates predictive models, and delivers executive-level insights with millisecond response times.',
       },
       {
         id: 4,
         content: <FourthBentoAnimation once={false} />,
-        title: 'Complete Customization',
+        title: 'Enterprise Customization Framework',
         description:
-          'Tailor Suna to your specific needs. As an open source solution, you have full control over its capabilities, integrations, and implementation.',
+          'Modular architecture allows complete customization of AI models, workflow orchestration, and security protocols to meet specific enterprise requirements.',
       },
     ],
   },
   benefits: [
     {
       id: 1,
-      text: "Automate everyday tasks with Suna's powerful AI capabilities.",
+      text: 'Deploy enterprise-grade AI agents for complex operational automation and strategic business process optimization.',
       image: '/Device-6.png',
     },
     {
       id: 2,
-      text: 'Increase productivity with autonomous task completion.',
+      text: 'Achieve 300% productivity gains through autonomous workflow orchestration and intelligent resource allocation.',
       image: '/Device-7.png',
     },
     {
       id: 3,
-      text: 'Improve focus on high-value work as Suna handles the routine.',
+      text: 'Enable executive teams to focus on strategic initiatives while AI agents manage operational complexities.',
       image: '/Device-8.png',
     },
     {
