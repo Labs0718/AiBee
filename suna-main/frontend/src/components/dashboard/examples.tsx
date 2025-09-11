@@ -660,6 +660,13 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 ## 2) (선택) 웹 보완 검색
 ⚠️ 내부 조회(1~1-β) 결과 보고 후에만 \`web_search\` 사용 허용.
 
+**검색 우선수위**
+- 가능하면 다음 도메인의 자료를 최우선으로 활용:
+  - 국제기구: OECD, World Bank
+  - OECD Publications: https://www.oecd.org/en/publications  
+  - World Bank Data: https://data.worldbank.org  
+
+  
 **목적**  
 - 최신 지침/메서드 개정, 기관 보고서, 통계 포털 문서 보완
 - 내부 데이터 누락 시 신뢰할 수 있는 공식 소스 보완
