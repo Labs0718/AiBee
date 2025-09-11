@@ -58,7 +58,7 @@ export interface PricingTier {
 }
 
 export const siteConfig = {
-  name: 'Kortix Suna',
+  name: 'AIBee',
   description: 'The Generalist AI Worker that can act on your behalf.',
   cta: 'Start Free',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -109,9 +109,9 @@ export const siteConfig = {
     ),
     badge: '100% OPEN SOURCE',
     githubUrl: 'https://github.com/kortix-ai/suna',
-    title: 'Kortix – Build, manage and train your AI Workforce.',
+    title: 'AIBee – Your Intelligent AI Assistant for Every Task.',
     description:
-      'Kortix – open-source platform to build, manage and train your AI Workforce.',
+      'AIBee – Advanced AI assistant powered by cutting-edge technology to enhance your productivity and streamline your workflow.',
     inputPlaceholder: 'Ask Suna to...',
   },
   cloudPricingItems: [
@@ -1235,43 +1235,11 @@ export const siteConfig = {
   },
   footerLinks: [
     {
-      title: 'Kortix',
+      title: 'AIBee',
       links: [
-        { id: 1, title: 'About', url: 'https://kortix.ai' },
-        { id: 3, title: 'Contact', url: 'mailto:hey@kortix.ai' },
-        { id: 4, title: 'Careers', url: 'https://kortix.ai/careers' },
-      ],
-    },
-    {
-      title: 'Resources',
-      links: [
-        {
-          id: 5,
-          title: 'Documentation',
-          url: 'https://github.com/Kortix-ai/Suna',
-        },
-        { id: 7, title: 'Discord', url: 'https://discord.gg/Py6pCBUUPw' },
-        { id: 8, title: 'GitHub', url: 'https://github.com/Kortix-ai/Suna' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        {
-          id: 9,
-          title: 'Privacy Policy',
-          url: 'https://suna.so/legal?tab=privacy',
-        },
-        {
-          id: 10,
-          title: 'Terms of Service',
-          url: 'https://suna.so/legal?tab=terms',
-        },
-        {
-          id: 11,
-          title: 'License Apache 2.0',
-          url: 'https://github.com/Kortix-ai/Suna/blob/main/LICENSE',
-        },
+        { id: 1, title: 'About AIBee', url: '#' },
+        { id: 2, title: 'Features', url: '#' },
+        { id: 3, title: 'Support', url: '#' },
       ],
     },
   ],
