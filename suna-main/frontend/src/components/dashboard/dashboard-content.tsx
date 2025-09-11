@@ -33,9 +33,6 @@ import { CustomAgentsSection } from './custom-agents-section';
 import { toast } from 'sonner';
 import { ReleaseBadge } from '../auth/release-badge';
 import { createClient } from '@/lib/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { SimpleChatHistory } from './simple-chat-history';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
@@ -44,9 +41,6 @@ export function DashboardContent() {
   const [hiddenPrompt, setHiddenPrompt] = useState<string | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
-  const [isSimpleMode, setIsSimpleMode] = useState(false);
-  const [simpleSessionId, setSimpleSessionId] = useState<string | null>(null);
-  const [simpleChatHistory, setSimpleChatHistory] = useState<Array<{role: 'user' | 'assistant', content: string, timestamp?: number}>>([]);
   const { 
     selectedAgentId, 
     setSelectedAgent, 
@@ -155,74 +149,6 @@ export function DashboardContent() {
       setInitiatedThreadId(null);
     }
   }, [threadQuery.data, initiatedThreadId, router]);
-
-  const handleSimpleModeSubmit = async (
-    message: string,
-    options?: {
-      model_name?: string;
-      enable_thinking?: boolean;
-      reasoning_effort?: string;
-    }
-  ) => {
-    if (!message.trim() || isSubmitting) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // 사용자 메시지를 히스토리에 추가
-      const userMessage = { role: 'user' as const, content: message, timestamp: Date.now() };
-      setSimpleChatHistory(prev => [...prev, userMessage]);
-
-      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
-      const supabase = createClient();
-      const { data: session } = await supabase.auth.getSession();
-      const token = session.session?.access_token;
-
-      if (!token) {
-        throw new Error('인증이 필요합니다.');
-      }
-
-      const response = await fetch(`${backendUrl}/simple-chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          model_name: options?.model_name || 'gpt-3.5-turbo',
-          enable_thinking: options?.enable_thinking || false,
-          reasoning_effort: options?.reasoning_effort || 'low',
-          session_id: simpleSessionId
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API 호출 실패: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // 세션 ID 저장 (메모리 기능을 위해)
-      if (result.session_id && result.session_id !== simpleSessionId) {
-        setSimpleSessionId(result.session_id);
-      }
-      
-      // AI 응답을 히스토리에 추가
-      const aiMessage = { role: 'assistant' as const, content: result.response || result.content || JSON.stringify(result), timestamp: Date.now() };
-      setSimpleChatHistory(prev => [...prev, aiMessage]);
-      
-      // 입력창 초기화
-      setInputValue('');
-      
-    } catch (error: any) {
-      console.error('Simple mode error:', error);
-      const errorMessage = error instanceof Error ? error.message : '요청 처리 중 오류가 발생했습니다.';
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleSubmit = async (
     message: string,
@@ -381,59 +307,19 @@ export function DashboardContent() {
       <div className="flex flex-col h-screen w-full overflow-hidden">
 
         <div className={cn(
-          "flex flex-col h-full px-4",
-          customAgentsEnabled ? "pt-16 md:pt-20" : "",
-          isSimpleMode && simpleChatHistory.length > 0 ? "items-center" : "items-center justify-center"
+          "flex flex-col h-full px-4 items-center justify-center",
+          customAgentsEnabled ? "pt-16 md:pt-20" : "justify-center"
         )}>
-          {/* 심플 모드 대화 히스토리 */}
-          {isSimpleMode && (
-            <div className="w-full max-w-[650px] flex-1 overflow-y-auto py-4">
-              <SimpleChatHistory messages={simpleChatHistory} isLoading={isSubmitting} />
+          <div className="w-full max-w-[650px] flex flex-col items-center justify-center space-y-4 md:space-y-6">
+            <div className="flex flex-col items-center text-center w-full">
+              <p className="tracking-tight text-2xl md:text-3xl font-normal text-muted-foreground/80">
+                오늘 무엇을 도와드릴까요?
+              </p>
             </div>
-          )}
-          
-          <div className={cn(
-            "w-full max-w-[650px] flex flex-col items-center space-y-4 md:space-y-6",
-            isSimpleMode && simpleChatHistory.length > 0 ? "pb-4" : "justify-center"
-          )}>
-            {(!isSimpleMode || simpleChatHistory.length === 0) && (
-              <div className="flex flex-col items-center text-center w-full">
-                <p className="tracking-tight text-2xl md:text-3xl font-normal text-muted-foreground/80">
-                  {isSimpleMode ? '간단한 질문을 해보세요' : '오늘 무엇을 도와드릴까요?'}
-                </p>
-              </div>
-            )}
-            <div className="w-full relative">
-              {/* 단순 모드 토글 버튼 */}
-              <div className="absolute top-2 right-2 z-50 flex gap-2">
-                <button
-                  onClick={() => setIsSimpleMode(!isSimpleMode)}
-                  className={`w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center text-sm font-bold shadow-lg hover:shadow-xl ${
-                    isSimpleMode 
-                      ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600' 
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-blue-500 hover:text-blue-600'
-                  }`}
-                  title={isSimpleMode ? "고급 모드로 전환 (현재: 단순 모드)" : "단순 모드로 전환 (현재: 고급 모드)"}
-                >
-                  {isSimpleMode ? 'S' : 'A'}
-                </button>
-                {isSimpleMode && simpleSessionId && (
-                  <button
-                    onClick={() => {
-                      setSimpleSessionId(null);
-                      setSimpleChatHistory([]);
-                      toast.success('대화 메모리가 초기화되었습니다.');
-                    }}
-                    className="w-10 h-10 rounded-full border-2 border-red-300 bg-white text-red-600 hover:bg-red-500 hover:text-white transition-all duration-200 flex items-center justify-center text-sm font-bold shadow-lg hover:shadow-xl"
-                    title="대화 메모리 초기화"
-                  >
-                    ↻
-                  </button>
-                )}
-              </div>
+            <div className="w-full">
               <ChatInput
                 ref={chatInputRef}
-                onSubmit={isSimpleMode ? handleSimpleModeSubmit : handleSubmit}
+                onSubmit={handleSubmit}
                 loading={isSubmitting}
                 placeholder="어떤 도움이 필요하신지 설명해 주세요..."
                 value={inputValue}
@@ -441,23 +327,20 @@ export function DashboardContent() {
                   setInputValue(value);
                   setHasUserModified(true);
                 }}
-                hideAttachments={isSimpleMode}
-                selectedAgentId={isSimpleMode ? undefined : selectedAgentId}
-                onAgentSelect={isSimpleMode ? undefined : setSelectedAgent}
-                enableAdvancedConfig={!isSimpleMode}
+                hideAttachments={false}
+                selectedAgentId={selectedAgentId}
+                onAgentSelect={setSelectedAgent}
+                enableAdvancedConfig={true}
                 onConfigureAgent={(agentId) => router.push(`/agents/config/${agentId}`)}
-                hideAgentSelection={isSimpleMode}
               />
             </div>
-            {!isSimpleMode && (
-              <div className="w-full">
-                <Examples onSelectPrompt={(query, hidden) => {
-                  setInputValue(query);
-                  setHiddenPrompt(hidden);
-                  setHasUserModified(true); // Examples에서 선택했음을 표시
-                }} count={isMobile ? 3 : 5} />
-              </div>
-            )}
+            <div className="w-full">
+              <Examples onSelectPrompt={(query, hidden) => {
+                setInputValue(query);
+                setHiddenPrompt(hidden);
+                setHasUserModified(true); // Examples에서 선택했음을 표시
+              }} count={isMobile ? 3 : 5} />
+            </div>
           </div>
           
           {/* {customAgentsEnabled && (
@@ -487,7 +370,6 @@ export function DashboardContent() {
           projectId={undefined}
         />
       )}
-
     </>
   );
 }
