@@ -55,21 +55,67 @@ const getAgentConnectedApps = (
   profiles: ComposioProfile[],
   toolkits: ComposioToolkit[]
 ): ConnectedApp[] => {
-  if (!agent?.custom_mcps || !profiles?.length || !toolkits?.length) return [];
+  if (!agent?.custom_mcps) return [];
 
   const connectedApps: ConnectedApp[] = [];
   
   agent.custom_mcps.forEach((mcpConfig: any) => {
-    if (mcpConfig.config?.profile_id) {
-      const profile = profiles.find(p => p.profile_id === mcpConfig.config.profile_id);
-      const toolkit = toolkits.find(t => t.slug === profile?.toolkit_slug);
-      if (profile && toolkit) {
-        connectedApps.push({
-          toolkit,
-          profile,
-          mcpConfig
-        });
+    let profile = null;
+    let toolkit = null;
+    
+    // Try to find profile if profile_id exists and profiles are available
+    if (mcpConfig.config?.profile_id && profiles?.length) {
+      profile = profiles.find(p => p.profile_id === mcpConfig.config.profile_id);
+      
+      if (profile) {
+        // Try to find toolkit by slug
+        toolkit = toolkits?.find(t => t.slug === profile.toolkit_slug);
+        
+        // Create fallback toolkit if not found
+        if (!toolkit) {
+          toolkit = {
+            slug: profile.toolkit_slug,
+            name: profile.toolkit_slug.charAt(0).toUpperCase() + profile.toolkit_slug.slice(1),
+            description: `Connected via ${profile.profile_name}`,
+            logo: undefined,
+            tags: [],
+            auth_schemes: [],
+            categories: ['connected']
+          } as ComposioToolkit;
+        }
       }
+    }
+    
+    // If no profile found, create fallback from MCP config
+    if (!profile) {
+      const appName = mcpConfig.name || 'Custom MCP';
+      const appSlug = mcpConfig.name?.toLowerCase().replace(/\s+/g, '-') || 'custom-mcp';
+      
+      profile = {
+        profile_id: mcpConfig.config?.profile_id || `mcp-${Math.random().toString(36).substr(2, 9)}`,
+        profile_name: appName,
+        toolkit_slug: appSlug,
+        is_connected: true
+      } as any;
+      
+      toolkit = {
+        slug: appSlug,
+        name: appName,
+        description: mcpConfig.config?.description || 'Custom MCP connection',
+        logo: undefined,
+        tags: ['custom'],
+        auth_schemes: [],
+        categories: ['custom']
+      } as ComposioToolkit;
+    }
+    
+    // Add the connected app
+    if (profile && toolkit) {
+      connectedApps.push({
+        toolkit,
+        profile,
+        mcpConfig
+      });
     }
   });
 
