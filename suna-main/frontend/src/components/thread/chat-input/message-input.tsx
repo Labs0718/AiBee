@@ -256,18 +256,18 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
                       size="sm"
                       onClick={toggleSimpleMode}
                       className={cn(
-                        'w-8 h-8 flex-shrink-0 rounded-xl transition-colors',
+                        'px-3 h-8 flex-shrink-0 rounded-xl transition-colors text-xs font-medium',
                         isSimpleMode 
                           ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
                           : 'text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900'
                       )}
                       disabled={loading || (disabled && !isAgentRunning)}
                     >
-                      {isSimpleMode ? <ZapOff className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+                      {isSimpleMode ? 'Standard' : 'Reasoning'}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{isSimpleMode ? '심플 모드 (활성화)' : '일반 모드 (활성화)'}</p>
+                    <p>{isSimpleMode ? 'Standard Mode' : 'Reasoning Mode'}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {isSimpleMode ? '간단하고 직접적인 답변' : '상세한 분석과 추론 기능'}
                     </p>
