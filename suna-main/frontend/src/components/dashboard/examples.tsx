@@ -1,30 +1,23 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import {
-  BarChart3,
-  Bot,
-  Briefcase,
-  Settings,
-  Sparkles,
-  RefreshCw,
-  TrendingUp,
-  Users,
-  Shield,
-  Zap,
-  Target,
-  Brain,
-  Globe,
-  Heart,
-  PenTool,
-  Code,
-  Camera,
   Calendar,
-  DollarSign,
-  Rocket,
+  CalendarCheck,
+  CalendarSearch,
+  Shield,
+  FileText,
+  Megaphone,
+  Users,
+  TrendingUp,
+  BarChart3,
+  LineChart,
+  AlertTriangle,
+  ClipboardList,
   Plane,
+  Heart,
 } from 'lucide-react';
 
 type PromptExample = {
@@ -35,29 +28,6 @@ type PromptExample = {
 };
 
 const allPrompts: PromptExample[] = [
-  {
-    title: '여행 일정 계획하기',
-    query: '1. {{duration}}일 여행을 위해 TripAdvisor에서 {{destination}}을 조사하세요\n2. 최고의 명소, 레스토랑, 액티비티를 찾으세요\n3. 위치와 시간을 고려하여 일일 일정을 최적화하세요\n4. 교통편, 날씨, 대안 계획을 포함하세요\n5. 시간대별로 일일 여행 계획표를 만드세요',
-    icon: <Calendar className="text-rose-700 dark:text-rose-400" size={16} />,
-  },
-  {
-    title: '법적 컴플라이언스 조사',
-    query: '1. {{jurisdictions}}에 걸쳐 {{legal_topic}}을 조사하세요\n2. 주별 요구 사항과 수수료를 비교하세요\n3. 결정 요인과 의미를 분석하세요\n4. 실질적인 구현 세부 사항을 수집하세요\n5. 권장사항이 포함된 비교 스프레드시트를 만드세요',
-    icon: <Settings className="text-red-700 dark:text-red-400" size={16} />,
-  },
-  {
-    title: '데이터 분석 컴파일',
-    query: '1. {{data_sources}}에서 {{data_topic}}을 수집하세요\n2. 데이터셋을 정리하고 표준화하세요\n3. 패턴을 분석하고 트렌드를 계산하세요\n4. 시각화가 포함된 스프레드시트를 만드세요\n5. 전략적 권장사항을 제공하세요',
-    icon: <BarChart3 className="text-slate-700 dark:text-slate-400" size={16} />,
-  },
-  {
-    title: '인재 및 후보자 소싱',
-    query: '1. {{location}}에서 {{job_title}} 후보자를 검색하세요\n2. LinkedIn, GitHub 및 구인 게시판을 활용하세요\n3. 기술, 경험 및 문화적 적합성을 평가하세요\n4. 순위가 매겨진 후보자 파이프라인을 만드세요\n5. 개인화된 접촉 전략을 개발하세요',
-    icon: <Users className="text-blue-600 dark:text-blue-300" size={16} />,
-  },
-
-
-
   //  그룹웨어 연차사용 가이드 - - - - - - - - -
   {
     title: '그룹웨어 연차사용',
@@ -125,7 +95,7 @@ const allPrompts: PromptExample[] = [
 `,
 
 //  그룹웨어 자원예약 가이드 - - - - - - - - -
-    icon: <Plane className="text-green-600 dark:text-green-400" size={16} />,
+    icon: <CalendarCheck className="text-green-600 dark:text-green-400" size={16} />,
   },
   
   {
@@ -238,7 +208,7 @@ const allPrompts: PromptExample[] = [
  ** 귀속년도는 가장 최근으로 띄워져있는 게 "올해" 라고 보면됨
 
 `,
-    icon: <Heart className="text-red-600 dark:text-red-400" size={16} />,
+    icon: <CalendarSearch className="text-blue-600 dark:text-blue-400" size={16} />,
   },
   
   {
@@ -316,7 +286,7 @@ web_search 도구로 실시간 상황 분석:
 
 **중요: 반드시 내부 문서 검색 → 웹 검색 → 보고서 생성 순서로 진행하며, 각 단계의 결과를 명확히 사용자에게 보고하세요.**
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <AlertTriangle className="text-red-600 dark:text-red-400" size={16} />,
   },
 
   {
@@ -385,9 +355,9 @@ web_search 도구로 실시간 상황 분석:
 - 대외 홍보용 핵심 메시지
 
 
-**중요: 반드시 내부 문서 검색 → 웹 검색 → 최종 보고서 생성 순서로 진행하며, 각 단계의 결과를 명확히 사용자에게 보고하세요.**
+**중요: 반드시 내부 문서 검색 → 웹 검색 → 최종 보고서 생성 순서로 진핉하며, 각 단계의 결과를 명확히 사용자에게 보고하세요.**
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <FileText className="text-indigo-600 dark:text-indigo-400" size={16} />,
   },
 
 
@@ -469,7 +439,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <ClipboardList className="text-purple-600 dark:text-purple-400" size={16} />,
   },
 
 {
@@ -870,11 +840,6 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 ];
 
-// Function to get random prompts
-const getRandomPrompts = (count: number = 5): PromptExample[] => {
-  const shuffled = [...allPrompts].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-};
 
 export const Examples = ({
   onSelectPrompt,
@@ -883,25 +848,12 @@ export const Examples = ({
   onSelectPrompt?: (query: string, hiddenPrompt?: string) => void;
   count?: number;
 }) => {
-  const [displayedPrompts, setDisplayedPrompts] = useState<PromptExample[]>([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Initialize with random prompts on mount
-  useEffect(() => {
-    setDisplayedPrompts(getRandomPrompts(count));
-  }, [count]);
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setDisplayedPrompts(getRandomPrompts(count));
-    setTimeout(() => setIsRefreshing(false), 300);
-  };
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
       <div className="group relative">
-        <div className="flex gap-2 justify-center py-2 flex-wrap">
-          {displayedPrompts.map((prompt, index) => (
+        <div className="grid grid-cols-4 gap-2 py-2">
+          {allPrompts.map((prompt, index) => (
             <motion.div
               key={`${prompt.title}-${index}`}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -928,20 +880,6 @@ export const Examples = ({
           ))}
         </div>
 
-        {/* Refresh button that appears on hover */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleRefresh}
-          className="absolute -top-4 right-1 h-5 w-5 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        >
-          <motion.div
-            animate={{ rotate: isRefreshing ? 360 : 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            <RefreshCw size={10} className="text-muted-foreground" />
-          </motion.div>
-        </Button>
       </div>
     </div>
   );
