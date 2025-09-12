@@ -328,8 +328,8 @@ export function HeroSection() {
           </Link> */}
           <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 pt-8 sm:pt-12 max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance text-center px-2">
-              <span className="text-primary">AiBee Agent는</span>
-              <span className="text-secondary"> 이런 기능을 제공합니다</span>
+              <span className="text-primary">AiBee</span>
+              <span className="text-secondary"> Agent</span>
             </h1>
             <h2 className="text-lg md:text-xl lg:text-2xl text-center text-gray-600 font-medium px-2 mt-2">
               기업과 공공을 위한 AI 기반 업무 자동화 솔루션
