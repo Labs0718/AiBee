@@ -96,18 +96,6 @@ export function ProcessSection() {
                 index % 2 !== 1 ? 'md:border-r border-gray-200' : ''
               }`}
             >
-              {/* Icon and Image Placeholder */}
-              <div className="mb-6">
-                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mb-4">
-                  <Image
-                    src="/logo2.png"
-                    alt="AiBee Logo"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 object-contain"
-                  />
-                </div>
-              </div>
 
               {/* Title */}
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
