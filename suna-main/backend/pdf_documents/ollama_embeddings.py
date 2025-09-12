@@ -11,7 +11,7 @@ import asyncio
 
 # Ollama API 설정 (로컬 환경 우선)
 OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11435")
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-m3")  # BGE-M3 다국어 모델
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "bge-large")  # bge-large 다국어 모델
 
 class OllamaEmbeddingProcessor:
     def __init__(self):
@@ -27,8 +27,8 @@ class OllamaEmbeddingProcessor:
             
         self.supabase = create_client(supabase_url, supabase_key)
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1500,
-            chunk_overlap=200,
+            chunk_size=500,  # bge-large 컨텍스트 문제로 축소
+            chunk_overlap=50,
             separators=["\n\n", "\n", ".", "!", "?", "。", "！", "？", " ", ""],
             length_function=len,
         )

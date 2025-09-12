@@ -1186,7 +1186,7 @@ class SetupWizard:
             "REDIS_HOST": redis_host,
             "REDIS_PORT": "6379",
             **self.env_vars["llm"],
-            "OLLAMA_HOST": "http://localhost:11435",  # Custom Ollama host port to avoid conflicts
+            "OLLAMA_HOST": "http://host.docker.internal:11435",  # Custom Ollama host port to avoid conflicts
             **self.env_vars["search"],
             **self.env_vars["rapidapi"],
             **self.env_vars.get("cron", {}),
