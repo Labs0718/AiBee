@@ -59,7 +59,7 @@ export interface PricingTier {
 
 export const siteConfig = {
   name: 'AIBee',
-  description: 'The Generalist AI Worker that can act on your behalf.',
+  description: '업무 혁신을 위한 차세대 AI 에이전트 플랫폼',
   cta: 'Start Free',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   keywords: ['AI Worker', 'Generalist AI', 'Open Source AI', 'Autonomous Agent'],
@@ -109,7 +109,7 @@ export const siteConfig = {
     githubUrl: 'https://github.com/kortix-ai/suna',
     title: 'AIBee – Enterprise-Grade AI Agent Platform',
     description:
-      'Deploy autonomous AI agents that analyze, decide, and execute complex business operations with enterprise-level precision and reliability.',
+      '복잡한 업무를 분석하고 의사결정을 내리며 자동으로 실행하는 지능형 AI 에이전트로 업무 생산성을 극대화하세요.',
     inputPlaceholder: 'Deploy AI agent to analyze quarterly revenue trends and generate executive summary...',
   },
   cloudPricingItems: [
@@ -1233,11 +1233,11 @@ export const siteConfig = {
   },
   footerLinks: [
     {
-      title: 'AIBee',
+      title: 'AIBee 소개',
       links: [
-        { id: 1, title: 'About AIBee', url: '#' },
-        { id: 2, title: 'Features', url: '#' },
-        { id: 3, title: 'Support', url: '#' },
+        { id: 1, title: 'AIBee란?', url: '#' },
+        { id: 2, title: '주요 기능', url: '#' },
+        { id: 3, title: '고객 지원', url: '#' },
       ],
     },
   ],
