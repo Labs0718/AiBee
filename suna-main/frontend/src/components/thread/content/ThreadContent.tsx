@@ -699,14 +699,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')) {
                                                     return fullContent.split('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')[0].trim();
                                                 }
-                                                if (fullContent.includes('# AI 정책보고서 생성')) {
-                                                    return fullContent.split('# AI 정책보고서 생성')[0].trim();
-                                                }
-
-                                                if (fullContent.includes('# AI 정책 브리핑 생성기')) {
-                                                    return fullContent.split('# AI 정책 브리핑 생성기')[0].trim();
-                                                }
-                                                
+                                              
                                                 if (fullContent.includes('# 정책 홍보 콘텐츠 초안 자동 생성')) {
                                                     return fullContent.split('# 정책 홍보 콘텐츠 초안 자동 생성')[0].trim();
                                                 }
@@ -719,8 +712,8 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 시계열 추이·예측 분석')[0].trim();
                                                 }
 
-                                                if (fullContent.includes('# 정책 효과 분석')) {
-                                                    return fullContent.split('# 정책 효과 분석')[0].trim();
+                                                if (fullContent.includes('# 문서 비교·요약·정리')) {
+                                                    return fullContent.split('# 문서 비교·요약·정리')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# 분석 보고서 생성')) {
