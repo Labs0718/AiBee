@@ -868,8 +868,8 @@ export default function PDFManagement() {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-600 cursor-pointer"
                     checked={currentItems.length > 0 && selectedFiles.length === currentItems.length}
                     onChange={(e) => handleSelectAll(e.target.checked)}
@@ -888,10 +888,10 @@ export default function PDFManagement() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      selectedFiles.length > 0 
-                        ? 'text-blue-700 bg-blue-50 hover:bg-blue-100' 
+                      selectedFiles.length > 0
+                        ? 'text-blue-700 bg-blue-50 hover:bg-blue-100'
                         : 'text-gray-400 cursor-not-allowed'
                     }`}
                     onClick={handleSelectedDownload}
@@ -900,10 +900,10 @@ export default function PDFManagement() {
                     <Download className="w-4 h-4" />
                     선택 다운로드 ({selectedFiles.length})
                   </button>
-                  <button 
+                  <button
                     className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      selectedFiles.length > 0 
-                        ? 'text-red-700 bg-red-50 hover:bg-red-100' 
+                      selectedFiles.length > 0
+                        ? 'text-red-700 bg-red-50 hover:bg-red-100'
                         : 'text-gray-400 cursor-not-allowed'
                     }`}
                     onClick={handleSelectedDelete}
@@ -919,9 +919,9 @@ export default function PDFManagement() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="w-full">
-                <thead>
+                <thead className="sticky top-0 z-10">
                   <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="text-left py-4 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       <input 

@@ -308,26 +308,6 @@ export function NavUserWithTeams({
                     마이페이지
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings/billing">
-                    <CreditCard className="h-4 w-4" />
-                    Billing
-                  </Link>
-                </DropdownMenuItem>
-                {!flagLoading && customAgentsEnabled && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings/api-keys">
-                      <Key className="h-4 w-4" />
-                      API Keys (Admin)
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-                {isLocalMode() && <DropdownMenuItem asChild>
-                  <Link href="/settings/env-manager">
-                    <KeyRound className="h-4 w-4" />
-                    Local .Env Manager
-                  </Link>
-                </DropdownMenuItem>}
                 
                 {/* PDF 관리 */}
                 <DropdownMenuItem asChild>
