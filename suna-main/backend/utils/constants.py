@@ -42,32 +42,8 @@ MODELS = {
     #     },
     #     "tier_availability": ["free", "paid"]
     # },
-    "openrouter/moonshotai/kimi-k2": {
-        "aliases": ["moonshotai/kimi-k2"],
-        "pricing": {
-            "input_cost_per_million_tokens": 1.00,
-            "output_cost_per_million_tokens": 3.00
-        },
-        "tier_availability": ["free", "paid"]
-    },
-    "xai/grok-4": {
-        "aliases": ["grok-4", "x-ai/grok-4"],
-        "pricing": {
-            "input_cost_per_million_tokens": 5.00,
-            "output_cost_per_million_tokens": 15.00
-        },
-        "tier_availability": ["paid"]
-    },
     
     # Paid tier only models
-    "gemini/gemini-2.5-pro": {
-        "aliases": ["google/gemini-2.5-pro"],
-        "pricing": {
-            "input_cost_per_million_tokens": 1.25,
-            "output_cost_per_million_tokens": 10.00
-        },
-        "tier_availability": ["paid"]
-    },
     # "openai/gpt-4o": {
     #     "aliases": ["gpt-4o"],
     #     "pricing": {
@@ -126,14 +102,6 @@ MODELS = {
     },
     
     # Ollama local models (free)
-    "ollama/deepseek-r1:32b": {
-        "aliases": ["deepseek-r1:32b"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
     "ollama/llama3.1:8b": {
         "aliases": ["llama3.1:8b"],
         "pricing": {
@@ -142,48 +110,8 @@ MODELS = {
         },
         "tier_availability": ["free", "paid"]
     },
-    "ollama/llama3.1:70b": {
-        "aliases": ["llama3.1:70b"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
-    "ollama/llama3.1:70b-instruct-q2_k": {
-        "aliases": ["llama3.1:70b-instruct-q2_k"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
     "ollama/qwen2.5:7b": {
         "aliases": ["qwen2.5:7b"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
-    "ollama/qwen2.5:14b": {
-        "aliases": ["qwen2.5:14b"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
-    "ollama/phi3:mini": {
-        "aliases": ["phi3:mini"],
-        "pricing": {
-            "input_cost_per_million_tokens": 0.0,
-            "output_cost_per_million_tokens": 0.0
-        },
-        "tier_availability": ["free", "paid"]
-    },
-    "ollama/gemma2:9b": {
-        "aliases": ["gemma2:9b"],
         "pricing": {
             "input_cost_per_million_tokens": 0.0,
             "output_cost_per_million_tokens": 0.0
