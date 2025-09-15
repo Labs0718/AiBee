@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Calendar,
   CalendarCheck,
@@ -25,12 +26,14 @@ type PromptExample = {
   query: string;
   icon: React.ReactNode;
   hiddenPrompt?: string; // 숨겨진 가이드 프롬프트
+  category: 'automation' | 'ai-analysis'; // 카테고리 수정
 };
 
 const allPrompts: PromptExample[] = [
   //  그룹웨어 연차사용 가이드 - - - - - - - - -
   {
     title: '그룹웨어 연차사용',
+    category: 'automation',
     query: `연차 사용일(예: 5월5일) : 
 연차사용종류(예: 오전반차, 연차 등) : `,
     hiddenPrompt: `
@@ -100,6 +103,7 @@ const allPrompts: PromptExample[] = [
   
   {
     title: '그룹웨어 자원예약',
+    category: 'automation',
     query: `- 예약명(예: AI 커뮤니티 Zoom) : 
 - 종일 여부(Ex : 예/아니오) :
 - 예약 기간(Ex : 8월28일 ) : N월 N일  NN시 NN분 ~ N월 N일 NN시 NN분
@@ -188,6 +192,7 @@ const allPrompts: PromptExample[] = [
   
   {
     title: '내 연차 찾기',
+    category: 'automation',
     query: '내 연차 찾기',
     hiddenPrompt: `
 ## 내 연차 찾기 자동화 가이드
@@ -213,6 +218,7 @@ const allPrompts: PromptExample[] = [
   
   {
     title: 'AI 민원 위기 대응 솔루션',
+    category: 'ai-analysis',
     query: `발생한 위기 상황을 간단히 입력하세요:
 예시: "강남역 지하철 고장으로 출근길 대란", "한강공원 수질 오염 신고 급증", "아파트 층간소음 집단 민원"
 → `,
@@ -291,6 +297,7 @@ web_search 도구로 실시간 상황 분석:
 
   {
     title: 'AI 정책보고서 생성',
+    category: 'ai-analysis',
     query: `생성할 정책보고서 주제를 입력하세요:
 예시: "최근 AI 정책 동향에 대해 브리핑 문서를 만들어줘", "OECD와 EU AI 법안 주요 내용 차이를 분석해줘" → `,
     hiddenPrompt: `
@@ -363,6 +370,7 @@ web_search 도구로 실시간 상황 분석:
 
 {
     title: 'AI 정책 브리핑 생성기',
+    category: 'ai-analysis',
     query: `생성할 브리핑 주제를 입력하세요:
 예시: "최근 AI 정책 동향을 간단히 브리핑해줘", "OECD와 EU AI 법안 주요 차이를 요약해줘" → `,
     hiddenPrompt: `
@@ -444,6 +452,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 {
     title: '정책 홍보 콘텐츠 초안 자동 생성',
+    category: 'ai-analysis',
     query: `생성할 홍보 콘텐츠 주제와 매체를 입력하세요 :
 
   [예시]
@@ -557,6 +566,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 {
     title: '시계열 추이·예측 분석',
+    category: 'ai-analysis',
     query: `분석할 지표와 국가, 기간, 예측 범위를 입력하세요. :
 
     [예시]
@@ -665,6 +675,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 {
     title: '정책 효과 분석',
+    category: 'ai-analysis',
     query: `분석할 정책명과 국가를 입력하세요. : 
 
     [예시]
@@ -764,6 +775,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 {
     title: '민원 처리 AI 어시스턴트',
+    category: 'ai-analysis',
     query: `생성할 민원 응답 주제를 입력하세요:
 예시: "최근 3개월간 교통 민원 주요 쟁점과 답변 초안 작성", "안전 관련 민원 FAQ 기반 답변 생성" → `,
     hiddenPrompt: `
@@ -848,12 +860,25 @@ export const Examples = ({
   onSelectPrompt?: (query: string, hiddenPrompt?: string) => void;
   count?: number;
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'automation' | 'ai-analysis'>('all');
+
+  const filteredPrompts = selectedCategory === 'all' 
+    ? allPrompts 
+    : allPrompts.filter(prompt => prompt.category === selectedCategory);
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
-      <div className="group relative">
-        <div className="grid grid-cols-4 gap-2 py-2">
-          {allPrompts.map((prompt, index) => (
+      <Tabs value={selectedCategory} onValueChange={(value) => setSelectedCategory(value as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="all">전체</TabsTrigger>
+          <TabsTrigger value="automation">업무 자동화</TabsTrigger>
+          <TabsTrigger value="ai-analysis">AI 분석/생성</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value={selectedCategory} className="mt-0">
+          <div className="group relative h-[200px] overflow-y-auto">
+            <div className="flex gap-2 justify-center py-2 flex-wrap">
+              {filteredPrompts.map((prompt, index) => (
             <motion.div
               key={`${prompt.title}-${index}`}
               initial={{ opacity: 0, scale: 0.8 }}
@@ -877,10 +902,11 @@ export const Examples = ({
                 </div>
               </Button>
             </motion.div>
-          ))}
-        </div>
-
-      </div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
