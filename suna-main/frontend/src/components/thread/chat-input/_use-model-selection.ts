@@ -31,51 +31,15 @@ export interface CustomModel {
 // SINGLE SOURCE OF TRUTH for all model data - aligned with backend constants
 export const MODELS = {
   // Local Ollama models (completely free)
-  'ollama/deepseek-r1:32b': { 
-    tier: 'free',
-    priority: 115, 
-    recommended: true,
-    lowQuality: false
-  },
   'ollama/llama3.1:8b': { 
     tier: 'free',
     priority: 110, 
     recommended: false,
     lowQuality: false
   },
-  'ollama/llama3.1:70b': { 
-    tier: 'free',
-    priority: 105, 
-    recommended: false,
-    lowQuality: false
-  },
-  'ollama/llama3.1:70b-instruct-q2_k': { 
-    tier: 'free',
-    priority: 107, 
-    recommended: false,
-    lowQuality: false
-  },
   'ollama/qwen2.5:7b': { 
     tier: 'free',
     priority: 95, 
-    recommended: false,
-    lowQuality: false
-  },
-  'ollama/qwen2.5:14b': { 
-    tier: 'free',
-    priority: 112, 
-    recommended: true,
-    lowQuality: false
-  },
-  'ollama/phi3:mini': { 
-    tier: 'free',
-    priority: 85, 
-    recommended: false,
-    lowQuality: false
-  },
-  'ollama/gemma2:9b': { 
-    tier: 'free',
-    priority: 90, 
     recommended: false,
     lowQuality: false
   },
@@ -101,28 +65,10 @@ export const MODELS = {
   //   lowQuality: false
   // },
 
-  // Premium/Paid tier models (require subscription) - except specific free models
-  'moonshotai/kimi-k2': { 
-    tier: 'free', 
-    priority: 96,
-    recommended: false,
-    lowQuality: false
-  },
-  'grok-4': { 
-    tier: 'premium', 
-    priority: 94,
-    recommended: false,
-    lowQuality: false
-  },
+  // Premium/Paid tier models (require subscription)
   'sonnet-3.7': { 
     tier: 'premium', 
     priority: 93, 
-    recommended: false,
-    lowQuality: false
-  },
-  'google/gemini-2.5-pro': { 
-    tier: 'premium', 
-    priority: 96,
     recommended: false,
     lowQuality: false
   },
@@ -141,12 +87,6 @@ export const MODELS = {
   'gpt-4-mini': { 
     tier: 'premium', 
     priority: 98,
-    recommended: false,
-    lowQuality: false
-  },
-  'gemini-2.5-flash:thinking': { 
-    tier: 'premium', 
-    priority: 84,
     recommended: false,
     lowQuality: false
   },
