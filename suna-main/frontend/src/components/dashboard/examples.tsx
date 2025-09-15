@@ -19,6 +19,14 @@ import {
   ClipboardList,
   Plane,
   Heart,
+  Briefcase,
+  Building,
+  Search,
+  Zap,
+  BookOpen,
+  Presentation,
+  MessageSquare,
+  HelpCircle,
 } from 'lucide-react';
 
 type PromptExample = {
@@ -98,7 +106,7 @@ const allPrompts: PromptExample[] = [
 `,
 
 //  그룹웨어 자원예약 가이드 - - - - - - - - -
-    icon: <CalendarCheck className="text-green-600 dark:text-green-400" size={16} />,
+    icon: <Calendar className="text-green-600 dark:text-green-400" size={16} />,
   },
   
   {
@@ -187,7 +195,7 @@ const allPrompts: PromptExample[] = [
       
   9. "저장" 버튼 클릭`,
 
-    icon: <Calendar className="text-orange-600 dark:text-orange-400" size={16} />,
+    icon: <Building className="text-orange-600 dark:text-orange-400" size={16} />,
   },
   
   {
@@ -213,7 +221,7 @@ const allPrompts: PromptExample[] = [
  ** 귀속년도는 가장 최근으로 띄워져있는 게 "올해" 라고 보면됨
 
 `,
-    icon: <CalendarSearch className="text-blue-600 dark:text-blue-400" size={16} />,
+    icon: <Search className="text-blue-600 dark:text-blue-400" size={16} />,
   },
   
   {
@@ -292,7 +300,7 @@ web_search 도구로 실시간 상황 분석:
 
 **중요: 반드시 내부 문서 검색 → 웹 검색 → 보고서 생성 순서로 진행하며, 각 단계의 결과를 명확히 사용자에게 보고하세요.**
 `,
-    icon: <AlertTriangle className="text-red-600 dark:text-red-400" size={16} />,
+    icon: <Zap className="text-red-600 dark:text-red-400" size={16} />,
   },
 
   {
@@ -364,7 +372,7 @@ web_search 도구로 실시간 상황 분석:
 
 **중요: 반드시 내부 문서 검색 → 웹 검색 → 최종 보고서 생성 순서로 진핉하며, 각 단계의 결과를 명확히 사용자에게 보고하세요.**
 `,
-    icon: <FileText className="text-indigo-600 dark:text-indigo-400" size={16} />,
+    icon: <BookOpen className="text-indigo-600 dark:text-indigo-400" size={16} />,
   },
 
 
@@ -447,7 +455,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <ClipboardList className="text-purple-600 dark:text-purple-400" size={16} />,
+    icon: <Presentation className="text-purple-600 dark:text-purple-400" size={16} />,
   },
 
 {
@@ -560,7 +568,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <Megaphone className="text-amber-600 dark:text-amber-400" size={16} />,
   },
 
 
@@ -670,7 +678,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <TrendingUp className="text-green-600 dark:text-green-400" size={16} />,
   },
 
 {
@@ -903,7 +911,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />,
   },
 
 
@@ -981,7 +989,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 
 
 `,
-    icon: <Shield className="text-amber-600 dark:text-amber-400" size={16} />,
+    icon: <HelpCircle className="text-purple-600 dark:text-purple-400" size={16} />,
   },
 
 
