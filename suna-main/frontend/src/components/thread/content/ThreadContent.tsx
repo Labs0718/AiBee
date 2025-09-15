@@ -722,6 +722,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('# 정책 효과 분석')) {
                                                     return fullContent.split('# 정책 효과 분석')[0].trim();
                                                 }
+
+                                                if (fullContent.includes('# 분석 보고서 생성')) {
+                                                    return fullContent.split('# 분석 보고서 생성')[0].trim();
+                                                }
                                                 
                                                 return fullContent;
                                             } catch {
