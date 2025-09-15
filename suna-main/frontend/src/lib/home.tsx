@@ -109,7 +109,7 @@ export const siteConfig = {
     githubUrl: 'https://github.com/kortix-ai/suna',
     title: 'AIBee – Enterprise-Grade AI Agent Platform',
     description:
-      '복잡한 업무를 분석하고 의사결정을 내리며 자동으로 실행하는 지능형 AI 에이전트로 업무 생산성을 극대화하세요.',
+      'Maximize your productivity with intelligent AI agents that analyze complex tasks, make decisions, and execute automatically.',
     inputPlaceholder: 'Deploy AI agent to analyze quarterly revenue trends and generate executive summary...',
   },
   cloudPricingItems: [
