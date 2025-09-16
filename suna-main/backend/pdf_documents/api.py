@@ -23,8 +23,11 @@ async def upload_pdf(
         user_id = await get_current_user_id_from_jwt(request)
         print(f"사용자 ID: {user_id}")
         
-        # 파일 유효성 검사
-        if not file.content_type or not file.content_type.startswith('application/pdf'):
+        # 파일 유효성 검사 (content-type과 파일 확장자 모두 체크)
+        is_pdf_content_type = file.content_type and file.content_type.startswith('application/pdf')
+        is_pdf_filename = fileName.lower().endswith('.pdf')
+        
+        if not (is_pdf_content_type or is_pdf_filename):
             raise HTTPException(status_code=400, detail="PDF 파일만 업로드 가능합니다.")
         
         # 파일 크기 제한 (50MB)
