@@ -44,22 +44,22 @@ MODELS = {
     # },
     
     # Paid tier only models
-    # "openai/gpt-4o": {
-    #     "aliases": ["gpt-4o"],
-    #     "pricing": {
-    #         "input_cost_per_million_tokens": 2.50,
-    #         "output_cost_per_million_tokens": 10.00
-    #     },
-    #     "tier_availability": ["paid"]
-    # },
-    # "openai/gpt-4.1": {
-    #     "aliases": ["gpt-4.1"],
-    #     "pricing": {
-    #         "input_cost_per_million_tokens": 15.00,
-    #         "output_cost_per_million_tokens": 60.00
-    #     },
-    #     "tier_availability": ["paid"]
-    # },
+    "openai/gpt-4o": {
+        "aliases": ["gpt-4o"],
+        "pricing": {
+            "input_cost_per_million_tokens": 2.50,
+            "output_cost_per_million_tokens": 10.00
+        },
+        "tier_availability": ["paid"]
+    },
+    "openai/gpt-4.1": {
+        "aliases": ["gpt-4.1"],
+        "pricing": {
+            "input_cost_per_million_tokens": 15.00,
+            "output_cost_per_million_tokens": 60.00
+        },
+        "tier_availability": ["paid"]
+    },
     "openai/gpt-4-turbo": {
         "aliases": ["gpt-4-turbo"],
         "pricing": {
@@ -76,14 +76,14 @@ MODELS = {
         },
         "tier_availability": ["paid"]
     },
-    # "openai/gpt-4.1-mini": {
-    #     "aliases": ["gpt-4.1-mini"],
-    #     "pricing": {
-    #         "input_cost_per_million_tokens": 1.50,
-    #         "output_cost_per_million_tokens": 6.00
-    #     },
-    #     "tier_availability": ["paid"]
-    # },
+    "openai/gpt-4.1-mini": {
+        "aliases": ["gpt-4.1-mini"],
+        "pricing": {
+            "input_cost_per_million_tokens": 1.50,
+            "output_cost_per_million_tokens": 6.00
+        },
+        "tier_availability": ["paid"]
+    },
     "anthropic/claude-3-7-sonnet-latest": {
         "aliases": ["sonnet-3.7"],
         "pricing": {
