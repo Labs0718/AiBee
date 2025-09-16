@@ -74,7 +74,6 @@ export const siteConfig = {
     links: [
       { id: 1, name: 'Home', href: '#hero' },
       { id: 2, name: 'Process', href: '#process' },
-      { id: 3, name: 'About', href: '/about' },
       { id: 4, name: 'AiBee Demo', href: '#streaming-demo' },
     ],
   },

@@ -758,8 +758,8 @@ export const Examples = ({
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'automation' | 'ai-analysis'>('all');
 
-  const filteredPrompts = selectedCategory === 'all' 
-    ? allPrompts 
+  const filteredPrompts = selectedCategory === 'all'
+    ? allPrompts
     : allPrompts.filter(prompt => prompt.category === selectedCategory);
 
   return (
@@ -785,7 +785,7 @@ export const Examples = ({
             AI 분석/생성
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value={selectedCategory} className="mt-0">
           <div className="group relative h-[200px] overflow-y-auto">
             <div className="flex gap-2 justify-center py-2 flex-wrap">
