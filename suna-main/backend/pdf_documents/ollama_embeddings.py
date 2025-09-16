@@ -262,23 +262,57 @@ class OllamaEmbeddingProcessor:
             return await self._fallback_search(query, match_count, filter_department)
     
     async def _expand_query_advanced(self, query: str) -> List[str]:
-        """고급 쿼리 확장 - 동의어, 관련어, 상위/하위 개념"""
+        """임베딩 기반 동의어 확장 - 의미적 유사어 자동 생성"""
         base_query = query.strip()
         expanded = [base_query]
-        
-        # 한국어 민원 도메인 특화 확장
-        expansion_map = {
-            "교통": ["교통체증", "교통난", "교통문제", "도로", "차량", "신호등"],
-            "정체": ["체증", "막힘", "지연", "느림"],
-            "소음": ["시끄러움", "소리", "騒音", "소음공해", "층간소음"],
-            "주차": ["주차장", "주차공간", "주차난", "주차문제"],
-            "민원": ["불만", "신고", "요청", "건의", "항의"]
-        }
-        
-        for keyword, synonyms in expansion_map.items():
-            if keyword in base_query:
-                for synonym in synonyms:
-                    expanded.append(base_query.replace(keyword, synonym))
+
+        try:
+            # 핵심 키워드 추출 (간단한 토큰화)
+            keywords = [word.strip() for word in query.split() if len(word.strip()) > 1]
+
+            for keyword in keywords:
+                # 키워드의 임베딩 생성
+                keyword_embedding = self.get_ollama_embedding(keyword)
+                if not keyword_embedding:
+                    continue
+
+                # 의미적 유사어 생성을 위한 후보 단어들
+                # 실제로는 더 큰 어휘 사전이나 문서 코퍼스에서 가져와야 함
+                candidate_words = [
+                    "문제", "이슈", "사안", "해결", "처리", "개선", "요청", "신청",
+                    "민원", "불만", "건의", "제안", "시설", "설비", "공간", "지역",
+                    "교통", "도로", "차량", "주차", "소음", "환경", "안전", "보안"
+                ]
+
+                # 각 후보 단어와의 유사도 계산
+                similar_words = []
+                for candidate in candidate_words:
+                    if candidate == keyword:
+                        continue
+
+                    candidate_embedding = self.get_ollama_embedding(candidate)
+                    if candidate_embedding:
+                        similarity = self._cosine_similarity(keyword_embedding, candidate_embedding)
+                        if similarity > 0.7:  # 높은 유사도만 선택
+                            similar_words.append((candidate, similarity))
+
+                # 유사도 기준으로 정렬하여 상위 2개만 선택
+                similar_words.sort(key=lambda x: x[1], reverse=True)
+                for word, _ in similar_words[:2]:
+                    expanded.append(base_query.replace(keyword, word))
+
+        except Exception as e:
+            print(f"임베딩 기반 쿼리 확장 오류: {e}")
+            # 오류 시 기본 확장으로 폴백
+            fallback_map = {
+                "문제": ["이슈", "사안"],
+                "요청": ["신청", "건의"],
+                "개선": ["향상", "보완"]
+            }
+            for keyword, synonyms in fallback_map.items():
+                if keyword in base_query:
+                    for synonym in synonyms:
+                        expanded.append(base_query.replace(keyword, synonym))
         
         # 지역별 특화 확장
         if "강남" in base_query:
