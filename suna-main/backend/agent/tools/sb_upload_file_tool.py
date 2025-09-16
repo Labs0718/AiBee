@@ -103,7 +103,7 @@ class SandboxUploadFileTool(SandboxToolsBase):
                     {"content-type": content_type}
                 )
 
-                expires_in = 24 * 60 * 60
+                expires_in = 6 * 30 * 24 * 60 * 60  # 6개월 (180일)
                 signed_url_response = await client.storage.from_(bucket_name).create_signed_url(
                     storage_path,
                     expires_in
