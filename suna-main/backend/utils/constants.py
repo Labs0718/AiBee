@@ -84,6 +84,30 @@ MODELS = {
         },
         "tier_availability": ["paid"]
     },
+    "openai/o1": {
+        "aliases": ["o1"],
+        "pricing": {
+            "input_cost_per_million_tokens": 15.00,
+            "output_cost_per_million_tokens": 60.00
+        },
+        "tier_availability": ["paid"]
+    },
+    "openai/o1-preview": {
+        "aliases": ["o1-preview"],
+        "pricing": {
+            "input_cost_per_million_tokens": 15.00,
+            "output_cost_per_million_tokens": 60.00
+        },
+        "tier_availability": ["paid"]
+    },
+    "openai/o1-mini": {
+        "aliases": ["o1-mini"],
+        "pricing": {
+            "input_cost_per_million_tokens": 3.00,
+            "output_cost_per_million_tokens": 12.00
+        },
+        "tier_availability": ["paid"]
+    },
     "anthropic/claude-3-7-sonnet-latest": {
         "aliases": ["sonnet-3.7"],
         "pricing": {
