@@ -708,9 +708,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 민원 처리 AI 어시스턴트')[0].trim();
                                                 }
 
-                                                if (fullContent.includes('# 시계열 추이·예측 분석')) {
-                                                    return fullContent.split('# 시계열 추이·예측 분석')[0].trim();
-                                                }
 
                                                 if (fullContent.includes('# 문서 비교·요약·정리')) {
                                                     return fullContent.split('# 문서 비교·요약·정리')[0].trim();
