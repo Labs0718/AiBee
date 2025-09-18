@@ -188,30 +188,16 @@ export default function ThreadPage({
     }
 
     setMessages((prev) => {
-      const messageExists = prev.some(
-        (m) => m.message_id === message.message_id,
-      );
+      // 간단한 중복 체크: 같은 message_id가 이미 있으면 업데이트, 없으면 추가
+      const messageExists = prev.some((m) => m.message_id === message.message_id);
+
       if (messageExists) {
         return prev.map((m) =>
           m.message_id === message.message_id ? message : m,
         );
-      } else {
-        // If this is a user message, replace any optimistic user message with temp ID
-        if (message.type === 'user') {
-          const optimisticIndex = prev.findIndex(m =>
-            m.type === 'user' &&
-            m.message_id?.startsWith('temp-') &&
-            m.content === message.content
-          );
-          if (optimisticIndex !== -1) {
-            // Replace the optimistic message with the real one
-            return prev.map((m, index) =>
-              index === optimisticIndex ? message : m
-            );
-          }
-        }
-        return [...prev, message];
       }
+
+      return [...prev, message];
     });
 
     if (message.type === 'tool') {
@@ -293,7 +279,8 @@ export default function ThreadPage({
         updated_at: new Date().toISOString(),
       };
 
-      setMessages((prev) => [...prev, optimisticUserMessage]);
+      // 완전히 optimistic update 비활성화 - 서버 응답만 표시
+      // setMessages((prev) => [...prev, optimisticUserMessage]);
       setNewMessage('');
 
       try {
