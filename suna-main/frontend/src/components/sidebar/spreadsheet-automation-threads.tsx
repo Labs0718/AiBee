@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { ChevronRight, MessageSquare, FolderOpen, Settings } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { TaskManagement } from '@/components/scheduling/task-management';
+import { TaskManagement } from '@/components/work-management/task-management';
 
 interface AutomationThread {
   thread_id: string;
@@ -180,7 +180,7 @@ export function SpreadsheetAutomationThreads() {
       <SidebarMenuSubItem>
         <SidebarMenuSubButton onClick={handleManageAutomation} className="w-full justify-start touch-manipulation">
           <Settings className="h-4 w-4 text-blue-500" />
-          <span className="text-sm">자동화 관리</span>
+          <span className="text-sm">작업 관리</span>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
 

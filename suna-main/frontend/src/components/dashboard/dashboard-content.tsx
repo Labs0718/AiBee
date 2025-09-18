@@ -33,7 +33,7 @@ import { CustomAgentsSection } from './custom-agents-section';
 import { toast } from 'sonner';
 import { ReleaseBadge } from '../auth/release-badge';
 import { createClient } from '@/lib/supabase/client';
-import { TaskManagement } from '@/components/scheduling/task-management';
+import { TaskManagement } from '@/components/work-management/task-management';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 

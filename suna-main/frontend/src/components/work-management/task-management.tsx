@@ -324,45 +324,79 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              MCP 자동화 작업 관리
-            </DialogTitle>
-            <DialogDescription>
-              생성된 자동화 작업들을 관리하고 설정을 수정할 수 있습니다.
-            </DialogDescription>
+        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden bg-white border-0 shadow-2xl">
+          <DialogHeader className="border-b pb-6 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-semibold text-gray-900">
+                    작업 관리
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-gray-600 mt-1">
+                    자동화 작업을 생성하고 관리할 수 있습니다.
+                  </DialogDescription>
+                </div>
+              </div>
+              <Button
+                onClick={() => setShowEditModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                새 작업 생성
+              </Button>
+            </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto px-1">
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                <span>작업 목록을 불러오는 중...</span>
+              <div className="flex items-center justify-center py-12">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                  <span className="text-gray-600">작업 목록을 불러오는 중...</span>
+                </div>
               </div>
             ) : tasks.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                생성된 자동화 작업이 없습니다.
+              <div className="text-center py-16">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-900 font-medium mb-2">아직 생성된 작업이 없습니다</p>
+                <p className="text-gray-500 text-sm mb-6">새 작업 생성 버튼을 클릭하여 첫 번째 자동화 작업을 만들어보세요</p>
+                <Button
+                  onClick={() => setShowEditModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                >
+                  첫 작업 생성하기
+                </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {tasks.map((task) => (
                   <Card
                     key={task.id}
-                    className="cursor-pointer hover:shadow-md transition-shadow"
+                    className="border-0 shadow-sm hover:shadow-lg transition-all duration-200 bg-white rounded-xl"
                   >
-                    <CardHeader className="pb-3">
+                    <CardHeader className="pb-4 px-6">
                       <div className="flex items-start justify-between">
-                        <div className="flex-1" onClick={() => handleEditTask(task)}>
-                          <CardTitle className="text-lg flex items-center gap-2">
-                            {task.name}
-                            <Badge variant={task.is_active ? "default" : "secondary"}>
+                        <div className="flex-1 cursor-pointer" onClick={() => handleEditTask(task)}>
+                          <div className="flex items-center gap-3 mb-2">
+                            <CardTitle className="text-lg font-semibold text-gray-900">
+                              {task.name}
+                            </CardTitle>
+                            <Badge
+                              variant={task.is_active ? "default" : "secondary"}
+                              className={task.is_active
+                                ? "bg-green-100 text-green-800 hover:bg-green-100"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-100"
+                              }
+                            >
                               {task.is_active ? '활성' : '비활성'}
                             </Badge>
-                          </CardTitle>
+                          </div>
                           {task.description && (
-                            <CardDescription className="mt-1">
+                            <CardDescription className="text-gray-600 text-sm">
                               {task.description}
                             </CardDescription>
                           )}
@@ -370,11 +404,11 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
 
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreVertical className="h-4 w-4" />
+                            <Button variant="ghost" size="sm" className="hover:bg-gray-100 rounded-lg">
+                              <MoreVertical className="h-4 w-4 text-gray-500" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="bg-white border shadow-lg rounded-lg">
                             <DropdownMenuItem onClick={() => handleEditTask(task)}>
                               <Edit className="h-4 w-4 mr-2" />
                               수정
@@ -392,7 +426,10 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                                 </>
                               )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleRunNow(task)}>
+                            <DropdownMenuItem
+                              onClick={() => handleRunNow(task)}
+                              className="text-blue-600 focus:text-blue-700 focus:bg-blue-50"
+                            >
                               <Play className="h-4 w-4 mr-2" />
                               지금 실행
                             </DropdownMenuItem>
@@ -409,24 +446,34 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                     </CardHeader>
 
                     <CardContent
-                      className="pt-0 space-y-2"
+                      className="px-6 pb-6 cursor-pointer"
                       onClick={() => handleEditTask(task)}
                     >
-                      <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-3 gap-4 mb-4">
                         <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{formatSchedule(task.schedule_config)}</span>
+                          <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                            <Clock className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 mb-1">실행 주기</p>
+                            <p className="text-sm font-medium text-gray-900">{formatSchedule(task.schedule_config)}</p>
+                          </div>
                         </div>
-                        <div className="text-muted-foreground">
-                          실행 {task.run_count}회
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">실행 회수</p>
+                          <p className="text-sm font-medium text-gray-900">{task.run_count}회</p>
                         </div>
-                        <div className="text-muted-foreground">
-                          마지막 실행: {formatLastRun(task.last_run_at)}
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">마지막 실행</p>
+                          <p className="text-sm font-medium text-gray-900">{formatLastRun(task.last_run_at)}</p>
                         </div>
                       </div>
 
-                      <div className="text-xs text-muted-foreground line-clamp-2">
-                        {task.task_prompt}
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <p className="text-xs text-gray-500 mb-1">작업 내용</p>
+                        <p className="text-sm text-gray-700 line-clamp-2">
+                          {task.task_prompt}
+                        </p>
                       </div>
                     </CardContent>
                   </Card>
