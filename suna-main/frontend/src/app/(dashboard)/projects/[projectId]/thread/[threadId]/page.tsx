@@ -268,6 +268,19 @@ export default function ThreadPage({
       if (!message.trim()) return;
       setIsSending(true);
 
+      // 새 질문 시작 전에 이전 에이전트 실행 완전히 정지
+      if (agentRunId && (agentStatus === 'running' || agentStatus === 'connecting')) {
+        console.log('[SUBMIT] Stopping previous agent run before starting new one');
+        try {
+          await stopStreaming();
+          await stopAgentMutation.mutateAsync(agentRunId);
+          setAgentStatus('idle');
+          setAgentRunId(null);
+        } catch (error) {
+          console.error('Error stopping previous agent:', error);
+        }
+      }
+
       const optimisticUserMessage: UnifiedMessage = {
         message_id: `temp-${Date.now()}`,
         thread_id: threadId,
@@ -354,7 +367,7 @@ export default function ThreadPage({
         setIsSending(false);
       }
     },
-    [threadId, project?.account_id, addUserMessageMutation, startAgentMutation, setMessages, setBillingData, setShowBillingAlert, setAgentRunId],
+    [threadId, project?.account_id, addUserMessageMutation, startAgentMutation, setMessages, setBillingData, setShowBillingAlert, setAgentRunId, agentRunId, agentStatus, stopStreaming, stopAgentMutation, setAgentStatus, selectedAgentId],
   );
 
   const handleStopAgent = useCallback(async () => {
@@ -456,14 +469,24 @@ export default function ThreadPage({
   useEffect(() => {
     // Start streaming if user initiated a run (don't wait for initialLoadCompleted for first-time users)
     if (agentRunId && agentRunId !== currentHookRunId && userInitiatedRun) {
+      // 새 스트림 시작 전에 이전 스트림이 있다면 정지
+      if (currentHookRunId) {
+        console.log('[STREAM] Stopping previous stream before starting new one');
+        stopStreaming();
+      }
       startStreaming(agentRunId);
       setUserInitiatedRun(false); // Reset flag after starting
     }
     // Also start streaming if this is from page load with recent active runs
     else if (agentRunId && agentRunId !== currentHookRunId && initialLoadCompleted && !userInitiatedRun) {
+      // 새 스트림 시작 전에 이전 스트림이 있다면 정지
+      if (currentHookRunId) {
+        console.log('[STREAM] Stopping previous stream before starting new one');
+        stopStreaming();
+      }
       startStreaming(agentRunId);
     }
-  }, [agentRunId, startStreaming, currentHookRunId, initialLoadCompleted, userInitiatedRun]);
+  }, [agentRunId, startStreaming, currentHookRunId, initialLoadCompleted, userInitiatedRun, stopStreaming]);
 
   // No auto-scroll needed with flex-column-reverse
 
