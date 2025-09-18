@@ -720,7 +720,11 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('# 프로젝트·운영 관리 분석')) {
                                                     return fullContent.split('# 프로젝트·운영 관리 분석')[0].trim();
                                                 }
-                                                
+
+                                                if (fullContent.includes('# SheetAgent - Google Sheets 자동화 도구')) {
+                                                    return fullContent.split('# SheetAgent - Google Sheets 자동화 도구')[0].trim();
+                                                }
+
                                                 return fullContent;
                                             } catch {
                                                 return message.content;
