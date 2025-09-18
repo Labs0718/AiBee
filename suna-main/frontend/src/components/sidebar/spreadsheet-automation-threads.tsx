@@ -63,7 +63,7 @@ export function SpreadsheetAutomationThreads() {
 
       // 스프레드시트 자동화 채팅방들 조회
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/threads`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/threads`,
         {
           headers: {
             'Authorization': `Bearer ${session.session.access_token}`,
