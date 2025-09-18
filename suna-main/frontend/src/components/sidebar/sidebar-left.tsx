@@ -8,6 +8,7 @@ import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
 import { KortixLogo } from '@/components/sidebar/kortix-logo';
 import { CTACard } from '@/components/sidebar/cta';
+import { SpreadsheetAutomationThreads } from '@/components/sidebar/spreadsheet-automation-threads';
 import {
   Sidebar,
   SidebarContent,
@@ -229,6 +230,30 @@ export function SidebarLeft({
          
         </SidebarGroup>
         <NavAgents />
+
+        {/* 스프레드시트 자동화 섹션 */}
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <Collapsible defaultOpen>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton className="w-full justify-between touch-manipulation">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-green-500" />
+                      <span>스프레드시트 자동화</span>
+                    </div>
+                    <ChevronRight className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-90" />
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <SidebarMenuSub>
+                    <SpreadsheetAutomationThreads />
+                  </SidebarMenuSub>
+                </CollapsibleContent>
+              </Collapsible>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       {state !== 'collapsed' && (
         <div className="px-3 py-2">

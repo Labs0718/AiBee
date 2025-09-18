@@ -260,6 +260,20 @@ export default function ThreadPage({
     setMessages,
   );
 
+  // URL에서 autoSend 파라미터 확인하여 자동 전송
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const autoSendMessage = urlParams.get('autoSend');
+
+    if (autoSendMessage && !isLoading && messages.length === 0) {
+      const decodedMessage = decodeURIComponent(autoSendMessage);
+      // URL에서 autoSend 파라미터 제거
+      window.history.replaceState({}, '', window.location.pathname);
+      // 자동으로 메시지 전송
+      handleSubmitMessage(decodedMessage);
+    }
+  }, [isLoading, messages.length]);
+
   const handleSubmitMessage = useCallback(
     async (
       message: string,

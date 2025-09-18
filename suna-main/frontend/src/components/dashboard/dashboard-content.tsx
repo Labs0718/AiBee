@@ -33,6 +33,7 @@ import { CustomAgentsSection } from './custom-agents-section';
 import { toast } from 'sonner';
 import { ReleaseBadge } from '../auth/release-badge';
 import { createClient } from '@/lib/supabase/client';
+import { TaskManagement } from '@/components/scheduling/task-management';
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
@@ -48,6 +49,7 @@ export function DashboardContent() {
     getCurrentAgent
   } = useAgentSelection();
   const [initiatedThreadId, setInitiatedThreadId] = useState<string | null>(null);
+  const [showTaskManagement, setShowTaskManagement] = useState(false);
   const { billingError, handleBillingError, clearBillingError } =
     useBillingError();
   const [showAgentLimitDialog, setShowAgentLimitDialog] = useState(false);
@@ -86,6 +88,18 @@ export function DashboardContent() {
   const isSunaAgent = selectedAgent?.metadata?.is_suna_default || false;
 
   const threadQuery = useThreadQuery(initiatedThreadId || '');
+
+  // URL 파라미터에서 자동화 관리 모달 열기
+  useEffect(() => {
+    const manage = searchParams.get('manage');
+    if (manage === 'automation') {
+      setShowTaskManagement(true);
+      // URL 파라미터 제거
+      const url = new URL(window.location.href);
+      url.searchParams.delete('manage');
+      router.replace(url.pathname + url.search);
+    }
+  }, [searchParams, router]);
 
   useEffect(() => {
     console.log('🚀 Dashboard effect:', { 
@@ -372,6 +386,12 @@ export function DashboardContent() {
           projectId={undefined}
         />
       )}
+
+      {/* 스프레드시트 자동화 관리 모달 */}
+      <TaskManagement
+        open={showTaskManagement}
+        onOpenChange={setShowTaskManagement}
+      />
     </>
   );
 }

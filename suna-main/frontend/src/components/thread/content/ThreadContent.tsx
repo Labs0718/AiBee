@@ -725,6 +725,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# SheetAgent - Google Sheets 자동화 도구')[0].trim();
                                                 }
 
+                                                if (fullContent.includes('# MCP 자동화 작업 가이드')) {
+                                                    return fullContent.split('# MCP 자동화 작업 가이드')[0].trim();
+                                                }
+
                                                 return fullContent;
                                             } catch {
                                                 return message.content;
