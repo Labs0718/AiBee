@@ -436,12 +436,12 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                               {task.is_active ? (
                                 <>
                                   <Pause className="h-4 w-4 mr-2" />
-                                  일시정지
+                                  비활성화
                                 </>
                               ) : (
                                 <>
                                   <Play className="h-4 w-4 mr-2" />
-                                  재시작
+                                  활성화
                                 </>
                               )}
                             </DropdownMenuItem>
