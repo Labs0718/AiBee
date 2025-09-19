@@ -187,13 +187,7 @@ export function SpreadsheetAutomationThreads() {
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
 
-      {taskFolders.length === 0 ? (
-        <SidebarMenuSubItem>
-          <SidebarMenuSubButton className="cursor-default">
-            <div className="text-xs text-muted-foreground">자동화 기록 없음</div>
-          </SidebarMenuSubButton>
-        </SidebarMenuSubItem>
-      ) : (
+      {taskFolders.length > 0 && (
         taskFolders.map((taskFolder) => {
           const totalThreads = taskFolder.dateFolders.reduce((sum, df) => sum + df.threads.length, 0);
 
