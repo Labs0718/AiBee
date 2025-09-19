@@ -708,21 +708,12 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 민원 처리 AI 어시스턴트')[0].trim();
                                                 }
 
-
                                                 if (fullContent.includes('# 문서 비교·요약·정리')) {
                                                     return fullContent.split('# 문서 비교·요약·정리')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# 분석 보고서 생성')) {
                                                     return fullContent.split('# 분석 보고서 생성')[0].trim();
-                                                }
-
-                                                if (fullContent.includes('# 프로젝트·운영 관리 분석')) {
-                                                    return fullContent.split('# 프로젝트·운영 관리 분석')[0].trim();
-                                                }
-
-                                                if (fullContent.includes('# SheetAgent - Google Sheets 자동화 도구')) {
-                                                    return fullContent.split('# SheetAgent - Google Sheets 자동화 도구')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# MCP 자동화 작업 가이드')) {
