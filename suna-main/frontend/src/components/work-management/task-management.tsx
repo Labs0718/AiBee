@@ -17,7 +17,8 @@ import {
   Edit,
   Trash2,
   Play,
-  Pause,
+  Power,
+  PowerOff,
   MoreVertical,
   Loader2,
   Link,
@@ -435,12 +436,12 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                             <DropdownMenuItem onClick={() => handleToggleActive(task)}>
                               {task.is_active ? (
                                 <>
-                                  <Pause className="h-4 w-4 mr-2" />
+                                  <PowerOff className="h-4 w-4 mr-2" />
                                   비활성화
                                 </>
                               ) : (
                                 <>
-                                  <Play className="h-4 w-4 mr-2" />
+                                  <Power className="h-4 w-4 mr-2" />
                                   활성화
                                 </>
                               )}
