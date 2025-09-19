@@ -73,7 +73,10 @@ export function SpreadsheetAutomationThreads() {
       );
 
       if (response.ok) {
-        const allThreads = await response.json();
+        const responseData = await response.json();
+
+        // API 응답에서 threads 배열 추출
+        const allThreads = responseData.threads || [];
 
         // 스프레드시트 자동화 카테고리만 필터링
         const automationThreads: AutomationThread[] = allThreads.filter(

@@ -59,6 +59,7 @@ class FeatureFlagManager:
             'mcp_module': True,
             'templates_api': True,
             'triggers_api': True,
+            'agent_triggers': True,
             'workflows_api': True,
             'knowledge_base': True,
             'pipedream': True,

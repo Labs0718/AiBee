@@ -59,7 +59,8 @@ class TriggerService:
         provider_id: str,
         name: str,
         config: Dict[str, Any],
-        description: Optional[str] = None
+        description: Optional[str] = None,
+        is_active: bool = True
     ) -> Trigger:
         trigger_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc)
@@ -77,7 +78,7 @@ class TriggerService:
             trigger_type=trigger_type,
             name=name,
             description=description,
-            is_active=True,
+            is_active=is_active,
             config=validated_config,
             created_at=now,
             updated_at=now
@@ -104,7 +105,29 @@ class TriggerService:
     async def get_agent_triggers(self, agent_id: str) -> List[Trigger]:
         client = await self._db.client
         result = await client.table('agent_triggers').select('*').eq('agent_id', agent_id).execute()
-        
+
+        return [self._map_to_trigger(data) for data in result.data]
+
+    async def get_user_triggers(self, user_id: str, provider_id: Optional[str] = None) -> List[Trigger]:
+        """Get all triggers for a user, optionally filtered by provider"""
+        client = await self._db.client
+
+        # First get all agents for this user
+        agents_result = await client.table('agents').select('agent_id').eq('account_id', user_id).execute()
+
+        if not agents_result.data:
+            return []
+
+        agent_ids = [agent['agent_id'] for agent in agents_result.data]
+
+        # Get triggers for these agents
+        query = client.table('agent_triggers').select('*').in_('agent_id', agent_ids)
+
+        if provider_id:
+            query = query.eq('provider_id', provider_id)
+
+        result = await query.execute()
+
         return [self._map_to_trigger(data) for data in result.data]
     
     async def update_trigger(
@@ -203,6 +226,7 @@ class TriggerService:
         await client.table('agent_triggers').insert({
             'trigger_id': trigger.trigger_id,
             'agent_id': trigger.agent_id,
+            'provider_id': trigger.provider_id,
             'trigger_type': trigger.trigger_type.value,
             'name': trigger.name,
             'description': trigger.description,
@@ -218,6 +242,7 @@ class TriggerService:
         config_with_provider = {**trigger.config, "provider_id": trigger.provider_id}
         
         await client.table('agent_triggers').update({
+            'provider_id': trigger.provider_id,
             'trigger_type': trigger.trigger_type.value,
             'name': trigger.name,
             'description': trigger.description,
@@ -228,8 +253,8 @@ class TriggerService:
     
     def _map_to_trigger(self, data: Dict[str, Any]) -> Trigger:
         config_data = data.get('config', {})
-        provider_id = config_data.get('provider_id', data['trigger_type'])
-        
+        provider_id = data.get('provider_id') or config_data.get('provider_id', data['trigger_type'])
+
         clean_config = {k: v for k, v in config_data.items() if k != 'provider_id'}
         
         return Trigger(

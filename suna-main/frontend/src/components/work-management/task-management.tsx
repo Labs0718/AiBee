@@ -19,7 +19,10 @@ import {
   Play,
   Pause,
   MoreVertical,
-  Loader2
+  Loader2,
+  Link,
+  Mail,
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -62,12 +65,15 @@ const createFullPrompt = (task: ScheduledTask): string => {
     day: 'numeric'
   });
 
-  const visiblePrompt = `링크: ${task.sheet_url}
+  // 사용자에게 보이는 깔끔한 프롬프트
+  const visiblePrompt = `오늘 날짜는 ${today}입니다.
 
-요청할 작업: 오늘 날짜는 ${today}이고, ${task.task_prompt} 링크는 ${task.sheet_url}이다.`;
+작업 내용: ${task.task_prompt}
+
+스프레드시트 URL: ${task.sheet_url}`;
 
   const emailRecipients = task.email_recipients && task.email_recipients.length > 0
-    ? `\n\n결과 수신 이메일: ${task.email_recipients.join(', ')}`
+    ? `\n\n작업 완료 후 다음 이메일 주소로 결과를 알려주세요: ${task.email_recipients.join(', ')}`
     : '';
 
   const hiddenPrompt = `
@@ -308,12 +314,12 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
     const { type, time, day } = schedule_config;
 
     if (type === 'daily') {
-      return `매일 ${time}`;
+      return `🔄 매일 ${time}`;
     } else if (type === 'weekly') {
       const days = ['일', '월', '화', '수', '목', '금', '토'];
-      return `매주 ${days[parseInt(day)]}요일 ${time}`;
+      return `📅 매주 ${days[parseInt(day)]}요일 ${time}`;
     } else if (type === 'monthly') {
-      return `매월 ${day}일 ${time}`;
+      return `📆 매월 ${day}일 ${time}`;
     }
 
     return '알 수 없음';
@@ -337,7 +343,7 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden bg-white border-0 shadow-2xl">
+        <DialogContent className="max-w-5xl max-h-[85vh] bg-white border-0 shadow-2xl flex flex-col">
           <DialogHeader className="border-b pb-6 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -482,11 +488,64 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                         </div>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-500 mb-1">작업 내용</p>
-                        <p className="text-sm text-gray-700 line-clamp-2">
-                          {task.task_prompt}
-                        </p>
+                      {/* 작업 정보를 깔끔하게 표시 */}
+                      <div className="space-y-3">
+                        {/* 작업 내용 */}
+                        <div className="bg-blue-50 rounded-lg p-3">
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-4 w-4 text-blue-600 mt-0.5" />
+                            <div className="flex-1">
+                              <p className="text-xs text-blue-700 font-medium mb-1">작업 내용</p>
+                              <p className="text-sm text-gray-800 leading-relaxed">
+                                {task.task_prompt}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 스프레드시트 링크 */}
+                        {task.sheet_url && (
+                          <div className="bg-green-50 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <Link className="h-4 w-4 text-green-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs text-green-700 font-medium mb-1">대상 스프레드시트</p>
+                                <a
+                                  href={task.sheet_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline truncate block"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {task.sheet_url.split('/').find(part => part.includes('spreadsheets')) ?
+                                    'Google 스프레드시트' : task.sheet_url}
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 이메일 수신자 */}
+                        {task.email_recipients && task.email_recipients.length > 0 && (
+                          <div className="bg-purple-50 rounded-lg p-3">
+                            <div className="flex items-start gap-2">
+                              <Mail className="h-4 w-4 text-purple-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs text-purple-700 font-medium mb-1">결과 수신</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {task.email_recipients.map((email, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="text-sm bg-white text-gray-700 px-2 py-0.5 rounded-md"
+                                    >
+                                      {email}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

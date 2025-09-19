@@ -75,12 +75,10 @@ class ScheduleProvider(TriggerProvider):
     async def setup_trigger(self, trigger: Trigger) -> bool:
         try:
             webhook_url = f"{self._webhook_base_url}/api/triggers/{trigger.trigger_id}/webhook"
+            # cron_expression은 이미 UTC로 변환된 상태입니다 (scheduler_proxy_api에서 변환)
             cron_expression = trigger.config['cron_expression']
             execution_type = trigger.config.get('execution_type', 'agent')
             user_timezone = trigger.config.get('timezone', 'UTC')
-
-            if user_timezone != 'UTC':
-                cron_expression = self._convert_cron_to_utc(cron_expression, user_timezone)
             
             payload = {
                 "trigger_id": trigger.trigger_id,
@@ -284,6 +282,13 @@ class ProviderService:
     def _initialize_providers(self):
         self._providers["schedule"] = ScheduleProvider()
         self._providers["webhook"] = WebhookProvider()
+
+    async def get_provider(self, provider_id: str) -> TriggerProvider:
+        """Get a provider by ID"""
+        provider = self._providers.get(provider_id)
+        if not provider:
+            raise ValueError(f"Unknown provider: {provider_id}")
+        return provider
     
     async def get_available_providers(self) -> List[Dict[str, Any]]:
         providers = []

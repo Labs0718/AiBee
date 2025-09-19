@@ -74,13 +74,8 @@ async def lifespan(app: FastAPI):
         credentials_api.initialize(db)
         template_api.initialize(db)
         composio_api.initialize(db)
-        scheduler_api.initialize(db)
 
-        # Start scheduler service
-        from scheduler.scheduler_service import SchedulerService
-        scheduler_service = SchedulerService(db)
-        await scheduler_service.initialize()
-        await scheduler_service.start_scheduler()
+        # Note: 스케줄링 기능은 기존 Triggers 시스템을 사용합니다.
         
         yield
         
@@ -205,8 +200,10 @@ api_router.include_router(admin_api.router)
 from composio_integration import api as composio_api
 api_router.include_router(composio_api.router)
 
-from scheduler import api as scheduler_api
-api_router.include_router(scheduler_api.router, prefix="/scheduler")
+# 스케줄러 프록시 API 추가 (기존 UI 호환성을 위해)
+import scheduler_proxy_api
+scheduler_proxy_api.initialize(db)
+api_router.include_router(scheduler_proxy_api.router)
 
 from departments import api as departments_api
 from groupware import api as groupware_api
