@@ -56,6 +56,10 @@ class SchedulerService:
             await self.load_active_tasks()
 
             logger.info("MCP Scheduler started")
+            logger.info(f"Scheduler timezone: {self.scheduler.timezone}")
+            logger.info(f"Total jobs loaded: {len(self.scheduler.get_jobs())}")
+        else:
+            logger.warning(f"Scheduler start failed - scheduler exists: {bool(self.scheduler)}, is_running: {self.is_running}")
 
     async def stop_scheduler(self):
         """스케줄러 중지"""
@@ -193,23 +197,39 @@ class SchedulerService:
 
     async def add_task_to_scheduler(self, task: Dict[str, Any]):
         """스케줄러에 작업 추가"""
-        if not self.scheduler or not task.get('is_active'):
+        # 기본 검증
+        if not self.scheduler:
+            logger.error("Scheduler not initialized")
+            return
+
+        if not task.get('is_active'):
+            logger.info(f"Task {task.get('id')} is not active, skipping scheduler registration")
             return
 
         try:
-            task_id = task['id']
-            schedule_config = task['schedule_config']
+            task_id = task.get('id')
+            if not task_id:
+                logger.error(f"Task missing ID: {task}")
+                return
+
+            schedule_config = task.get('schedule_config')
+            if not schedule_config:
+                logger.error(f"Task {task_id} missing schedule_config: {task}")
+                return
+
+            logger.info(f"Adding task {task_id} to scheduler with config: {schedule_config}")
 
             # 기존 job 제거
             try:
                 self.scheduler.remove_job(f"task_{task_id}")
-            except:
-                pass
+                logger.info(f"Removed existing job for task {task_id}")
+            except Exception as e:
+                logger.debug(f"No existing job to remove for task {task_id}: {e}")
 
             # 크론 트리거 생성
             trigger = self.create_cron_trigger(schedule_config)
             if not trigger:
-                logger.warning(f"Could not create trigger for task {task_id}")
+                logger.error(f"❌ FAILED to create trigger for task {task_id} with config: {schedule_config}")
                 return
 
             # 스케줄러에 작업 추가
@@ -222,10 +242,22 @@ class SchedulerService:
                 misfire_grace_time=300  # 5분
             )
 
-            logger.info(f"Added task {task_id} to scheduler")
+            logger.info(f"✅ Successfully added task {task_id} to scheduler")
+            logger.info(f"📊 Scheduler status - running: {self.is_running}, total jobs: {len(self.scheduler.get_jobs())}")
+
+            # 다음 실행 시간 로그
+            jobs = self.scheduler.get_jobs()
+            for job in jobs:
+                if job.id == f"task_{task_id}":
+                    next_run = job.next_run_time
+                    logger.info(f"⏰ Task {task_id} next run time: {next_run}")
+                    break
 
         except Exception as e:
-            logger.error(f"Error adding task {task['id']} to scheduler: {str(e)}")
+            logger.error(f"❌ Error adding task {task.get('id')} to scheduler: {str(e)}")
+            logger.error(f"Task data: {task}")
+            import traceback
+            logger.error(f"Full traceback: {traceback.format_exc()}")
 
     async def remove_task_from_scheduler(self, task_id: str):
         """스케줄러에서 작업 제거"""
@@ -252,53 +284,183 @@ class SchedulerService:
             time_str = schedule_config.get('time', '17:00')
             day = schedule_config.get('day')
 
+            # 입력값 검증
+            if not schedule_type:
+                logger.error(f"Missing schedule_type: {schedule_config}")
+                return None
+
+            if not time_str or ':' not in time_str:
+                logger.error(f"Invalid time format: {time_str}")
+                return None
+
             # 시간 파싱
-            hour, minute = map(int, time_str.split(':'))
+            try:
+                hour, minute = map(int, time_str.split(':'))
+                if not (0 <= hour <= 23) or not (0 <= minute <= 59):
+                    logger.error(f"Invalid time values - hour: {hour}, minute: {minute}")
+                    return None
+            except (ValueError, TypeError) as e:
+                logger.error(f"Time parsing error: {time_str}, error: {e}")
+                return None
+
+            logger.info(f"Creating trigger - type: {schedule_type}, time: {hour}:{minute}, day: {day}")
 
             if schedule_type == 'daily':
-                return CronTrigger(hour=hour, minute=minute)
-            elif schedule_type == 'weekly':
-                if day is not None:
-                    day_of_week = int(day)  # 0=일요일, 1=월요일, ...
-                    return CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute)
-            elif schedule_type == 'monthly':
-                if day is not None:
-                    day_of_month = int(day)  # 1-31
-                    return CronTrigger(day=day_of_month, hour=hour, minute=minute)
+                trigger = CronTrigger(hour=hour, minute=minute, timezone='Asia/Seoul')
+                logger.info(f"Created daily trigger: {trigger}")
+                return trigger
 
-            return None
+            elif schedule_type == 'weekly':
+                if day is None or day == '':
+                    logger.error(f"Weekly schedule requires day value: {day}")
+                    return None
+                try:
+                    day_of_week = int(day)  # 0=일요일, 1=월요일, ...
+                    if not (0 <= day_of_week <= 6):
+                        logger.error(f"Invalid day_of_week: {day_of_week}")
+                        return None
+                    trigger = CronTrigger(day_of_week=day_of_week, hour=hour, minute=minute, timezone='Asia/Seoul')
+                    logger.info(f"Created weekly trigger: {trigger}")
+                    return trigger
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Day parsing error for weekly: {day}, error: {e}")
+                    return None
+
+            elif schedule_type == 'monthly':
+                if day is None or day == '':
+                    logger.error(f"Monthly schedule requires day value: {day}")
+                    return None
+                try:
+                    day_of_month = int(day)  # 1-31
+                    if not (1 <= day_of_month <= 31):
+                        logger.error(f"Invalid day_of_month: {day_of_month}")
+                        return None
+                    trigger = CronTrigger(day=day_of_month, hour=hour, minute=minute, timezone='Asia/Seoul')
+                    logger.info(f"Created monthly trigger: {trigger}")
+                    return trigger
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Day parsing error for monthly: {day}, error: {e}")
+                    return None
+            else:
+                logger.error(f"Unknown schedule_type: {schedule_type}")
+                return None
 
         except Exception as e:
-            logger.error(f"Error creating cron trigger: {str(e)}")
+            logger.error(f"Unexpected error creating cron trigger: {str(e)}, config: {schedule_config}")
             return None
 
     def calculate_next_run_time(self, schedule_config: Dict[str, Any]) -> Optional[datetime]:
         """다음 실행 시간 계산"""
+        try:
+            from zoneinfo import ZoneInfo
+        except ImportError:
+            # Python < 3.9 fallback
+            import pytz
+            ZoneInfo = pytz.timezone
+
         trigger = self.create_cron_trigger(schedule_config)
         if trigger:
-            return trigger.get_next_fire_time(None, datetime.now(timezone.utc))
+            # 한국 시간으로 현재 시간을 구하고 계산
+            try:
+                seoul_tz = ZoneInfo('Asia/Seoul')
+                now_seoul = datetime.now(seoul_tz)
+            except:
+                # fallback to naive datetime with manual offset
+                import pytz
+                seoul_tz = pytz.timezone('Asia/Seoul')
+                now_seoul = datetime.now(seoul_tz)
+            return trigger.get_next_fire_time(None, now_seoul)
         return None
 
+    def create_full_prompt(self, task: Dict[str, Any]) -> str:
+        """간단한 프롬프트 생성 - 프론트엔드의 createFullPrompt와 동일한 형식"""
+        from datetime import datetime
+
+        # 한국 시간으로 오늘 날짜 구하기
+        try:
+            from zoneinfo import ZoneInfo
+            seoul_tz = ZoneInfo('Asia/Seoul')
+            today = datetime.now(seoul_tz).strftime('%Y년 %m월 %d일')
+        except ImportError:
+            # fallback: UTC + 9시간 오프셋
+            utc_now = datetime.now(timezone.utc)
+            seoul_now = utc_now + timedelta(hours=9)
+            today = seoul_now.strftime('%Y년 %m월 %d일')
+
+        # 프론트엔드의 createFullPrompt와 동일한 형식으로 간단히 생성
+        prompt = f"링크: {task['sheet_url']}\n\n"
+        prompt += f"요청할 작업: 오늘 날짜는 {today}이고, {task['task_prompt']} 링크는 {task['sheet_url']}이다."
+
+        if task.get('email_recipients') and len(task['email_recipients']) > 0:
+            prompt += f"\n\n결과 수신 이메일: {', '.join(task['email_recipients'])}"
+
+        return prompt
+
     async def execute_scheduled_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
-        """스케줄된 작업 실행"""
+        """스케줄된 작업 실행 - "지금 실행" 버튼 트리거"""
         task_id = task['id']
         task_name = task['name']
+        user_id = task['user_id']
 
-        logger.info(f"Executing scheduled task: {task_name} (ID: {task_id})")
+        logger.info(f"🚀 SCHEDULER TRIGGERED! Executing scheduled task: {task_name} (ID: {task_id})")
+        # 한국 시간과 UTC 시간 모두 로그에 출력
+        utc_now = datetime.now(timezone.utc)
+        try:
+            from zoneinfo import ZoneInfo
+            seoul_tz = ZoneInfo('Asia/Seoul')
+            seoul_now = utc_now.astimezone(seoul_tz)
+        except ImportError:
+            # fallback: UTC + 9시간
+            seoul_now = utc_now + timedelta(hours=9)
+
+        logger.info(f"Current time (UTC): {utc_now}")
+        logger.info(f"Current time (Seoul): {seoul_now}")
+        logger.info(f"Task details: {task}")
 
         try:
             # 실행 시작 로그
             await self.log_task_execution(task_id, "started", None, None)
 
-            # SheetAgent 프롬프트 생성
-            sheet_agent_prompt = self.create_sheet_agent_prompt(
-                task['sheet_url'],
-                task['task_prompt'],
-                task.get('email_recipients', [])
-            )
+            # "지금 실행" 버튼과 동일한 API 호출
+            import httpx
 
-            # 에이전트에게 직접 프롬프트 전송
-            result = await self.send_prompt_to_agent(task['user_id'], sheet_agent_prompt, task['name'])
+            user_token = await self.get_user_access_token(user_id)
+
+            # 프론트엔드의 handleRunNow 함수가 호출하는 것과 동일한 작업
+            # 1. 새 스레드 생성
+            async with httpx.AsyncClient() as http_client:
+                thread_response = await http_client.post(
+                    "http://localhost:8000/api/threads",
+                    headers={
+                        'Authorization': f'Bearer {user_token}',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    data={
+                        'name': f'MCP 자동화: {task_name}'
+                    }
+                )
+
+                if thread_response.status_code != 200:
+                    logger.error(f"Thread creation failed: {thread_response.status_code}")
+                    return {"success": False, "error": "채팅방 생성 실패"}
+
+                thread_data = thread_response.json()
+                thread_id = thread_data["thread_id"]
+
+                # 2. 프롬프트 생성
+                full_prompt = self.create_full_prompt(task)
+
+                # 3. 브라우저 리다이렉트와 동일한 효과 (autoSend)
+                logger.info(f"Created thread {thread_id} with autoSend prompt for task {task_id}")
+
+                result = {
+                    "success": True,
+                    "thread_id": thread_id,
+                    "message": "자동화 작업이 시작되었습니다",
+                    "autoSend": full_prompt
+                }
+
+            return result
 
             # 이메일 발송
             await self.send_task_result_email(task, result)
@@ -448,8 +610,16 @@ class SchedulerService:
             client = await self.db.client
 
             # 채팅방 메타데이터에 MCP 자동화 표시 (폴더 구조)
+            # 한국 시간 기준으로 날짜 폴더 생성
             now = datetime.now(timezone.utc)
-            date_str = now.strftime('%m%d')  # 0918 형식
+            try:
+                from zoneinfo import ZoneInfo
+                seoul_tz = ZoneInfo('Asia/Seoul')
+                seoul_now = now.astimezone(seoul_tz)
+            except ImportError:
+                # fallback: UTC + 9시간
+                seoul_now = now + timedelta(hours=9)
+            date_str = seoul_now.strftime('%m%d')  # 0918 형식 (한국 시간 기준)
 
             metadata = {
                 "scheduled_task_id": task['id'],
@@ -548,7 +718,19 @@ class SchedulerService:
                 metadata['mcp_status'] = new_status
 
                 # 상태 폴더 업데이트 (0918_실행중 → 0918_실행완료)
-                date_str = metadata.get('mcp_date_folder', datetime.now(timezone.utc).strftime('%m%d'))
+                # 한국 시간 기준으로 날짜 생성
+                try:
+                    from zoneinfo import ZoneInfo
+                    seoul_tz = ZoneInfo('Asia/Seoul')
+                    seoul_now = datetime.now(timezone.utc).astimezone(seoul_tz)
+                    fallback_date = seoul_now.strftime('%m%d')
+                except ImportError:
+                    # fallback: UTC + 9시간
+                    utc_now = datetime.now(timezone.utc)
+                    seoul_now = utc_now + timedelta(hours=9)
+                    fallback_date = seoul_now.strftime('%m%d')
+
+                date_str = metadata.get('mcp_date_folder', fallback_date)
                 new_status_korean = "실행완료" if new_status == "실행결과" else new_status
                 metadata['mcp_status_folder'] = f"{date_str}_{new_status_korean}"
 
@@ -736,9 +918,13 @@ MCP 자동화 시스템
         try:
             client = await self.db.client
 
+            # 먼저 현재 run_count 조회
+            current_task = await client.table("scheduled_tasks").select("run_count").eq("id", task_id).execute()
+            current_run_count = current_task.data[0]["run_count"] if current_task.data else 0
+
             update_data = {
                 "last_run_at": datetime.now(timezone.utc).isoformat(),
-                "run_count": client.table("scheduled_tasks").select("run_count").eq("id", task_id).execute().data[0]["run_count"] + 1
+                "run_count": current_run_count + 1
             }
 
             # 다음 실행 시간 계산

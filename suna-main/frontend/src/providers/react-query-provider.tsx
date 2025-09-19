@@ -22,18 +22,18 @@ export function ReactQueryProvider({
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 0,
-            gcTime: 1 * 60 * 1000,
-            refetchInterval: 2000,
+            staleTime: 5 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
+            refetchInterval: false,
             retry: (failureCount, error: any) => {
               if (error?.status >= 400 && error?.status < 500) return false;
               if (error?.status === 404) return false;
               return failureCount < 3;
             },
-            refetchOnMount: true,
-            refetchOnWindowFocus: true,
-            refetchOnReconnect: 'always',
-            refetchIntervalInBackground: true,
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+            refetchIntervalInBackground: false,
           },
           mutations: {
             retry: (failureCount, error: any) => {
