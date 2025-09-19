@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2, Calendar, Plane } from 'lucide-react';
+import { Bot, Menu, Store, Plus, Zap, Plug, ChevronRight, Loader2, Plane } from 'lucide-react';
 
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
@@ -239,7 +239,7 @@ export function SidebarLeft({
                 <CollapsibleTrigger asChild>
                   <SidebarMenuButton className="w-full justify-between touch-manipulation">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-green-500" />
+                      <Zap className="h-4 w-4 text-yellow-500" />
                       <span>스프레드시트 자동화</span>
                     </div>
                     <ChevronRight className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-90" />

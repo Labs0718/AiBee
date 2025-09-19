@@ -468,7 +468,7 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                       className="px-6 pb-6 cursor-pointer"
                       onClick={() => handleEditTask(task)}
                     >
-                      <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="mb-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                             <Clock className="h-4 w-4 text-blue-600" />
@@ -477,14 +477,6 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
                             <p className="text-xs text-gray-500 mb-1">실행 주기</p>
                             <p className="text-sm font-medium text-gray-900">{formatSchedule(task.schedule_config)}</p>
                           </div>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">실행 회수</p>
-                          <p className="text-sm font-medium text-gray-900">{task.run_count}회</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500 mb-1">마지막 실행</p>
-                          <p className="text-sm font-medium text-gray-900">{formatLastRun(task.last_run_at)}</p>
                         </div>
                       </div>
 
