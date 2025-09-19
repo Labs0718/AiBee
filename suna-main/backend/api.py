@@ -4,8 +4,8 @@ load_dotenv()
 from fastapi import FastAPI, Request, HTTPException, Response, Depends, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
-# from services import redis  # Temporarily disabled for scheduler testing
-# import sentry  # Temporarily disabled for scheduler testing
+from services import redis
+import sentry
 from contextlib import asynccontextmanager
 from agentpress.thread_manager import ThreadManager
 from services.supabase import DBConnection
@@ -57,14 +57,14 @@ async def lifespan(app: FastAPI):
         
         sandbox_api.initialize(db)
         
-        # Initialize Redis connection (temporarily disabled for scheduler testing)
-        # from services import redis
-        # try:
-        #     await redis.initialize_async()
-        #     logger.info("Redis connection initialized successfully")
-        # except Exception as e:
-        #     logger.error(f"Failed to initialize Redis connection: {e}")
-        #     # Continue without Redis - the application will handle Redis failures gracefully
+        # Initialize Redis connection
+        from services import redis
+        try:
+            await redis.initialize_async()
+            logger.info("Redis connection initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize Redis connection: {e}")
+            # Continue without Redis - the application will handle Redis failures gracefully
         
         # Start background tasks
         # asyncio.create_task(agent_api.restore_running_agent_runs())
@@ -74,15 +74,13 @@ async def lifespan(app: FastAPI):
         credentials_api.initialize(db)
         template_api.initialize(db)
         composio_api.initialize(db)
+        scheduler_api.initialize(db)
 
-        # Start scheduler service FIRST
+        # Start scheduler service
         from scheduler.scheduler_service import SchedulerService
         scheduler_service = SchedulerService(db)
         await scheduler_service.initialize()
         await scheduler_service.start_scheduler()
-
-        # Initialize scheduler API with the SAME instance
-        scheduler_api.initialize(db, scheduler_service)
         
         yield
         
@@ -90,13 +88,13 @@ async def lifespan(app: FastAPI):
         logger.info("Cleaning up agent resources")
         await agent_api.cleanup()
         
-        # Clean up Redis connection (temporarily disabled)
-        # try:
-        #     logger.info("Closing Redis connection")
-        #     await redis.close()
-        #     logger.info("Redis connection closed successfully")
-        # except Exception as e:
-        #     logger.error(f"Error closing Redis connection: {e}")
+        # Clean up Redis connection
+        try:
+            logger.info("Closing Redis connection")
+            await redis.close()
+            logger.info("Redis connection closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing Redis connection: {e}")
         
         # Clean up database connection
         logger.info("Disconnecting from database")

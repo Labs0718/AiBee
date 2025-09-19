@@ -75,12 +75,6 @@ export function SpreadsheetAutomationThreads() {
       if (response.ok) {
         const allThreads = await response.json();
 
-        // API 응답이 배열인지 확인
-        if (!Array.isArray(allThreads)) {
-          console.error('API response is not an array:', allThreads);
-          return;
-        }
-
         // 스프레드시트 자동화 카테고리만 필터링
         const automationThreads: AutomationThread[] = allThreads.filter(
           (thread: any) => thread.metadata?.category === 'spreadsheet_automation'

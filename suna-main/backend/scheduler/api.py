@@ -16,15 +16,11 @@ router = APIRouter()
 db = None
 scheduler_service = None
 
-def initialize(database: DBConnection, existing_scheduler_service=None):
+def initialize(database: DBConnection):
     """Initialize the scheduler API with database connection"""
     global db, scheduler_service
     db = database
-    # Use existing scheduler service if provided, otherwise create new one
-    if existing_scheduler_service:
-        scheduler_service = existing_scheduler_service
-    else:
-        scheduler_service = SchedulerService(db)
+    scheduler_service = SchedulerService(db)
 
 class ScheduledTaskCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
@@ -243,20 +239,19 @@ async def run_scheduled_task_now(
     task_id: str,
     user_id: str = Depends(get_current_user_id_from_jwt)
 ):
-    """스케줄된 작업 즉시 실행 - 프론트엔드의 handleRunNow와 동일한 동작"""
+    """스케줄된 작업 즉시 실행"""
     try:
         task = await scheduler_service.get_scheduled_task(task_id, user_id)
         if not task:
             raise HTTPException(status_code=404, detail="Scheduled task not found")
 
-        # Execute task - 프론트엔드가 호출하는 것과 동일하게 처리
+        # Execute task
         result = await scheduler_service.execute_scheduled_task(task)
 
         return {
             "success": True,
             "message": "Task executed successfully",
-            "result": result,
-            "trigger_frontend": True  # 프론트엔드에 실행 신호
+            "result": result
         }
 
     except HTTPException:
