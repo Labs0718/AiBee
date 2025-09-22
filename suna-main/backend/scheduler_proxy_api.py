@@ -269,8 +269,8 @@ async def get_scheduled_tasks(
             task_prompt = ""
             email_recipients = []
 
-            # 작업 내용 추출
-            task_match = re.search(r'작업 내용: (.+?)(?:\n|$)', agent_prompt)
+            # 작업 내용 추출 (여러 줄 지원)
+            task_match = re.search(r'작업 내용: (.+?)(?=\n\n|스프레드시트 URL:|$)', agent_prompt, re.DOTALL)
             if task_match:
                 task_prompt = task_match.group(1).strip()
 
@@ -428,7 +428,7 @@ async def update_scheduled_task(
                         sheet_url = url_match.group(1)
 
                 if not task_prompt:
-                    task_match = re.search(r'작업 내용: (.+?)(?:\n|$)', current_agent_prompt)
+                    task_match = re.search(r'작업 내용: (.+?)(?=\n\n|스프레드시트 URL:|$)', current_agent_prompt, re.DOTALL)
                     if task_match:
                         task_prompt = task_match.group(1).strip()
 
