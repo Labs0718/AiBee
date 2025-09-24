@@ -21,6 +21,7 @@ import {
   KeyRound,
   FileText,
   Shield,
+  Plug,
 } from 'lucide-react';
 import { useAccounts } from '@/hooks/use-accounts';
 import NewTeamForm from '@/components/basejump/new-team-form';
@@ -314,6 +315,14 @@ export function NavUserWithTeams({
                   <Link href="/pdf-management">
                     <FileText className="h-4 w-4" />
                     PDF 관리
+                  </Link>
+                </DropdownMenuItem>
+
+                {/* Integrations */}
+                <DropdownMenuItem asChild>
+                  <Link href="/integrations">
+                    <Plug className="h-4 w-4" />
+                    Integrations
                   </Link>
                 </DropdownMenuItem>
                 
