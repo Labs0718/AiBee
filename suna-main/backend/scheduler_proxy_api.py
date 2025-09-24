@@ -31,7 +31,7 @@ class ScheduledTaskCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     sheet_url: str = Field(..., min_length=1)
-    task_prompt: str = Field(..., min_length=10)
+    task_prompt: str = Field(..., min_length=10, max_length=500)
     schedule_config: Dict[str, Any] = Field(...)  # type, time, day 등
     email_recipients: Optional[List[str]] = Field(default=[])
     is_active: bool = Field(default=True)
@@ -40,7 +40,7 @@ class ScheduledTaskUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     sheet_url: Optional[str] = Field(None, min_length=1)
-    task_prompt: Optional[str] = Field(None, min_length=10)
+    task_prompt: Optional[str] = Field(None, min_length=10, max_length=500)
     schedule_config: Optional[Dict[str, Any]] = Field(None)
     email_recipients: Optional[List[str]] = Field(None)
     is_active: Optional[bool] = Field(None)
