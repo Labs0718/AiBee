@@ -88,19 +88,17 @@ const createFullPrompt = (task: ScheduledTask): string => {
 **STEP 1: MCP 도구 검색 및 준비**
 - "Searching MCP Servers" → googlesheets/gmail 검색
 - 스프레드시트 ID 추출 (URL에서)
-- 필요시 credential profile 생성
 
-**STEP 2: Google Sheets 작업**
+**STEP 2: Google Sheets 작업** : 반드시 브라우저 도구X , 아래 명시한 MCP를 사용해서 작업 필요
 - "GOOGLESHEETS: GET SPREADSHEET INFO" 사용
 - **중요**: URL의 정확한 gid 값 그대로 사용 (임의 변경 금지)
 - 데이터 읽기: "GOOGLESHEETS: BATCH GET" 사용
-- 데이터 쓰기: "GOOGLESHEETS: BATCH UPDATE" 사용
+- ** 사용자가 요청한 링크인 실제 스프레드시트안의 내용**을 가지고 mcp작업해야함. 임시 작업 금지
 
-** 만약 각 담당자 < 에 대한 이메일 전송 등을 요청할 경우** : 내부문서에 "담당자"에 대한 메일 주소가 있음.
-- **반드시 내부 문서 검색 먼저 실행**: search_internal_documents 도구 사용
-- "{담당자명} @goability.co.kr" 패턴으로 검색
-- **절대 금지**: 내부문서에서 담당자 메일 주소 검색 없이 바로 사용자에게 이메일 주소 요청
-
+**사용자가 "담당자"에 대한 이메일 작업 등을 요청할 경우** : 반드시 내부 문서 검색 도구(search_internal_documents)사용해서 내부에서 각 담당자의 이메일 정보 추출해야함.
+- **검색 요령**: "{담당자명} @goability.co.kr" 패턴으로 검색
+- 담당자에게 메일 전송등을 사용자가 요청했는데, 내부문서에서 해당 담당자의 메일 주소가 검색이 안될 경우: 사용자에게 메일 주소 수동 요청. (이는 무조건 내부문서 도구 실행 후 최후 수단으로 사용해야 함)
+ 
 **STEP 3: 결과 정리 및 이메일 발송**
 - 작업 결과 명확히 정리
 - 필요시 Gmail MCP 도구로 이메일 전송

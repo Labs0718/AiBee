@@ -688,9 +688,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('## 연차 신청 자동화 가이드')[0].trim();
                                                 }
                                                 
-                                                if (fullContent.includes('## 자원예약 자동화 가이드')) {
-                                                    return fullContent.split('## 자원예약 자동화 가이드')[0].trim();
-                                                }
                                                 
                                                 if (fullContent.includes('## 내 연차 찾기 자동화 가이드')) {
                                                     return fullContent.split('## 내 연차 찾기 자동화 가이드')[0].trim();
