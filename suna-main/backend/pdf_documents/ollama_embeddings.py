@@ -219,7 +219,7 @@ class OllamaEmbeddingProcessor:
         match_count: int = 5,
         filter_department: str = None
     ) -> List[Dict[str, Any]]:
-        """최신 하이브리드 검색 (Dense + Sparse + Query Expansion + Reranking)"""
+        """하이브리드 검색 (Dense + Sparse + Query Expansion + Reranking)"""
         try:
             # 1. Query Expansion - 다양한 표현으로 확장
             expanded_queries = await self._expand_query_advanced(query)
