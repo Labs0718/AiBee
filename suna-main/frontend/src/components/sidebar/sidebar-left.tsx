@@ -212,48 +212,51 @@ export function SidebarLeft({
       <SidebarContent className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
         <SidebarGroup>
           <Link href="/dashboard">
-            <SidebarMenuButton 
+            <SidebarMenuButton
               className={cn('touch-manipulation', {
                 'bg-accent text-accent-foreground font-medium': pathname === '/dashboard',
-              })} 
+              })}
               onClick={() => {
                 posthog.capture('new_task_clicked');
                 if (isMobile) setOpenMobile(false);
               }}
             >
-              <Plus className="h-4 w-4 mr-1" />
-              <span className="flex items-center justify-between w-full">
-                새 작업
-              </span>
+              <Plus className="h-4 w-4" />
+              {state !== 'collapsed' && (
+                <span className="ml-2 flex items-center justify-between w-full">
+                  새 작업
+                </span>
+              )}
             </SidebarMenuButton>
           </Link>
-         
         </SidebarGroup>
         <NavAgents />
 
         {/* 스프레드시트 자동화 섹션 */}
-        <SidebarGroup>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <Collapsible defaultOpen>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton className="w-full justify-between touch-manipulation">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-yellow-500" />
-                      <span>스프레드시트 자동화</span>
-                    </div>
-                    <ChevronRight className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-90" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <SidebarMenuSub>
-                    <SpreadsheetAutomationThreads />
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </Collapsible>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
+        {state !== 'collapsed' && (
+          <SidebarGroup>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Collapsible defaultOpen>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full justify-between touch-manipulation">
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-yellow-500" />
+                        <span>스프레드시트 자동화</span>
+                      </div>
+                      <ChevronRight className="h-4 w-4 transition-transform duration-200 data-[state=open]:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      <SpreadsheetAutomationThreads />
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       {state !== 'collapsed' && (
         <div className="px-3 py-2">
