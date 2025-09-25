@@ -8,6 +8,9 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 import numpy as np
 from supabase import create_client
 import asyncio
+import math
+from collections import Counter
+import re
 
 # Ollama API 설정 (로컬 환경 우선)
 OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11435")
@@ -27,8 +30,8 @@ class OllamaEmbeddingProcessor:
             
         self.supabase = create_client(supabase_url, supabase_key)
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,  # bge-large 컨텍스트 문제로 축소
-            chunk_overlap=50,
+            chunk_size=1200,  # 의미적 맥락 보존을 위해 증가
+            chunk_overlap=200,  # 충분한 오버랩으로 맥락 연결성 확보
             separators=["\n\n", "\n", ".", "!", "?", "。", "！", "？", " ", ""],
             length_function=len,
         )
@@ -219,202 +222,274 @@ class OllamaEmbeddingProcessor:
         match_count: int = 5,
         filter_department: str = None
     ) -> List[Dict[str, Any]]:
-        """하이브리드 검색 (Dense + Sparse + Query Expansion + Reranking)"""
+        """하이브리드 검색 (벡터 + 키워드) - RPC 없이 직접 구현"""
         try:
-            # 1. Query Expansion - 다양한 표현으로 확장
-            expanded_queries = await self._expand_query_advanced(query)
-            print(f"확장된 쿼리: {expanded_queries}")
-            
-            # 2. Multi-Query Dense Search
-            all_dense_results = []
-            for expanded_query in expanded_queries:
-                query_embedding = self.get_ollama_embedding(expanded_query)
-                if query_embedding and len(query_embedding) == 1024:
-                    dense_results = self.supabase.rpc(
-                        'search_documents',
-                        {
-                            'query_embedding': query_embedding,
-                            'match_count': match_count * 2,  # 더 많이 가져와서 재랭킹
-                            'filter_department': filter_department
-                        }
-                    ).execute()
-                    
-                    if dense_results.data:
-                        # 각 결과에 쿼리 정보 추가
-                        for result in dense_results.data:
-                            result['search_query'] = expanded_query
-                        all_dense_results.extend(dense_results.data)
-            
-            # 3. Sparse Search (키워드 기반) - PostgreSQL Full Text Search
-            sparse_results = await self._keyword_search(query, match_count * 2, filter_department)
-            
-            # 4. Hybrid Fusion - RRF (Reciprocal Rank Fusion)
-            fused_results = self._reciprocal_rank_fusion(all_dense_results, sparse_results)
-            
-            # 5. Semantic Reranking - 의미적 재랭킹
-            final_results = await self._semantic_rerank(query, fused_results[:match_count * 3])
-            
-            return final_results[:match_count]
-            
-        except Exception as e:
-            print(f"고급 검색 오류: {str(e)}")
-            # 실패시 기본 검색으로 폴백
-            return await self._fallback_search(query, match_count, filter_department)
-    
-    async def _expand_query_advanced(self, query: str) -> List[str]:
-        """임베딩 기반 동의어 확장 - 의미적 유사어 자동 생성"""
-        base_query = query.strip()
-        expanded = [base_query]
+            print(f"하이브리드 검색 시작: '{query}' (최대 {match_count}개)")
 
-        try:
-            # 핵심 키워드 추출 (간단한 토큰화)
-            keywords = [word.strip() for word in query.split() if len(word.strip()) > 1]
+            # 1. 벡터 검색 실행
+            vector_results = await self._vector_search(query, match_count * 2, filter_department)
+            print(f"벡터 검색 결과: {len(vector_results)}개")
 
-            for keyword in keywords:
-                # 키워드의 임베딩 생성
-                keyword_embedding = self.get_ollama_embedding(keyword)
-                if not keyword_embedding:
-                    continue
+            # 2. 키워드 검색 실행
+            keyword_results = await self._keyword_search(query, match_count * 2, filter_department)
+            print(f"키워드 검색 결과: {len(keyword_results)}개")
 
-                # 의미적 유사어 생성을 위한 후보 단어들
-                # 실제로는 더 큰 어휘 사전이나 문서 코퍼스에서 가져와야 함
-                candidate_words = [
-                    "문제", "이슈", "사안", "해결", "처리", "개선", "요청", "신청",
-                    "민원", "불만", "건의", "제안", "시설", "설비", "공간", "지역",
-                    "교통", "도로", "차량", "주차", "소음", "환경", "안전", "보안"
-                ]
+            # 3. 하이브리드 결합 (간단한 점수 기반)
+            combined_results = self._combine_search_results(vector_results, keyword_results)
+            print(f"결합 후 결과: {len(combined_results)}개")
 
-                # 각 후보 단어와의 유사도 계산
-                similar_words = []
-                for candidate in candidate_words:
-                    if candidate == keyword:
-                        continue
+            # 4. 최종 결과 반환
+            final_results = combined_results[:match_count]
+            print(f"최종 반환: {len(final_results)}개")
 
-                    candidate_embedding = self.get_ollama_embedding(candidate)
-                    if candidate_embedding:
-                        similarity = self._cosine_similarity(keyword_embedding, candidate_embedding)
-                        if similarity > 0.7:  # 높은 유사도만 선택
-                            similar_words.append((candidate, similarity))
-
-                # 유사도 기준으로 정렬하여 상위 2개만 선택
-                similar_words.sort(key=lambda x: x[1], reverse=True)
-                for word, _ in similar_words[:2]:
-                    expanded.append(base_query.replace(keyword, word))
+            return final_results
 
         except Exception as e:
-            print(f"임베딩 기반 쿼리 확장 오류: {e}")
-            # 오류 시 기본 확장으로 폴백
-            fallback_map = {
-                "문제": ["이슈", "사안"],
-                "요청": ["신청", "건의"],
-                "개선": ["향상", "보완"]
-            }
-            for keyword, synonyms in fallback_map.items():
-                if keyword in base_query:
-                    for synonym in synonyms:
-                        expanded.append(base_query.replace(keyword, synonym))
-        
-        # 지역별 특화 확장
-        if "강남" in base_query:
-            expanded.extend([
-                base_query.replace("강남", "테헤란로"),
-                base_query.replace("강남", "역삼동"),
-                base_query + " CBD"
-            ])
-        
-        return list(set(expanded))[:5]  # 중복 제거, 최대 5개
-    
-    async def _keyword_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
-        """간단한 키워드 검색 (LIKE 사용)"""
+            print(f"하이브리드 검색 오류: {str(e)}")
+            # 오류시 키워드 검색만 실행
+            return await self._keyword_search(query, match_count, filter_department)
+
+    async def _vector_search(
+        self,
+        query: str,
+        match_count: int,
+        filter_department: str = None
+    ) -> List[Dict[str, Any]]:
+        """벡터 검색 (RPC 없이 직접 구현)"""
         try:
-            # 간단한 키워드 매칭으로 폴백
-            query_builder = self.supabase.table('pdf_embeddings').select(
-                'document_id, chunk_text, pdf_documents(original_file_name, department)'
-            ).ilike('chunk_text', f'%{query}%').limit(match_count)
-            
-            if filter_department:
-                query_builder = query_builder.eq('pdf_documents.department', filter_department)
-            
-            result = query_builder.execute()
-            
-            # 결과 포맷 맞추기
-            formatted_results = []
-            for item in result.data or []:
-                doc_info = item.get('pdf_documents', {})
-                formatted_results.append({
-                    'document_id': item['document_id'],
-                    'chunk_text': item['chunk_text'],
-                    'document_title': doc_info.get('original_file_name', '제목 없음'),
-                    'department': doc_info.get('department', '부서 정보 없음'),
-                    'search_type': 'keyword',
-                    'similarity': 0.5  # 기본 점수
-                })
-            
-            return formatted_results
-            
-        except Exception as e:
-            print(f"키워드 검색 오류: {str(e)}")
-            return []
-    
-    def _reciprocal_rank_fusion(self, dense_results: List[Dict], sparse_results: List[Dict], k: int = 60) -> List[Dict]:
-        """RRF를 이용한 하이브리드 검색 결과 융합"""
-        scores = {}
-        
-        # Dense 검색 결과 점수화
-        for rank, result in enumerate(dense_results):
-            doc_key = f"{result['document_id']}_{result.get('chunk_index', 0)}"
-            if doc_key not in scores:
-                scores[doc_key] = {'result': result, 'dense_score': 0, 'sparse_score': 0}
-            scores[doc_key]['dense_score'] += 1 / (k + rank + 1)
-        
-        # Sparse 검색 결과 점수화
-        for rank, result in enumerate(sparse_results):
-            doc_key = f"{result['document_id']}_{result.get('chunk_index', 0)}"
-            if doc_key not in scores:
-                scores[doc_key] = {'result': result, 'dense_score': 0, 'sparse_score': 0}
-            scores[doc_key]['sparse_score'] += 1 / (k + rank + 1)
-        
-        # 총 점수로 정렬
-        for item in scores.values():
-            item['total_score'] = item['dense_score'] + item['sparse_score']
-            item['result']['fusion_score'] = item['total_score']
-        
-        return [item['result'] for item in sorted(scores.values(), key=lambda x: x['total_score'], reverse=True)]
-    
-    async def _semantic_rerank(self, query: str, results: List[Dict]) -> List[Dict]:
-        """의미적 재랭킹 - 쿼리와 각 결과의 의미적 관련성 점수화"""
-        if not results:
-            return []
-        
-        try:
-            # 쿼리 임베딩
+            # 쿼리 임베딩 생성
             query_embedding = self.get_ollama_embedding(query)
             if not query_embedding:
-                return results
-            
-            # 각 결과와 쿼리 간의 세밀한 유사도 계산
-            for result in results:
-                chunk_text = result.get('chunk_text', '')
-                if chunk_text:
-                    chunk_embedding = self.get_ollama_embedding(chunk_text[:500])  # 길이 제한
-                    if chunk_embedding:
-                        # 코사인 유사도 계산
-                        similarity = self._cosine_similarity(query_embedding, chunk_embedding)
-                        result['semantic_score'] = similarity
-                        
-                        # 기존 점수와 결합
-                        fusion_score = result.get('fusion_score', 0)
-                        result['final_score'] = fusion_score * 0.7 + similarity * 0.3
-                    else:
-                        result['semantic_score'] = 0
-                        result['final_score'] = result.get('fusion_score', 0)
-            
-            # 최종 점수로 정렬
-            return sorted(results, key=lambda x: x.get('final_score', 0), reverse=True)
-            
+                return []
+
+            # 부서 필터 적용 쿼리 구성
+            query_builder = self.supabase.table('pdf_embeddings').select(
+                'document_id, chunk_text, embedding, metadata, pdf_documents(original_file_name, department)'
+            ).eq('pdf_documents.embedding_status', 'completed').is_('pdf_documents.deleted_at', 'null')
+
+            if filter_department:
+                query_builder = query_builder.eq('pdf_documents.department', filter_department)
+
+            # 충분한 데이터 가져오기
+            embeddings_result = query_builder.limit(200).execute()
+
+            if not embeddings_result.data:
+                return []
+
+            # 코사인 유사도 계산
+            scored_results = []
+            for item in embeddings_result.data:
+                doc_embedding = item.get('embedding', [])
+                if doc_embedding and len(doc_embedding) == len(query_embedding):
+                    similarity = self._cosine_similarity(query_embedding, doc_embedding)
+
+                    doc_info = item.get('pdf_documents', {})
+                    scored_results.append({
+                        'document_id': item['document_id'],
+                        'chunk_text': item['chunk_text'],
+                        'similarity': round(similarity, 4),
+                        'document_title': doc_info.get('original_file_name', '제목 없음'),
+                        'department': doc_info.get('department', '부서 정보 없음'),
+                        'metadata': item.get('metadata', {}),
+                        'search_type': 'vector'
+                    })
+
+            # 유사도순 정렬 후 임계값 필터링
+            scored_results.sort(key=lambda x: x['similarity'], reverse=True)
+            return [r for r in scored_results[:match_count] if r['similarity'] > 0.2]
+
         except Exception as e:
-            print(f"의미적 재랭킹 오류: {str(e)}")
-            return results
+            print(f"벡터 검색 오류: {str(e)}")
+            return []
+
+    def _combine_search_results(
+        self,
+        vector_results: List[Dict],
+        keyword_results: List[Dict]
+    ) -> List[Dict[str, Any]]:
+        """벡터 검색과 키워드 검색 결과를 결합"""
+        # 결과를 document_id + chunk_text로 식별하여 중복 제거 및 점수 결합
+        combined_scores = {}
+
+        # 벡터 검색 결과 처리 (가중치 0.7)
+        for i, result in enumerate(vector_results):
+            key = f"{result['document_id']}_{hash(result['chunk_text'][:100])}"
+
+            if key not in combined_scores:
+                combined_scores[key] = result.copy()
+                combined_scores[key]['vector_score'] = result.get('similarity', 0)
+                combined_scores[key]['keyword_score'] = 0
+                combined_scores[key]['vector_rank'] = i + 1
+                combined_scores[key]['keyword_rank'] = 999
+            else:
+                combined_scores[key]['vector_score'] = max(
+                    combined_scores[key]['vector_score'],
+                    result.get('similarity', 0)
+                )
+                combined_scores[key]['vector_rank'] = min(combined_scores[key]['vector_rank'], i + 1)
+
+        # BM25 검색 결과 처리
+        for i, result in enumerate(keyword_results):
+            key = f"{result['document_id']}_{hash(result['chunk_text'][:100])}"
+
+            # BM25 점수 사용 (기존 similarity 대신)
+            bm25_score = result.get('bm25_score', 0)
+            normalized_bm25 = result.get('similarity', bm25_score / 10)
+
+            if key not in combined_scores:
+                combined_scores[key] = result.copy()
+                combined_scores[key]['vector_score'] = 0
+                combined_scores[key]['keyword_score'] = normalized_bm25
+                combined_scores[key]['bm25_raw_score'] = bm25_score
+                combined_scores[key]['vector_rank'] = 999
+                combined_scores[key]['keyword_rank'] = i + 1
+            else:
+                # 더 높은 BM25 점수 선택
+                if bm25_score > combined_scores[key].get('bm25_raw_score', 0):
+                    combined_scores[key]['keyword_score'] = normalized_bm25
+                    combined_scores[key]['bm25_raw_score'] = bm25_score
+                combined_scores[key]['keyword_rank'] = min(combined_scores[key]['keyword_rank'], i + 1)
+
+        # 최종 점수 계산 및 정렬
+        final_results = []
+        for result in combined_scores.values():
+            # RRF (Reciprocal Rank Fusion) 기반 점수 계산
+            vector_rrf = 1 / (60 + result['vector_rank'])
+            keyword_rrf = 1 / (60 + result['keyword_rank'])
+
+            # 가중 결합 점수
+            final_score = (
+                result['vector_score'] * 0.6 +
+                result['keyword_score'] * 0.4 +
+                vector_rrf * 0.3 +
+                keyword_rrf * 0.2
+            )
+
+            result['final_score'] = round(final_score, 4)
+            result['similarity'] = round(final_score, 4)  # 호환성을 위해
+            final_results.append(result)
+
+        # 최종 점수로 정렬
+        return sorted(final_results, key=lambda x: x['final_score'], reverse=True)
+    
+    
+    async def _keyword_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
+        """BM25 기반 키워드 검색"""
+        try:
+            print(f"BM25 키워드 검색 시작: '{query}'")
+
+            # 모든 문서 조회 (BM25 계산을 위해)
+            query_builder = self.supabase.table('pdf_embeddings').select(
+                'document_id, chunk_text, pdf_documents(original_file_name, department)'
+            ).eq('pdf_documents.embedding_status', 'completed').is_('pdf_documents.deleted_at', 'null')
+
+            if filter_department:
+                query_builder = query_builder.eq('pdf_documents.department', filter_department)
+
+            result = query_builder.limit(500).execute()  # BM25 계산을 위해 더 많이 조회
+
+            if not result.data:
+                return []
+
+            print(f"BM25 계산 대상: {len(result.data)}개 문서")
+
+            # BM25 점수 계산
+            bm25_scores = self._calculate_bm25_scores(query, result.data)
+
+            # 점수순 정렬 후 상위 결과만 선택
+            ranked_results = sorted(bm25_scores, key=lambda x: x['bm25_score'], reverse=True)
+
+            # 점수가 0인 결과 제거
+            filtered_results = [r for r in ranked_results if r['bm25_score'] > 0]
+
+            print(f"BM25 검색 완료: {len(filtered_results)}개 관련 문서")
+
+            return filtered_results[:match_count]
+
+        except Exception as e:
+            print(f"BM25 검색 오류: {str(e)}")
+            return []
+
+    def _calculate_bm25_scores(self, query: str, documents: List[Dict]) -> List[Dict]:
+        """BM25 알고리즘으로 문서 점수 계산"""
+        # BM25 파라미터
+        k1 = 1.5  # term frequency saturation parameter
+        b = 0.75  # length normalization parameter
+
+        # 쿼리 토큰화
+        query_terms = self._tokenize(query.lower())
+        if not query_terms:
+            return []
+
+        # 문서 전처리
+        doc_tokens = []
+        doc_lengths = []
+        term_doc_freq = Counter()  # 각 단어가 포함된 문서 수
+
+        for doc in documents:
+            tokens = self._tokenize(doc['chunk_text'].lower())
+            doc_tokens.append(tokens)
+            doc_lengths.append(len(tokens))
+
+            # 문서별 고유 단어들
+            unique_terms = set(tokens)
+            for term in unique_terms:
+                term_doc_freq[term] += 1
+
+        total_docs = len(documents)
+        avg_doc_length = sum(doc_lengths) / total_docs if total_docs > 0 else 0
+
+        # BM25 점수 계산
+        scored_results = []
+        for i, doc in enumerate(documents):
+            doc_token_count = Counter(doc_tokens[i])
+            doc_length = doc_lengths[i]
+            bm25_score = 0
+
+            for term in query_terms:
+                if term in doc_token_count:
+                    # Term Frequency (TF)
+                    tf = doc_token_count[term]
+
+                    # Inverse Document Frequency (IDF)
+                    df = term_doc_freq.get(term, 0)
+                    if df > 0:
+                        idf = math.log((total_docs - df + 0.5) / (df + 0.5))
+                    else:
+                        continue
+
+                    # BM25 점수 계산
+                    numerator = tf * (k1 + 1)
+                    denominator = tf + k1 * (1 - b + b * (doc_length / avg_doc_length))
+                    bm25_score += idf * (numerator / denominator)
+
+            # 결과 포맷팅
+            doc_info = doc.get('pdf_documents', {})
+            scored_results.append({
+                'document_id': doc['document_id'],
+                'chunk_text': doc['chunk_text'],
+                'document_title': doc_info.get('original_file_name', '제목 없음'),
+                'department': doc_info.get('department', '부서 정보 없음'),
+                'search_type': 'bm25',
+                'bm25_score': round(bm25_score, 4),
+                'similarity': min(bm25_score / 10, 1.0)  # 0-1 범위로 정규화
+            })
+
+        return scored_results
+
+    def _tokenize(self, text: str) -> List[str]:
+        """텍스트 토큰화 (한국어/영어 지원)"""
+        # 한국어, 영어, 숫자만 남기고 나머지 제거
+        text = re.sub(r'[^\w\s가-힣]', ' ', text)
+
+        # 공백으로 분할하여 토큰화
+        tokens = text.split()
+
+        # 길이가 1인 토큰 제거 (너무 짧은 단어)
+        tokens = [token for token in tokens if len(token) > 1]
+
+        return tokens
+    
     
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         """코사인 유사도 계산"""
@@ -431,24 +506,3 @@ class OllamaEmbeddingProcessor:
         
         return dot_product / (norm1 * norm2)
     
-    async def _fallback_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
-        """기본 검색 (고급 검색 실패시 폴백)"""
-        try:
-            query_embedding = self.get_ollama_embedding(query)
-            if not query_embedding:
-                return []
-            
-            result = self.supabase.rpc(
-                'search_documents',
-                {
-                    'query_embedding': query_embedding,
-                    'match_count': match_count,
-                    'filter_department': filter_department
-                }
-            ).execute()
-            
-            return result.data if result.data else []
-            
-        except Exception as e:
-            print(f"폴백 검색 오류: {str(e)}")
-            return []
