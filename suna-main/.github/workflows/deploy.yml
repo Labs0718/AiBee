@@ -80,7 +80,7 @@ jobs:
         NEXT_PUBLIC_URL: http://localhost:3000
         GROUPWARE_ENCRYPTION_KEY: B4k3R6lpR_4wYSRRQRLLtRalF4-RtIW_URBq8W5l6tk=
       run: |
-        cd suna-main/backend
+        cd backend
         docker build \
           --build-arg ENV_MODE=local \
           --build-arg SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \
@@ -147,7 +147,7 @@ jobs:
         REDIS_HOST: ${{ secrets.REDIS_HOST }}
         REDIS_PORT: 6379
       run: |
-        cd suna-main/frontend
+        cd frontend
         docker build \
           --build-arg NEXT_PUBLIC_ENV_MODE=local \
           --build-arg NEXT_PUBLIC_SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \

@@ -1,53 +1,45 @@
 {
-  "family": "suna-backend-task",
+  "family": "suna-frontend-task",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "cpu": "2048",
-  "memory": "4096",
+  "cpu": "1024",
+  "memory": "2048",
   "executionRoleArn": "arn:aws:iam::265766434511:role/ecsTaskExecutionRole",
   "taskRoleArn": "arn:aws:iam::265766434511:role/ecsTaskRole",
   "containerDefinitions": [
     {
-      "name": "suna-backend",
-      "image": "265766434511.dkr.ecr.ap-northeast-2.amazonaws.com/suna-backend:latest",
+      "name": "suna-frontend",
+      "image": "265766434511.dkr.ecr.ap-northeast-2.amazonaws.com/suna-frontend:latest",
       "essential": true,
       "portMappings": [
         {
-          "containerPort": 8000,
+          "containerPort": 3000,
           "protocol": "tcp"
         }
       ],
       "environment": [
         {
-          "name": "ENV_MODE",
+          "name": "NEXT_PUBLIC_ENV_MODE",
           "value": "production"
         },
         {
-          "name": "REDIS_HOST",
-          "value": "REDIS_ENDPOINT_REPLACE_ME"
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "value": "https://oupvawyejyteixggrfat.supabase.co"
         },
         {
-          "name": "REDIS_PORT",
-          "value": "6379"
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA"
         },
         {
-          "name": "OLLAMA_HOST",
-          "value": "OLLAMA_SERVER_IP_REPLACE_ME:11435"
+          "name": "NEXT_PUBLIC_BACKEND_URL",
+          "value": "http://suna-backend-service.aibee-cluster:8000/api"
         },
         {
-          "name": "EMBEDDING_MODEL",
-          "value": "bge-large"
-        },
-        {
-          "name": "MODEL_TO_USE",
-          "value": "ollama/deepseek-r1:32b"
+          "name": "NEXT_PUBLIC_URL",
+          "value": "http://localhost:3000"
         }
       ],
       "secrets": [
-        {
-          "name": "SUPABASE_URL",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/supabase/url"
-        },
         {
           "name": "SUPABASE_SERVICE_ROLE_KEY",
           "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/supabase/service-role-key"
@@ -60,13 +52,13 @@
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/suna-backend",
+          "awslogs-group": "/ecs/suna-frontend",
           "awslogs-region": "ap-northeast-2",
           "awslogs-stream-prefix": "ecs"
         }
       },
       "healthCheck": {
-        "command": ["CMD-SHELL", "curl -f http://localhost:8000/api/health || exit 1"],
+        "command": ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"],
         "interval": 30,
         "timeout": 5,
         "retries": 3,

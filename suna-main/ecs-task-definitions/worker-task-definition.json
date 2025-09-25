@@ -4,12 +4,12 @@
   "requiresCompatibilities": ["FARGATE"],
   "cpu": "1024",
   "memory": "2048",
-  "executionRoleArn": "arn:aws:iam::AWS_ACCOUNT_ID:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::AWS_ACCOUNT_ID:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::265766434511:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::265766434511:role/ecsTaskRole",
   "containerDefinitions": [
     {
       "name": "suna-worker",
-      "image": "AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/suna-backend:latest",
+      "image": "265766434511.dkr.ecr.ap-northeast-2.amazonaws.com/suna-backend:latest",
       "essential": true,
       "command": ["uv", "run", "dramatiq", "--skip-logging", "--processes", "4", "--threads", "4", "run_agent_background"],
       "environment": [
@@ -41,15 +41,15 @@
       "secrets": [
         {
           "name": "SUPABASE_URL",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/supabase/url"
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/supabase/url"
         },
         {
           "name": "SUPABASE_SERVICE_ROLE_KEY",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/supabase/service-role-key"
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/supabase/service-role-key"
         },
         {
           "name": "OPENAI_API_KEY",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/openai/api-key"
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/openai/api-key"
         }
       ],
       "logConfiguration": {
