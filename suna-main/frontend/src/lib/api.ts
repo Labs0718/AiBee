@@ -1673,6 +1673,7 @@ export interface UsageLogEntry {
   total_tokens: number;
   estimated_cost: number;
   project_id: string;
+  account_id?: string; // Optional field for admin view
 }
 
 // Usage logs response interface
