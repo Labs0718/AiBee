@@ -18,10 +18,10 @@ AWS ECS Fargate (컨테이너)
 ### A. IAM 사용자 생성
 ```bash
 # AWS CLI로 빠른 설정
-aws iam create-user --user-name github-actions-suna
-aws iam attach-user-policy --user-name github-actions-suna --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-aws iam attach-user-policy --user-name github-actions-suna --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
-aws iam create-access-key --user-name github-actions-suna
+aws iam create-user --user-name aibee-abs
+aws iam attach-user-policy --user-name aibee-abs --policy-arn arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
+aws iam attach-user-policy --user-name aibee-abs --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+aws iam create-access-key --user-name aibee-abs
 ```
 
 ### B. ECR 리포지토리 생성

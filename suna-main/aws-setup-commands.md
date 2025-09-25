@@ -12,16 +12,16 @@ aws ecr create-repository --repository-name suna-frontend --region ap-northeast-
 ## 2. IAM 사용자 생성 (GitHub Actions용)
 ```bash
 # IAM 사용자 생성
-aws iam create-user --user-name github-actions-suna
+aws iam create-user --user-name aibee-abs
 
 # 정책 첨부
 aws iam put-user-policy \
-    --user-name github-actions-suna \
+    --user-name aibee-abs \
     --policy-name SunaDeploymentPolicy \
     --policy-document file://aws-iam-policy.json
 
 # Access Key 생성 (출력된 키를 GitHub Secrets에 저장)
-aws iam create-access-key --user-name github-actions-suna
+aws iam create-access-key --user-name aibee-abs
 ```
 
 ## 3. ECS 클러스터 및 서비스 생성
