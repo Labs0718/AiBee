@@ -7,7 +7,7 @@
 
 1. **IAM 사용자 생성**
    - AWS 콘솔 → IAM → Users → Create user
-   - 사용자 이름: `github-actions-suna`
+   - 사용자 이름: `aibee-abs`
    - Attach policies directly 선택
    - 정책: `AmazonEC2ContainerRegistryFullAccess`, `AmazonECS_FullAccess`
 
