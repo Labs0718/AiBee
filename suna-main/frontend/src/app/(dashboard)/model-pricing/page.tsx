@@ -418,14 +418,13 @@ export default function PricingPage() {
         <CardHeader>
           <CardTitle>Compute Pricing by Model</CardTitle>
           <CardDescription>
-            Detailed pricing information for available AI models. We apply a 50%
-            markup on direct LLM provider costs to maintain our service and
-            generate profit.
+            Detailed pricing information for available AI models. We apply a 20% markup on direct LLM provider costs to maintain our
+            service and generate profit.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="bg-card border border-border rounded-lg">
-            <div className="px-6 py-4 border-b border-border">
+          <div className="overflow-hidden rounded-lg border border-border">
+            <div className="px-6 py-4 border-b border-border bg-gray-50 dark:bg-gray-900/50">
               <div className="grid grid-cols-3 gap-4 text-sm font-medium text-muted-foreground">
                 <div className="col-span-1">Model</div>
                 <div className="col-span-1 text-center">Input Cost</div>
@@ -433,14 +432,22 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <div className="divide-y divide-border">
-              {models.map((model, index) => (
+            <div className="divide-y divide-border bg-white dark:bg-card">
+              {models.length === 0 ? (
+                <div className="px-6 py-8 text-center text-muted-foreground">
+                  <div className="space-y-2">
+                    <div>No pricing data available</div>
+                    <div className="text-xs">
+                      {loading ? 'Loading...' : error ? 'Error loading data' : 'Models may not have pricing information'}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                models.map((model, index) => (
                 <div
                   key={model.id}
-                  className={`px-6 py-4 hover:bg-muted/50 transition-colors duration-150 ${
-                    selectedModelId === model.id
-                      ? 'bg-blue-50 dark:bg-blue-950/20 border-l-4 border-l-blue-500'
-                      : ''
+                  className={`px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-900/30 transition-colors duration-150 ${
+                    index === 0 ? 'border-l-4 border-l-blue-500 bg-blue-50/30 dark:bg-blue-950/20' : ''
                   }`}
                 >
                   <div className="grid grid-cols-3 gap-4 items-center">
@@ -449,7 +456,7 @@ export default function PricingPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                         <div className="min-w-0">
-                          <div className="font-medium text-foreground truncate">
+                          <div className="font-medium text-foreground text-sm">
                             {model.display_name ?? model.id}
                           </div>
                         </div>
@@ -458,11 +465,11 @@ export default function PricingPage() {
 
                     {/* Input Cost */}
                     <div className="col-span-1 text-center">
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {model.input_cost_per_million_tokens !== null &&
                         model.input_cost_per_million_tokens !== undefined ? (
                           <>
-                            <div className="font-semibold text-foreground">
+                            <div className="font-semibold text-foreground text-sm">
                               ${model.input_cost_per_million_tokens.toFixed(2)}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -470,7 +477,7 @@ export default function PricingPage() {
                             </div>
                           </>
                         ) : (
-                          <div className="font-semibold text-muted-foreground">
+                          <div className="font-semibold text-muted-foreground text-sm">
                             —
                           </div>
                         )}
@@ -479,11 +486,11 @@ export default function PricingPage() {
 
                     {/* Output Cost */}
                     <div className="col-span-1 text-center">
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {model.output_cost_per_million_tokens !== null &&
                         model.output_cost_per_million_tokens !== undefined ? (
                           <>
-                            <div className="font-semibold text-foreground">
+                            <div className="font-semibold text-foreground text-sm">
                               ${model.output_cost_per_million_tokens.toFixed(2)}
                             </div>
                             <div className="text-xs text-muted-foreground">
@@ -491,7 +498,7 @@ export default function PricingPage() {
                             </div>
                           </>
                         ) : (
-                          <div className="font-semibold text-muted-foreground">
+                          <div className="font-semibold text-muted-foreground text-sm">
                             —
                           </div>
                         )}
@@ -499,7 +506,8 @@ export default function PricingPage() {
                     </div>
                   </div>
                 </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </CardContent>

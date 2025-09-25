@@ -1445,18 +1445,29 @@ async def get_available_models(
         if config.ENV_MODE == EnvMode.LOCAL:
             logger.info("Running in local development mode - billing checks are disabled")
             
-            # In local mode, return all models from MODEL_NAME_ALIASES
+            # In local mode, return all models from MODEL_NAME_ALIASES with pricing
             model_info = []
             for short_name, full_name in MODEL_NAME_ALIASES.items():
                 # Skip entries where the key is a full name to avoid duplicates
                 # if short_name == full_name or '/' in short_name:
                 #     continue
-                
+
+                # Get pricing information from HARDCODED_MODEL_PRICES
+                pricing = HARDCODED_MODEL_PRICES.get(full_name) or HARDCODED_MODEL_PRICES.get(short_name)
+                input_cost = None
+                output_cost = None
+
+                if pricing:
+                    input_cost = pricing.get("input_cost_per_million_tokens")
+                    output_cost = pricing.get("output_cost_per_million_tokens")
+
                 model_info.append({
                     "id": full_name,
                     "display_name": short_name,
                     "short_name": short_name,
-                    "requires_subscription": False  # Always false in local dev mode
+                    "requires_subscription": False,  # Always false in local dev mode
+                    "input_cost_per_million_tokens": input_cost,
+                    "output_cost_per_million_tokens": output_cost
                 })
             
             return {
