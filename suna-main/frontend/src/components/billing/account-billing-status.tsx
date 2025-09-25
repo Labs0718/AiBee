@@ -48,18 +48,63 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
     }
   };
 
-  // In local development mode, show a simplified component
+  // In local development mode, show usage statistics
   if (isLocalMode()) {
     return (
       <div className="rounded-xl border shadow-sm bg-card p-6">
-        <h2 className="text-xl font-semibold mb-4">Billing Status</h2>
-        <div className="p-4 mb-4 bg-muted/30 border border-border rounded-lg text-center">
-          <p className="text-sm text-muted-foreground">
-            Running in local development mode - billing features are disabled
+        <h2 className="text-xl font-semibold mb-4">Usage Statistics</h2>
+        <div className="p-4 mb-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+              Local Development Mode
+            </p>
+          </div>
+          <p className="text-xs text-blue-600 dark:text-blue-400">
+            Usage tracking is enabled. Billing limits are not enforced.
           </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            Agent usage limits are not enforced in this environment
-          </p>
+        </div>
+
+        <div className="space-y-4">
+          {/* Cost-based usage */}
+          <div className="rounded-lg border bg-background p-4">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm font-medium text-foreground/90">
+                API Usage This Month (Cost)
+              </span>
+              <span className="text-sm font-medium text-card-title">
+                ${subscriptionData?.current_usage?.toFixed(2) || '0.00'} / unlimited
+              </span>
+              <Button variant='outline' asChild className='text-sm'>
+                <Link href="/settings/usage-logs">
+                  Usage logs
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Request count */}
+          <div className="rounded-lg border bg-background p-4">
+            <div className="flex justify-between items-center gap-4">
+              <span className="text-sm font-medium text-foreground/90">
+                API Requests This Month (Count)
+              </span>
+              <span className="text-sm font-medium text-card-title">
+                {subscriptionData?.current_count || 0} / unlimited
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 space-y-3">
+          <Button
+            onClick={() => window.open('/model-pricing', '_blank')}
+            variant="outline"
+            className="w-full border-border hover:bg-muted/50 shadow-sm hover:shadow-md transition-all"
+          >
+            View Model Pricing
+          </Button>
         </div>
       </div>
     );
@@ -112,11 +157,12 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
 
       {subscriptionData ? (
         <>
-          <div className="mb-6">
+          <div className="mb-6 space-y-4">
+            {/* Cost-based usage */}
             <div className="rounded-lg border bg-background p-4">
               <div className="flex justify-between items-center gap-4">
                 <span className="text-sm font-medium text-foreground/90">
-                  Agent Usage This Month
+                  Agent Usage This Month (Cost)
                 </span>
                 <span className="text-sm font-medium text-card-title">
                   ${subscriptionData.current_usage?.toFixed(2) || '0'} /{' '}
@@ -129,6 +175,21 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
                 </Button>
               </div>
             </div>
+
+            {/* Count-based usage */}
+            {subscriptionData.count_limit && (
+              <div className="rounded-lg border bg-background p-4">
+                <div className="flex justify-between items-center gap-4">
+                  <span className="text-sm font-medium text-foreground/90">
+                    Agent Usage This Month (Count)
+                  </span>
+                  <span className="text-sm font-medium text-card-title">
+                    {subscriptionData.current_count || 0} /{' '}
+                    {subscriptionData.count_limit}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Plans Comparison */}
@@ -156,7 +217,7 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
       ) : (
         <>
           <div className="mb-6">
-            <div className="rounded-lg border bg-background p-4 gap-4">
+            <div className="rounded-lg border bg-background p-4 space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-foreground/90">
                   Current Plan
@@ -168,13 +229,26 @@ export default function AccountBillingStatus({ accountId, returnUrl }: Props) {
 
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-foreground/90">
-                  Agent Usage This Month
+                  Agent Usage This Month (Cost)
                 </span>
                 <span className="text-sm font-medium text-card-title">
                   ${subscriptionData?.current_usage?.toFixed(2) || '0'} /{' '}
                   ${subscriptionData?.cost_limit || '0'}
                 </span>
               </div>
+
+              {/* Count-based usage for free plan */}
+              {subscriptionData?.count_limit && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-foreground/90">
+                    Agent Usage This Month (Count)
+                  </span>
+                  <span className="text-sm font-medium text-card-title">
+                    {subscriptionData?.current_count || 0} /{' '}
+                    {subscriptionData?.count_limit}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 

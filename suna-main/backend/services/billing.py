@@ -155,6 +155,9 @@ class SubscriptionStatus(BaseModel):
     minutes_limit: Optional[int] = None
     cost_limit: Optional[float] = None
     current_usage: Optional[float] = None
+    # Count-based billing fields
+    count_limit: Optional[int] = None
+    current_count: Optional[int] = None
     # Fields for scheduled changes
     has_schedule: bool = False
     scheduled_plan_name: Optional[str] = None
@@ -328,35 +331,71 @@ async def calculate_monthly_usage(client, user_id: str) -> float:
         return result
 
     start_time = time.time()
-    
+
     # Use get_usage_logs to fetch all usage data (it already handles the date filtering and batching)
     total_cost = 0.0
     page = 0
     items_per_page = 1000
-    
+
     while True:
         # Get usage logs for this page
         usage_result = await get_usage_logs(client, user_id, page, items_per_page)
-        
+
         if not usage_result['logs']:
             break
-        
+
         # Sum up the estimated costs from this page
         for log_entry in usage_result['logs']:
             total_cost += log_entry['estimated_cost']
-        
+
         # If there are no more pages, break
         if not usage_result['has_more']:
             break
-            
+
         page += 1
-    
+
     end_time = time.time()
     execution_time = end_time - start_time
     logger.info(f"Calculate monthly usage took {execution_time:.3f} seconds, total cost: {total_cost}")
-    
+
     await Cache.set(f"monthly_usage:{user_id}", total_cost, ttl=2 * 60)
     return total_cost
+
+async def calculate_monthly_count(client, user_id: str) -> int:
+    """Calculate total API request count for the current month for a user."""
+    result = await Cache.get(f"monthly_count:{user_id}")
+    if result:
+        return result
+
+    start_time = time.time()
+
+    # Use get_usage_logs to fetch all usage data (it already handles the date filtering and batching)
+    total_count = 0
+    page = 0
+    items_per_page = 1000
+
+    while True:
+        # Get usage logs for this page
+        usage_result = await get_usage_logs(client, user_id, page, items_per_page)
+
+        if not usage_result['logs']:
+            break
+
+        # Count each API request (each log entry represents one request)
+        total_count += len(usage_result['logs'])
+
+        # If there are no more pages, break
+        if not usage_result['has_more']:
+            break
+
+        page += 1
+
+    end_time = time.time()
+    execution_time = end_time - start_time
+    logger.info(f"Calculate monthly count took {execution_time:.3f} seconds, total count: {total_count}")
+
+    await Cache.set(f"monthly_count:{user_id}", total_count, ttl=2 * 60)
+    return total_count
 
 
 async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: int = 1000) -> Dict:
@@ -1177,10 +1216,11 @@ async def get_subscription(
         subscription = await get_user_subscription(current_user_id)
         # print("Subscription data for status:", subscription)
         
-        # Calculate current usage
+        # Calculate current usage and count
         db = DBConnection()
         client = await db.client
         current_usage = await calculate_monthly_usage(client, current_user_id)
+        current_count = await calculate_monthly_count(client, current_user_id)
 
         if not subscription:
             # Default to free tier status if no active subscription for our product
@@ -1192,7 +1232,9 @@ async def get_subscription(
                 price_id=free_tier_id,
                 minutes_limit=free_tier_info.get('minutes') if free_tier_info else 0,
                 cost_limit=free_tier_info.get('cost') if free_tier_info else 0,
-                current_usage=current_usage
+                current_usage=current_usage,
+                count_limit=1000,  # Default count limit for free tier
+                current_count=current_count
             )
         
         # Extract current plan details
@@ -1204,6 +1246,18 @@ async def get_subscription(
             logger.warning(f"User {current_user_id} subscribed to unknown price {current_price_id}. Defaulting info.")
             current_tier_info = {'name': 'unknown', 'minutes': 0}
         
+        # Determine count limit based on tier (you can customize these values)
+        tier_count_limits = {
+            'free': 1000,
+            'tier_2_20': 5000,
+            'tier_6_50': 15000,
+            'tier_12_100': 30000,
+            'tier_25_200': 60000,
+            'tier_50_400': 120000,
+            'tier_125_800': 300000,
+            'tier_200_1000': 500000,
+        }
+
         status_response = SubscriptionStatus(
             status=subscription['status'], # 'active', 'trialing', etc.
             plan_name=subscription['plan'].get('nickname') or current_tier_info['name'],
@@ -1214,6 +1268,8 @@ async def get_subscription(
             minutes_limit=current_tier_info['minutes'],
             cost_limit=current_tier_info['cost'],
             current_usage=current_usage,
+            count_limit=tier_count_limits.get(current_tier_info['name'], 1000),
+            current_count=current_count,
             has_schedule=False, # Default
             subscription_id=subscription['id'],
             subscription={
@@ -1569,15 +1625,6 @@ async def get_usage_logs_endpoint(
         # Get Supabase client
         db = DBConnection()
         client = await db.client
-        
-        # Check if we're in local development mode
-        if config.ENV_MODE == EnvMode.LOCAL:
-            logger.info("Running in local development mode - usage logs are not available")
-            return {
-                "logs": [], 
-                "has_more": False,
-                "message": "Usage logs are not available in local development mode"
-            }
         
         # Validate pagination parameters
         if page < 0:

@@ -1588,6 +1588,9 @@ export interface SubscriptionStatus {
   minutes_limit?: number;
   cost_limit?: number;
   current_usage?: number;
+  // Count-based billing fields
+  count_limit?: number;
+  current_count?: number;
   // Fields for scheduled changes
   has_schedule?: boolean;
   scheduled_plan_name?: string;
