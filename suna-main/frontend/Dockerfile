@@ -62,7 +62,7 @@ ENV KORTIX_ADMIN_API_KEY=$KORTIX_ADMIN_API_KEY
 # Debug: Print environment variables
 RUN echo "=== DEBUG: Environment Variables ===" && \
     echo "NEXT_PUBLIC_SUPABASE_URL: $NEXT_PUBLIC_SUPABASE_URL" && \
-    echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:0:20}..." && \
+    echo "NEXT_PUBLIC_SUPABASE_ANON_KEY: [API KEY SET]" && \
     echo "===================================="
 
 COPY --from=deps /app/node_modules ./node_modules
