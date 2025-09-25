@@ -38,24 +38,6 @@
           "value": "http://localhost:3000"
         }
       ],
-      "secrets": [
-        {
-          "name": "SUPABASE_SERVICE_ROLE_KEY",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/supabase/service-role-key"
-        },
-        {
-          "name": "OPENAI_API_KEY",
-          "valueFrom": "arn:aws:ssm:ap-northeast-2:265766434511:parameter/suna/openai/api-key"
-        }
-      ],
-      "logConfiguration": {
-        "logDriver": "awslogs",
-        "options": {
-          "awslogs-group": "/ecs/suna-frontend",
-          "awslogs-region": "ap-northeast-2",
-          "awslogs-stream-prefix": "ecs"
-        }
-      },
       "healthCheck": {
         "command": ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"],
         "interval": 30,
