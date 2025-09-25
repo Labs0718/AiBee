@@ -1,11 +1,11 @@
 name: Deploy SUNA to AWS
 
-  on:
+on:
     push:
       branches: [ main ]
     workflow_dispatch: # 수동 실행 가능
 
-  env:
+env:
     AWS_REGION: ap-northeast-2
     ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com        
     ECS_CLUSTER: aibee-cluster
@@ -13,7 +13,7 @@ name: Deploy SUNA to AWS
     ECS_SERVICE_FRONTEND: suna-frontend-service
     ECS_SERVICE_WORKER: suna-worker-service
 
-  jobs:
+jobs:
     build-and-deploy:
       name: Build and Deploy
       runs-on: ubuntu-latest
