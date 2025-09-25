@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { useUsageLogs } from '@/hooks/react-query/subscriptions/use-billing';
 import { UsageLogEntry } from '@/lib/api';
+import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 
 
 
@@ -50,11 +51,35 @@ export default function UsageLogs({ accountId }: Props) {
   const [page, setPage] = useState(0);
   const [allLogs, setAllLogs] = useState<UsageLogEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  
+  const [userNames, setUserNames] = useState<Record<string, string>>({});
+
   const ITEMS_PER_PAGE = 1000;
+
+  // Get current user profile to check admin status
+  const { data: currentUserProfile } = useUserProfile();
+  const isAdmin = currentUserProfile?.user_role === 'admin' || currentUserProfile?.user_role === 'operator';
 
   // Use React Query hook for the current page
   const { data: currentPageData, isLoading, error, refetch } = useUsageLogs(page, ITEMS_PER_PAGE);
+
+  // Function to fetch user names for admin view
+  const fetchUserNames = async (accountIds: string[]) => {
+    if (!isAdmin || accountIds.length === 0) return;
+
+    try {
+      // Create a simple mapping for now - in a real app, you'd call an API
+      const newUserNames: Record<string, string> = {};
+      for (const accountId of accountIds) {
+        if (!userNames[accountId]) {
+          // For now, just display the account ID - you can enhance this to fetch actual names
+          newUserNames[accountId] = `User ${accountId.slice(0, 8)}`;
+        }
+      }
+      setUserNames(prev => ({ ...prev, ...newUserNames }));
+    } catch (error) {
+      console.warn('Failed to fetch user names:', error);
+    }
+  };
 
   // Update accumulated logs when new data arrives
   useEffect(() => {
@@ -67,8 +92,18 @@ export default function UsageLogs({ accountId }: Props) {
         setAllLogs(prev => [...prev, ...(currentPageData.logs || [])]);
       }
       setHasMore(currentPageData.has_more || false);
+
+      // Fetch user names for admin users if account_ids are present
+      if (isAdmin && currentPageData.logs) {
+        const accountIds = currentPageData.logs
+          .map(log => log.account_id)
+          .filter((id): id is string => !!id);
+        if (accountIds.length > 0) {
+          fetchUserNames([...new Set(accountIds)]); // Remove duplicates
+        }
+      }
     }
-  }, [currentPageData, page]);
+  }, [currentPageData, page, isAdmin]);
 
   const loadMore = () => {
     const nextPage = page + 1;
@@ -208,7 +243,10 @@ export default function UsageLogs({ accountId }: Props) {
           <CardTitle>Daily Usage Logs</CardTitle>
           <CardDescription>
             <div className='flex justify-between items-center'>
-              Your token usage organized by day, sorted by most recent.{" "}
+              {isAdmin
+                ? "All users' token usage organized by day, sorted by most recent."
+                : "Your token usage organized by day, sorted by most recent."
+              }{" "}
               <Button variant='outline' asChild className='text-sm ml-4'>
                 <Link href="/model-pricing">
                   View Model Pricing <OpenInNewWindowIcon className='w-4 h-4' />
@@ -255,6 +293,7 @@ export default function UsageLogs({ accountId }: Props) {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Time</TableHead>
+                              {isAdmin && <TableHead>User</TableHead>}
                               <TableHead>Model</TableHead>
                               <TableHead className="text-right">
                                 Tokens
@@ -273,6 +312,13 @@ export default function UsageLogs({ accountId }: Props) {
                                     log.created_at,
                                   ).toLocaleTimeString()}
                                 </TableCell>
+                                {isAdmin && (
+                                  <TableCell className="text-sm">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {log.account_id ? userNames[log.account_id] || `User ${log.account_id.slice(0, 8)}` : 'Unknown'}
+                                    </Badge>
+                                  </TableCell>
+                                )}
                                 <TableCell>
                                   <Badge className="font-mono text-xs">
                                     {log.content.model}

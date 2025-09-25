@@ -339,7 +339,7 @@ async def calculate_monthly_usage(client, user_id: str) -> float:
 
     while True:
         # Get usage logs for this page
-        usage_result = await get_usage_logs(client, user_id, page, items_per_page)
+        usage_result = await get_usage_logs(client, user_id, page, items_per_page, False)
 
         if not usage_result['logs']:
             break
@@ -376,7 +376,7 @@ async def calculate_monthly_count(client, user_id: str) -> int:
 
     while True:
         # Get usage logs for this page
-        usage_result = await get_usage_logs(client, user_id, page, items_per_page)
+        usage_result = await get_usage_logs(client, user_id, page, items_per_page, False)
 
         if not usage_result['logs']:
             break
@@ -398,40 +398,49 @@ async def calculate_monthly_count(client, user_id: str) -> int:
     return total_count
 
 
-async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: int = 1000) -> Dict:
+async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: int = 1000, is_admin: bool = False) -> Dict:
     """Get detailed usage logs for a user with pagination."""
     # Get start of current month in UTC
     now = datetime.now(timezone.utc)
     start_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
-    
+
     # Use fixed cutoff date: June 26, 2025 midnight UTC
     # Ignore all token counts before this date
     cutoff_date = datetime(2025, 6, 30, 9, 0, 0, tzinfo=timezone.utc)
-    
+
     start_of_month = max(start_of_month, cutoff_date)
-    
-    # First get all threads for this user in batches
+
+    # First get threads based on user role
     batch_size = 1000
     offset = 0
     all_threads = []
-    
+
     while True:
-        threads_batch = await client.table('threads') \
-            .select('thread_id, agent_runs(thread_id)') \
-            .eq('account_id', user_id) \
-            .gte('agent_runs.created_at', start_of_month.isoformat()) \
-            .range(offset, offset + batch_size - 1) \
-            .execute()
-        
+        if is_admin:
+            # Admin can see all threads
+            threads_batch = await client.table('threads') \
+                .select('thread_id, account_id, agent_runs(thread_id)') \
+                .gte('agent_runs.created_at', start_of_month.isoformat()) \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+        else:
+            # Regular user can only see their own threads
+            threads_batch = await client.table('threads') \
+                .select('thread_id, agent_runs(thread_id)') \
+                .eq('account_id', user_id) \
+                .gte('agent_runs.created_at', start_of_month.isoformat()) \
+                .range(offset, offset + batch_size - 1) \
+                .execute()
+
         if not threads_batch.data:
             break
-            
+
         all_threads.extend(threads_batch.data)
-        
+
         # If we got less than batch_size, we've reached the end
         if len(threads_batch.data) < batch_size:
             break
-            
+
         offset += batch_size
     
     if not all_threads:
@@ -441,16 +450,30 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
     
     # Fetch usage messages with pagination, including thread project info
     start_time = time.time()
-    messages_result = await client.table('messages') \
-        .select(
-            'message_id, thread_id, created_at, content, threads!inner(project_id)'
-        ) \
-        .in_('thread_id', thread_ids) \
-        .eq('type', 'assistant_response_end') \
-        .gte('created_at', start_of_month.isoformat()) \
-        .order('created_at', desc=True) \
-        .range(page * items_per_page, (page + 1) * items_per_page - 1) \
-        .execute()
+    if is_admin:
+        # For admin, include account_id to show which user's log this is
+        messages_result = await client.table('messages') \
+            .select(
+                'message_id, thread_id, created_at, content, threads!inner(project_id, account_id)'
+            ) \
+            .in_('thread_id', thread_ids) \
+            .eq('type', 'assistant_response_end') \
+            .gte('created_at', start_of_month.isoformat()) \
+            .order('created_at', desc=True) \
+            .range(page * items_per_page, (page + 1) * items_per_page - 1) \
+            .execute()
+    else:
+        # For regular users, no need for account_id
+        messages_result = await client.table('messages') \
+            .select(
+                'message_id, thread_id, created_at, content, threads!inner(project_id)'
+            ) \
+            .in_('thread_id', thread_ids) \
+            .eq('type', 'assistant_response_end') \
+            .gte('created_at', start_of_month.isoformat()) \
+            .order('created_at', desc=True) \
+            .range(page * items_per_page, (page + 1) * items_per_page - 1) \
+            .execute()
     
     end_time = time.time()
     execution_time = end_time - start_time
@@ -483,12 +506,14 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
                 model
             )
             
-            # Safely extract project_id from threads relationship
+            # Safely extract project_id and account_id from threads relationship
             project_id = 'unknown'
+            account_id = None
             if message.get('threads') and isinstance(message['threads'], list) and len(message['threads']) > 0:
                 project_id = message['threads'][0].get('project_id', 'unknown')
+                account_id = message['threads'][0].get('account_id')
             
-            processed_logs.append({
+            log_entry = {
                 'message_id': message.get('message_id', 'unknown'),
                 'thread_id': message.get('thread_id', 'unknown'),
                 'created_at': message.get('created_at', None),
@@ -502,7 +527,13 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
                 'total_tokens': total_tokens,
                 'estimated_cost': estimated_cost,
                 'project_id': project_id
-            })
+            }
+
+            # Add account_id for admin users to identify which user the log belongs to
+            if is_admin and account_id:
+                log_entry['account_id'] = account_id
+
+            processed_logs.append(log_entry)
         except Exception as e:
             logger.warning(f"Error processing usage log entry for message {message.get('message_id', 'unknown')}: {str(e)}")
             continue
@@ -1636,16 +1667,26 @@ async def get_usage_logs_endpoint(
         # Get Supabase client
         db = DBConnection()
         client = await db.client
-        
+
         # Validate pagination parameters
         if page < 0:
             raise HTTPException(status_code=400, detail="Page must be non-negative")
         if items_per_page < 1 or items_per_page > 1000:
             raise HTTPException(status_code=400, detail="Items per page must be between 1 and 1000")
-        
+
+        # Check if current user is admin/operator
+        is_admin = False
+        try:
+            current_user_result = await client.schema('basejump').from_('accounts').select('user_role').eq('primary_owner_user_id', current_user_id).execute()
+            current_user_role = current_user_result.data[0]['user_role'] if current_user_result.data else 'user'
+            is_admin = current_user_role in ['admin', 'operator']
+        except Exception as e:
+            logger.warning(f"Failed to get user role for {current_user_id}: {str(e)}")
+            is_admin = False
+
         # Get usage logs
-        result = await get_usage_logs(client, current_user_id, page, items_per_page)
-        
+        result = await get_usage_logs(client, current_user_id, page, items_per_page, is_admin)
+
         return result
         
     except HTTPException:
