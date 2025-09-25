@@ -1,0 +1,53 @@
+{
+  "family": "suna-worker-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::AWS_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::AWS_ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "suna-worker",
+      "image": "AWS_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/suna-backend:latest",
+      "essential": true,
+      "command": ["uv", "run", "dramatiq", "--skip-logging", "--processes", "4", "--threads", "4", "run_agent_background"],
+      "environment": [
+        {
+          "name": "ENV_MODE",
+          "value": "production"
+        },
+        {
+          "name": "REDIS_HOST",
+          "value": "REDIS_ENDPOINT_REPLACE_ME"
+        },
+        {
+          "name": "REDIS_PORT",
+          "value": "6379"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "SUPABASE_URL",
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/supabase/url"
+        },
+        {
+          "name": "SUPABASE_SERVICE_ROLE_KEY",
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/supabase/service-role-key"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:ssm:ap-northeast-2:AWS_ACCOUNT_ID:parameter/suna/openai/api-key"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/suna-worker",
+          "awslogs-region": "ap-northeast-2",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}
