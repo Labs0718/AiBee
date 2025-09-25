@@ -5,7 +5,6 @@
   "cpu": "2048",
   "memory": "4096",
   "executionRoleArn": "arn:aws:iam::265766434511:role/ecsTaskExecutionRole",
-  "taskRoleArn": "arn:aws:iam::265766434511:role/ecsTaskRole",
   "containerDefinitions": [
     {
       "name": "suna-backend",
