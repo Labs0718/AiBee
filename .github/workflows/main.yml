@@ -81,8 +81,20 @@ jobs:
           GROUPWARE_ENCRYPTION_KEY: B4k3R6lpR_4wYSRRQRLLtRalF4-RtIW_URBq8W5l6tk=
         run: |
           cd suna-main/backend
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker build \
+            --build-arg ENV_MODE=local \
+            --build-arg SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \
+            --build-arg SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA \
+            --build-arg SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA \
+            --build-arg REDIS_HOST=${{ secrets.REDIS_HOST }} \
+            --build-arg REDIS_PORT=6379 \
+            --build-arg OPENAI_API_KEY=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 \
+            --build-arg ANTHROPIC_API_KEY=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 \
+            --build-arg MODEL_TO_USE=ollama/deepseek-r1:32b \
+            --build-arg OLLAMA_HOST=http://host.docker.internal:11435 \
+            --build-arg KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
@@ -136,8 +148,19 @@ jobs:
           REDIS_PORT: 6379
         run: |
           cd suna-main/frontend
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker build \
+            --build-arg NEXT_PUBLIC_ENV_MODE=local \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA \
+            --build-arg NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api \
+            --build-arg NEXT_PUBLIC_URL=http://localhost:3000 \
+            --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID="" \
+            --build-arg NEXT_PUBLIC_POSTHOG_KEY="" \
+            --build-arg SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA \
+            --build-arg OPENAI_API_KEY=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 \
+            --build-arg KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
