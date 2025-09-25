@@ -29,6 +29,18 @@
         {
           "name": "REDIS_PORT",
           "value": "6379"
+        },
+        {
+          "name": "OLLAMA_HOST",
+          "value": "OLLAMA_SERVER_IP_REPLACE_ME:11435"
+        },
+        {
+          "name": "EMBEDDING_MODEL",
+          "value": "bge-large"
+        },
+        {
+          "name": "MODEL_TO_USE",
+          "value": "ollama/deepseek-r1:32b"
         }
       ],
       "secrets": [
