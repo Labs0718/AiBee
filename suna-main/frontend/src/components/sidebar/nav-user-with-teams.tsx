@@ -326,13 +326,15 @@ export function NavUserWithTeams({
                   </Link>
                 </DropdownMenuItem>
 
-                {/* Billing */}
-                <DropdownMenuItem asChild>
-                  <Link href={activeTeam.personal_account ? "/settings/billing" : `/${activeTeam.slug}/settings/billing`}>
-                    <CreditCard className="h-4 w-4" />
-                    Billing
-                  </Link>
-                </DropdownMenuItem>
+                {/* Billing - 관리자만 접근 가능 */}
+                {!profileLoading && userProfile && (userProfile.user_role === 'admin' || userProfile.user_role === 'operator') && (
+                  <DropdownMenuItem asChild>
+                    <Link href={activeTeam.personal_account ? "/settings/billing" : `/${activeTeam.slug}/settings/billing`}>
+                      <CreditCard className="h-4 w-4" />
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                )}
 
                 {/* 관리자 메뉴 - operator, admin 권한만 접근 가능 */}
                 {!profileLoading && userProfile && (userProfile.user_role === 'admin' || userProfile.user_role === 'operator') && (
