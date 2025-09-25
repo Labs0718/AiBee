@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
-  ECS_CLUSTER: suna-cluster
+  ECS_CLUSTER: aibee-cluster
   ECS_SERVICE_BACKEND: suna-backend-service
   ECS_SERVICE_FRONTEND: suna-frontend-service
   ECS_SERVICE_WORKER: suna-worker-service

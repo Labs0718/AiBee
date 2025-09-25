@@ -88,7 +88,7 @@ aws elasticache create-cache-cluster \
 
 ### B. ECS 클러스터 생성
 ```bash
-aws ecs create-cluster --cluster-name suna-cluster --capacity-providers FARGATE --region ap-northeast-2
+aws ecs create-cluster --cluster-name aibee-cluster --capacity-providers FARGATE --region ap-northeast-2
 ```
 
 ### C. 로그 그룹 생성

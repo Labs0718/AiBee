@@ -27,7 +27,7 @@ aws iam create-access-key --user-name aibee-abs
 ## 3. ECS 클러스터 및 서비스 생성
 ```bash
 # 클러스터 생성
-aws ecs create-cluster --cluster-name suna-cluster --capacity-providers FARGATE
+aws ecs create-cluster --cluster-name aibee-cluster --capacity-providers FARGATE
 
 # VPC 및 서브넷 정보 확인 (기본 VPC 사용)
 aws ec2 describe-vpcs --filters "Name=is-default,Values=true"
