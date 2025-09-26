@@ -98,8 +98,8 @@ services:
         - KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend/.env.local:/app/.env.local:ro
+    env_file:
+      - ./frontend/.env.local
     depends_on:
       - backend
 

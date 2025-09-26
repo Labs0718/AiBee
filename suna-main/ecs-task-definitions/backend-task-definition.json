@@ -23,7 +23,7 @@
         },
         {
           "name": "REDIS_HOST",
-          "value": "REDIS_ENDPOINT_REPLACE_ME"
+          "value": "suna-redis-rti2u9.serverless.apn2.cache.amazonaws.com"
         },
         {
           "name": "REDIS_PORT",
@@ -31,7 +31,7 @@
         },
         {
           "name": "OLLAMA_HOST",
-          "value": "OLLAMA_SERVER_IP_REPLACE_ME:11435"
+          "value": "http://localhost:11435"
         },
         {
           "name": "EMBEDDING_MODEL",
