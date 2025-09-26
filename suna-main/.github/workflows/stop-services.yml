@@ -1,0 +1,59 @@
+겨name: Stop ECS Services
+
+# on:
+#   workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECS_CLUSTER: aibee-cluster
+  ECS_SERVICE_BACKEND: suna-backend-service
+  ECS_SERVICE_FRONTEND: suna-frontend-service
+  ECS_SERVICE_WORKER: suna-worker-service
+
+jobs:
+  stop-services:
+    name: Stop ECS Services
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Stop Backend Service
+      run: |
+        echo "Stopping ${{ env.ECS_SERVICE_BACKEND }}..."
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE_BACKEND }} \
+          --desired-count 0
+        echo "Backend service stopped"
+
+    - name: Stop Frontend Service
+      run: |
+        echo "Stopping ${{ env.ECS_SERVICE_FRONTEND }}..."
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE_FRONTEND }} \
+          --desired-count 0
+        echo "Frontend service stopped"
+
+    - name: Stop Worker Service
+      run: |
+        echo "Stopping ${{ env.ECS_SERVICE_WORKER }}..."
+        aws ecs update-service \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --service ${{ env.ECS_SERVICE_WORKER }} \
+          --desired-count 0
+        echo "Worker service stopped"
+
+    - name: Wait for services to stop
+      run: |
+        echo "Waiting for services to stop completely..."
+        aws ecs wait services-stable \
+          --cluster ${{ env.ECS_CLUSTER }} \
+          --services ${{ env.ECS_SERVICE_BACKEND }} ${{ env.ECS_SERVICE_FRONTEND }} ${{ env.ECS_SERVICE_WORKER }}
+        echo "All services stopped successfully!"
