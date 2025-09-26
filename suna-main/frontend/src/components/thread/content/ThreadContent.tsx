@@ -713,6 +713,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 분석 보고서 생성')[0].trim();
                                                 }
 
+                                                if (fullContent.includes('# 회의록 자동 생성기')) {
+                                                    return fullContent.split('# 회의록 자동 생성기')[0].trim();
+                                                }
+
                                                 if (fullContent.includes('# MCP 자동화 작업 가이드')) {
                                                     return fullContent.split('# MCP 자동화 작업 가이드')[0].trim();
                                                 }

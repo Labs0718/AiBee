@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Read(//c/Users/jjuun/Pictures/Screenshots/**)"
+      "Read(//c/Users/jjuun/Pictures/Screenshots/**)",
+      "Bash(timeout 30 docker-compose logs -f backend)",
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(timeout 10 docker-compose logs -f backend)",
+      "Bash(timeout 15 docker-compose logs -f backend)"
     ],
     "deny": [],
     "ask": []

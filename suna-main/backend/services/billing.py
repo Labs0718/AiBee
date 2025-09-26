@@ -450,69 +450,82 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
     
     # Fetch usage messages with pagination, including thread project info
     start_time = time.time()
-    if is_admin:
-        # For admin, include account_id to show which user's log this is
-        messages_result = await client.table('messages') \
-            .select(
-                'message_id, thread_id, created_at, content, threads!inner(project_id, account_id)'
-            ) \
-            .in_('thread_id', thread_ids) \
-            .eq('type', 'assistant_response_end') \
-            .gte('created_at', start_of_month.isoformat()) \
-            .order('created_at', desc=True) \
-            .range(page * items_per_page, (page + 1) * items_per_page - 1) \
-            .execute()
-    else:
-        # For regular users, no need for account_id
-        messages_result = await client.table('messages') \
-            .select(
-                'message_id, thread_id, created_at, content, threads!inner(project_id)'
-            ) \
-            .in_('thread_id', thread_ids) \
-            .eq('type', 'assistant_response_end') \
-            .gte('created_at', start_of_month.isoformat()) \
-            .order('created_at', desc=True) \
-            .range(page * items_per_page, (page + 1) * items_per_page - 1) \
-            .execute()
+    # Always include account_id for user information display
+    messages_result = await client.table('messages') \
+        .select(
+            'message_id, thread_id, created_at, content, threads!inner(project_id, account_id)'
+        ) \
+        .in_('thread_id', thread_ids) \
+        .eq('type', 'assistant_response_end') \
+        .gte('created_at', start_of_month.isoformat()) \
+        .order('created_at', desc=True) \
+        .range(page * items_per_page, (page + 1) * items_per_page - 1) \
+        .execute()
     
     end_time = time.time()
     execution_time = end_time - start_time
     logger.info(f"Database query for usage logs took {execution_time:.3f} seconds")
 
+    logger.info(f"Messages result data length: {len(messages_result.data) if messages_result.data else 0}")
     if not messages_result.data:
+        logger.info("No messages found, returning empty logs")
         return {"logs": [], "has_more": False}
 
     # Process messages into usage log entries
     processed_logs = []
-    
+
+    # Fetch all users info once to create a lookup map
+    user_info_map = {}
+    logger.info("Fetching all users for lookup")
+    try:
+        user_info_result = await client.auth.admin.list_users()
+        logger.info(f"Retrieved {len(user_info_result.users) if user_info_result and user_info_result.users else 0} users from auth table")
+        if user_info_result and user_info_result.users:
+            for user in user_info_result.users:
+                user_info_map[user.id] = {
+                    'email': user.email or 'No email',
+                    'name': user.user_metadata.get('name') or user.user_metadata.get('full_name') or user.email or 'Unknown User'
+                }
+        logger.info(f"Created user lookup map with {len(user_info_map)} users")
+    except Exception as e:
+        logger.warning(f"Failed to fetch user information: {str(e)}")
+
     for message in messages_result.data:
         try:
             # Safely extract usage data with defaults
             content = message.get('content', {})
             usage = content.get('usage', {})
-            
+
             # Ensure usage has required fields with safe defaults
             prompt_tokens = usage.get('prompt_tokens', 0)
             completion_tokens = usage.get('completion_tokens', 0)
             model = content.get('model', 'unknown')
-            
+
             # Safely calculate total tokens
             total_tokens = (prompt_tokens or 0) + (completion_tokens or 0)
-            
+
             # Calculate estimated cost using the same logic as calculate_monthly_usage
             estimated_cost = calculate_token_cost(
                 prompt_tokens,
                 completion_tokens,
                 model
             )
-            
+
             # Safely extract project_id and account_id from threads relationship
             project_id = 'unknown'
             account_id = None
-            if message.get('threads') and isinstance(message['threads'], list) and len(message['threads']) > 0:
-                project_id = message['threads'][0].get('project_id', 'unknown')
-                account_id = message['threads'][0].get('account_id')
-            
+            threads_data = message.get('threads')
+
+            if threads_data:
+                if isinstance(threads_data, list) and len(threads_data) > 0:
+                    project_id = threads_data[0].get('project_id', 'unknown')
+                    account_id = threads_data[0].get('account_id')
+                elif isinstance(threads_data, dict):
+                    project_id = threads_data.get('project_id', 'unknown')
+                    account_id = threads_data.get('account_id')
+
+            logger.info(f"Extracted for message {message.get('message_id', 'unknown')}: project_id={project_id}, account_id={account_id}")
+
             log_entry = {
                 'message_id': message.get('message_id', 'unknown'),
                 'thread_id': message.get('thread_id', 'unknown'),
@@ -529,9 +542,13 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
                 'project_id': project_id
             }
 
-            # Add account_id for admin users to identify which user the log belongs to
-            if is_admin and account_id:
+            # Add account_id and user info (for both admin and regular users)
+            if account_id:
                 log_entry['account_id'] = account_id
+                user_info = user_info_map.get(account_id)
+                if user_info:
+                    log_entry['user_email'] = user_info['email']
+                    log_entry['user_name'] = user_info['name']
 
             processed_logs.append(log_entry)
         except Exception as e:
@@ -1680,6 +1697,7 @@ async def get_usage_logs_endpoint(
             current_user_result = await client.schema('basejump').from_('accounts').select('user_role').eq('primary_owner_user_id', current_user_id).execute()
             current_user_role = current_user_result.data[0]['user_role'] if current_user_result.data else 'user'
             is_admin = current_user_role in ['admin', 'operator']
+            logger.info(f"User {current_user_id} role check: {current_user_role}, is_admin: {is_admin}")
         except Exception as e:
             logger.warning(f"Failed to get user role for {current_user_id}: {str(e)}")
             is_admin = False

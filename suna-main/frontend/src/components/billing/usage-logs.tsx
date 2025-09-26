@@ -64,8 +64,6 @@ export default function UsageLogs({ accountId }: Props) {
   const [page, setPage] = useState(0);
   const [allLogs, setAllLogs] = useState<UsageLogEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
-  const [userNames, setUserNames] = useState<Record<string, string>>({});
-
   const ITEMS_PER_PAGE = 1000;
 
   // Get current user profile to check admin status
@@ -74,25 +72,6 @@ export default function UsageLogs({ accountId }: Props) {
 
   // Use React Query hook for the current page
   const { data: currentPageData, isLoading, error, refetch } = useUsageLogs(page, ITEMS_PER_PAGE);
-
-  // Function to fetch user names for admin view
-  const fetchUserNames = async (accountIds: string[]) => {
-    if (!isAdmin || accountIds.length === 0) return;
-
-    try {
-      // Create a simple mapping for now - in a real app, you'd call an API
-      const newUserNames: Record<string, string> = {};
-      for (const accountId of accountIds) {
-        if (!userNames[accountId]) {
-          // For now, just display the account ID - you can enhance this to fetch actual names
-          newUserNames[accountId] = `User ${accountId.slice(0, 8)}`;
-        }
-      }
-      setUserNames(prev => ({ ...prev, ...newUserNames }));
-    } catch (error) {
-      console.warn('Failed to fetch user names:', error);
-    }
-  };
 
   // Update accumulated logs when new data arrives
   useEffect(() => {
@@ -105,18 +84,8 @@ export default function UsageLogs({ accountId }: Props) {
         setAllLogs(prev => [...prev, ...(currentPageData.logs || [])]);
       }
       setHasMore(currentPageData.has_more || false);
-
-      // Fetch user names for admin users if account_ids are present
-      if (isAdmin && currentPageData.logs) {
-        const accountIds = currentPageData.logs
-          .map(log => log.account_id)
-          .filter((id): id is string => !!id);
-        if (accountIds.length > 0) {
-          fetchUserNames([...new Set(accountIds)]); // Remove duplicates
-        }
-      }
     }
-  }, [currentPageData, page, isAdmin]);
+  }, [currentPageData, page]);
 
   const loadMore = () => {
     const nextPage = page + 1;
@@ -414,7 +383,7 @@ export default function UsageLogs({ accountId }: Props) {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Time</TableHead>
-                              {isAdmin && <TableHead>User</TableHead>}
+                              <TableHead>User</TableHead>
                               <TableHead>Model</TableHead>
                               <TableHead className="text-right">
                                 Tokens
@@ -433,16 +402,14 @@ export default function UsageLogs({ accountId }: Props) {
                                     log.created_at,
                                   ).toLocaleTimeString()}
                                 </TableCell>
-                                {isAdmin && (
-                                  <TableCell className="text-sm">
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
-                                    >
-                                      {log.account_id ? userNames[log.account_id] || `User ${log.account_id.slice(0, 8)}` : '익명 사용자'}
-                                    </Badge>
-                                  </TableCell>
-                                )}
+                                <TableCell className="text-sm">
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
+                                  >
+                                    {log.user_name || log.user_email || (log.account_id ? `User ${log.account_id.slice(0, 8)}` : '익명 사용자')}
+                                  </Badge>
+                                </TableCell>
                                 <TableCell>
                                   <Badge
                                     variant="outline"
