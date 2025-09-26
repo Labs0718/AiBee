@@ -40,7 +40,7 @@ jobs:
         ECR_REPOSITORY: suna-backend
         IMAGE_TAG: ${{ github.sha }}
         # All backend environment variables hardcoded
-        ENV_MODE: local
+        ENV_MODE: production
         SUPABASE_URL: https://oupvawyejyteixggrfat.supabase.co
         SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA
         SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA
@@ -54,7 +54,7 @@ jobs:
         MORPH_API_KEY: ""
         GEMINI_API_KEY: ""
         MODEL_TO_USE: ollama/deepseek-r1:32b
-        OLLAMA_HOST: http://host.docker.internal:11435
+        OLLAMA_HOST: http://172.31.4.124:11435
         TAVILY_API_KEY: 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
         FIRECRAWL_API_KEY: fc-fbfc7efc40174069b30cde0fb5e84da3
         FIRECRAWL_URL: https://api.firecrawl.dev
@@ -82,7 +82,7 @@ jobs:
       run: |
         cd backend
         docker build \
-          --build-arg ENV_MODE=local \
+          --build-arg ENV_MODE=production \
           --build-arg SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \
           --build-arg SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA \
           --build-arg SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA \
@@ -91,7 +91,7 @@ jobs:
           --build-arg OPENAI_API_KEY=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 \
           --build-arg ANTHROPIC_API_KEY=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 \
           --build-arg MODEL_TO_USE=ollama/deepseek-r1:32b \
-          --build-arg OLLAMA_HOST=http://host.docker.internal:11435 \
+          --build-arg OLLAMA_HOST=http://172.31.4.124:11435 \
           --build-arg KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
@@ -106,10 +106,10 @@ jobs:
         ECR_REPOSITORY: suna-frontend
         IMAGE_TAG: ${{ github.sha }}
         # All environment variables hardcoded
-        NEXT_PUBLIC_ENV_MODE: local
+        NEXT_PUBLIC_ENV_MODE: production
         NEXT_PUBLIC_SUPABASE_URL: https://oupvawyejyteixggrfat.supabase.co
         NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA
-        NEXT_PUBLIC_BACKEND_URL: http://localhost:8000/api
+        NEXT_PUBLIC_BACKEND_URL: http://suna-backend-service.aibee-cluster:8000/api
         NEXT_PUBLIC_URL: http://localhost:3000
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ""
         NEXT_PUBLIC_POSTHOG_KEY: ""
@@ -121,7 +121,7 @@ jobs:
         MORPH_API_KEY: ""
         GEMINI_API_KEY: ""
         MODEL_TO_USE: ollama/deepseek-r1:32b
-        OLLAMA_HOST: http://host.docker.internal:11435
+        OLLAMA_HOST: http://172.31.4.124:11435
         TAVILY_API_KEY: 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
         FIRECRAWL_API_KEY: fc-fbfc7efc40174069b30cde0fb5e84da3
         FIRECRAWL_URL: https://api.firecrawl.dev
@@ -149,11 +149,11 @@ jobs:
       run: |
         cd frontend
         docker build \
-          --build-arg NEXT_PUBLIC_ENV_MODE=local \
+          --build-arg NEXT_PUBLIC_ENV_MODE=production \
           --build-arg NEXT_PUBLIC_SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co \
           --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA \
-          --build-arg NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api \
-          --build-arg NEXT_PUBLIC_URL=http://localhost:3000 \
+          --build-arg NEXT_PUBLIC_BACKEND_URL=http://suna-backend-service.aibee-cluster:8000/api \
+          --build-arg NEXT_PUBLIC_URL=https://suna.so \
           --build-arg NEXT_PUBLIC_GOOGLE_CLIENT_ID="" \
           --build-arg NEXT_PUBLIC_POSTHOG_KEY="" \
           --build-arg SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA \
@@ -173,19 +173,20 @@ jobs:
 
     - name: Update backend task definition
       id: backend-task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@v2
       with:
         task-definition: backend-task-definition.json
         container-name: suna-backend
         image: ${{ steps.build-backend.outputs.image }}
 
     - name: Deploy backend to Amazon ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.backend-task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE_BACKEND }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
+        wait-for-service-stability-timeout: 40m
 
     - name: Download task definition for worker
       run: |
@@ -195,19 +196,20 @@ jobs:
 
     - name: Update worker task definition
       id: worker-task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@v2
       with:
         task-definition: worker-task-definition.json
         container-name: suna-worker
         image: ${{ steps.build-backend.outputs.image }}
 
     - name: Deploy worker to Amazon ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.worker-task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE_WORKER }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
+        wait-for-service-stability-timeout: 40m
 
     - name: Download task definition for frontend
       run: |
@@ -217,19 +219,20 @@ jobs:
 
     - name: Update frontend task definition
       id: frontend-task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      uses: aws-actions/amazon-ecs-render-task-definition@v2
       with:
         task-definition: frontend-task-definition.json
         container-name: suna-frontend
         image: ${{ steps.build-frontend.outputs.image }}
 
     - name: Deploy frontend to Amazon ECS
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
         task-definition: ${{ steps.frontend-task-def.outputs.task-definition }}
         service: ${{ env.ECS_SERVICE_FRONTEND }}
         cluster: ${{ env.ECS_CLUSTER }}
         wait-for-service-stability: true
+        wait-for-service-stability-timeout: 40m
 
     - name: Deployment Success Notification
       run: |

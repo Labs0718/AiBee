@@ -43,17 +43,12 @@ export async function GET(
     let isAdmin = false;
     let userDepartment = null;
 
-    // accounts 테이블에서 사용자 정보 조회 (백엔드 로그에서 확인한 구조)
+    // basejump.accounts 스키마에서 사용자 정보 조회 (백엔드와 동일한 구조)
     const { data: accountProfile, error: accountError } = await supabase
+      .schema('basejump')
       .from('accounts')
-      .select(`
-        id,
-        user_role,
-        display_name,
-        department_id,
-        departments!accounts_department_id_fkey(name, display_name)
-      `)
-      .eq('id', user.id)
+      .select('id, user_role, display_name, department_id, name')
+      .eq('primary_owner_user_id', user.id)
       .single();
 
     if (accountError) {

@@ -1,0 +1,104 @@
+name: Deploy SUNA to EC2
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Deploy to EC2
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_PRIVATE_KEY }}
+        port: ${{ secrets.EC2_PORT || 22 }}
+        script: |
+          echo "🚀 Starting SUNA deployment..."
+
+          # 프로젝트 디렉토리로 이동 (없으면 생성)
+          cd /home/ubuntu || cd /home/ec2-user
+
+          # 기존 프로젝트가 있으면 업데이트, 없으면 클론
+          if [ -d "suna-main" ]; then
+            echo "📦 Updating existing repository..."
+            cd suna-main
+            git fetch origin
+            git reset --hard origin/main
+          else
+            echo "📥 Cloning repository..."
+            git clone -b main https://github.com/yourusername/suna-main.git
+            cd suna-main
+          fi
+
+          # 환경 변수 파일 생성
+          echo "⚙️ Setting up environment files..."
+
+          # Backend .env 생성
+          cat > backend/.env << EOF
+          ENV_MODE=production
+          SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co
+          SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA
+          REDIS_HOST=redis
+          REDIS_PORT=6379
+          REDIS_PASSWORD=
+          REDIS_SSL=False
+          OPENAI_API_KEY=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
+          ANTHROPIC_API_KEY=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
+          MODEL_TO_USE=ollama/deepseek-r1:32b
+          OLLAMA_HOST=http://172.31.4.124:11435
+          KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a
+          WEBHOOK_BASE_URL=https://suna.so
+          TRIGGER_WEBHOOK_SECRET=d522ced715bbec24eda5ad1c6971ec383ee1a6780aefe122144e421d297905de
+          MCP_CREDENTIAL_ENCRYPTION_KEY=Wrb0dxo0VG2t4AdXKolo9osrRurtlnYOpgm5MkPUPgE=
+          DAYTONA_API_KEY=dtn_a89150f22c3a2b0fbb9e61ef02761899c36f1ef2798091a4c7511d932f14d2b7
+          DAYTONA_SERVER_URL=https://app.daytona.io/api
+          DAYTONA_TARGET=us
+          COMPOSIO_API_KEY=ak_ljggW_Xz4K806q8q4JZ-
+          GROUPWARE_ENCRYPTION_KEY=B4k3R6lpR_4wYSRRQRLLtRalF4-RtIW_URBq8W5l6tk=
+          EOF
+
+          # Frontend .env 생성
+          cat > frontend/.env.local << EOF
+          NEXT_PUBLIC_ENV_MODE=production
+          NEXT_PUBLIC_SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA
+          NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
+          NEXT_PUBLIC_URL=https://suna.so
+          SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTA2Mzk1NSwiZXhwIjoyMDcwNjM5OTU1fQ.7KhANy2DpIDk61a7Osl630tuR_yrMG3hlhQW-vg_1YA
+          EOF
+
+          # Docker Compose로 배포
+          echo "🐳 Building and starting containers..."
+          cd backend
+
+          # 기존 컨테이너 중지 및 제거
+          docker-compose down || true
+
+          # 새로운 이미지 빌드 및 시작
+          docker-compose up -d --build
+
+          # 컨테이너 상태 확인
+          echo "📊 Container status:"
+          docker-compose ps
+
+          # 로그 확인
+          echo "📝 Recent logs:"
+          docker-compose logs --tail=50
+
+          echo "✅ SUNA deployment completed!"
+          echo "🌐 API should be available at: http://13.223.234.139:8000"
+
+    - name: Deployment Success Notification
+      run: |
+        echo "🎉 SUNA EC2 배포 완료!"
+        echo "서버가 정상적으로 시작되었는지 확인하세요."
