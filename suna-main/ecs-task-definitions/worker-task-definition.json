@@ -26,7 +26,7 @@
         },
         {
           "name": "OLLAMA_HOST",
-          "value": "OLLAMA_SERVER_IP_REPLACE_ME:11435"
+          "value": "http://172.31.4.124:11435"
         },
         {
           "name": "EMBEDDING_MODEL",
