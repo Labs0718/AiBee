@@ -89,6 +89,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_ENV_MODE=LOCAL
+        - NEXT_PUBLIC_SUPABASE_URL=https://oupvawyejyteixggrfat.supabase.co
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91cHZhd3llanl0ZWl4Z2dyZmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUwNjM5NTUsImV4cCI6MjA3MDYzOTk1NX0.0B1PlWkBFW-QFVk2yVtMVyyWbXYWUeO8a48FDZvcFdA
+        - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
+        - NEXT_PUBLIC_URL=http://localhost:3000
+        - KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a
     ports:
       - "3000:3000"
     volumes:
