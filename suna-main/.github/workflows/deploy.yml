@@ -2,7 +2,7 @@ name: Deploy SUNA to AWS
 
 on:
   push:
-    branches: [ main ]
+    branches: [ develop ]
   workflow_dispatch: # 수동 실행 가능
 
 env:
