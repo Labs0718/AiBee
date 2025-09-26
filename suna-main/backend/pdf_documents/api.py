@@ -94,10 +94,10 @@ async def upload_pdf(
         processor = OllamaEmbeddingProcessor()
         import asyncio
         
-        async def process_and_complete(doc_id, path):
+        async def process_and_complete(doc_id, path, file_name):
             """임베딩 처리 후 자동으로 completed 상태로 변경"""
             try:
-                result = await processor.process_document(doc_id, path)
+                result = await processor.process_document(doc_id, path, file_name)
                 print(f"임베딩 처리 결과: {result}")
                 
                 # 처리 완료되었는데 상태가 processing이면 completed로 변경
@@ -133,7 +133,7 @@ async def upload_pdf(
                 except Exception as update_error:
                     print(f"상태 업데이트 실패: {update_error}")
         
-        asyncio.create_task(process_and_complete(documentId, storage_path))
+        asyncio.create_task(process_and_complete(documentId, storage_path, fileName))
         
         # 성공 응답
         return {
@@ -218,7 +218,7 @@ async def process_embeddings(
         
         # 문서 정보 조회
         document_response = await client.table('pdf_documents').select(
-            'id, storage_path, file_uploaded'
+            'id, storage_path, file_uploaded, file_name'
         ).eq('id', document_id).eq('account_id', user_id).is_('deleted_at', 'null').execute()
         
         if not document_response.data:
@@ -239,7 +239,7 @@ async def process_embeddings(
         
         # 백그라운드에서 임베딩 처리
         import asyncio
-        asyncio.create_task(processor.process_document(document_id, document['storage_path']))
+        asyncio.create_task(processor.process_document(document_id, document['storage_path'], document['file_name']))
         
         return {
             "success": True,
