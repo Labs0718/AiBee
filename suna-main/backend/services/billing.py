@@ -474,17 +474,43 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
     # Process messages into usage log entries
     processed_logs = []
 
-    # Fetch all users info once to create a lookup map
+    # Fetch all users info and profiles once to create a lookup map
     user_info_map = {}
-    logger.info("Fetching all users for lookup")
+    logger.info("Fetching all users and profiles for lookup")
     try:
+        # Get auth users
         user_info_result = await client.auth.admin.list_users()
-        logger.info(f"Retrieved {len(user_info_result.users) if user_info_result and user_info_result.users else 0} users from auth table")
-        if user_info_result and user_info_result.users:
-            for user in user_info_result.users:
+        logger.info(f"Retrieved {len(user_info_result) if user_info_result else 0} users from auth table")
+
+        # Get user profiles with department info (join with departments table)
+        profiles_result = await client.table('user_profiles').select(
+            'id, name, email, department_id, departments(id, display_name)'
+        ).execute()
+        logger.info(f"Retrieved {len(profiles_result.data) if profiles_result.data else 0} profiles from user_profiles table")
+
+        # Create profiles lookup
+        profiles_map = {}
+        if profiles_result.data:
+            for profile in profiles_result.data:
+                # Extract department display_name from joined data
+                department_display_name = None
+                if profile.get('departments'):
+                    department_display_name = profile['departments'].get('display_name')
+
+                profiles_map[profile['id']] = {
+                    **profile,
+                    'department_display_name': department_display_name
+                }
+
+        # Combine auth and profile data
+        if user_info_result:
+            for user in user_info_result:
+                profile = profiles_map.get(user.id, {})
                 user_info_map[user.id] = {
-                    'email': user.email or 'No email',
-                    'name': user.user_metadata.get('name') or user.user_metadata.get('full_name') or user.email or 'Unknown User'
+                    'email': user.email or profile.get('email') or 'No email',
+                    'name': profile.get('name') or user.user_metadata.get('name') or user.user_metadata.get('full_name') or user.email or 'Unknown User',
+                    'department_name': profile.get('department_display_name'),
+                    'department_id': profile.get('department_id')
                 }
         logger.info(f"Created user lookup map with {len(user_info_map)} users")
     except Exception as e:
@@ -549,6 +575,8 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
                 if user_info:
                     log_entry['user_email'] = user_info['email']
                     log_entry['user_name'] = user_info['name']
+                    log_entry['department_name'] = user_info['department_name']
+                    log_entry['department_id'] = user_info['department_id']
 
             processed_logs.append(log_entry)
         except Exception as e:
