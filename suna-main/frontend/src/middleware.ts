@@ -35,17 +35,24 @@ export async function middleware(request: NextRequest) {
 
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/agents', '/projects', '/settings', '/invitation']
+  const protectedApiRoutes = ['/api/pdf-documents']
   const authRoutes = ['/auth', '/login', '/signup']
-  
-  const isProtectedRoute = protectedRoutes.some(route => 
+
+  const isProtectedRoute = protectedRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
-  const isAuthRoute = authRoutes.some(route => 
+  const isProtectedApiRoute = protectedApiRoutes.some(route =>
+    request.nextUrl.pathname.startsWith(route)
+  )
+  const isAuthRoute = authRoutes.some(route =>
     request.nextUrl.pathname.startsWith(route)
   )
 
   // Redirect unauthenticated users from protected routes
-  if (isProtectedRoute && !user) {
+  if ((isProtectedRoute || isProtectedApiRoute) && !user) {
+    if (isProtectedApiRoute) {
+      return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
+    }
     const redirectUrl = new URL('/auth', request.url)
     redirectUrl.searchParams.set('returnUrl', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
