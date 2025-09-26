@@ -6,7 +6,9 @@
       "Bash(docker-compose restart:*)",
       "Bash(docker-compose logs:*)",
       "Bash(timeout 10 docker-compose logs -f backend)",
-      "Bash(timeout 15 docker-compose logs -f backend)"
+      "Bash(timeout 15 docker-compose logs -f backend)",
+      "Bash(python:*)",
+      "Bash(docker-compose:*)"
     ],
     "deny": [],
     "ask": []

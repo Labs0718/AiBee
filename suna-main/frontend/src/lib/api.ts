@@ -1676,6 +1676,8 @@ export interface UsageLogEntry {
   account_id?: string; // Optional field for admin view
   user_email?: string; // Optional user email for admin view
   user_name?: string; // Optional user name for admin view
+  department_name?: string; // Optional department name for admin/user view
+  department_id?: string; // Optional department ID for admin/user view
 }
 
 // Usage logs response interface
