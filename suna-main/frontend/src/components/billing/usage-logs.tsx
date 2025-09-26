@@ -31,6 +31,19 @@ import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { useUsageLogs } from '@/hooks/react-query/subscriptions/use-billing';
 import { UsageLogEntry } from '@/lib/api';
 import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
+} from 'recharts';
 
 
 
@@ -237,6 +250,114 @@ export default function UsageLogs({ accountId }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Daily Usage Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle>일별 사용량 추이</CardTitle>
+          <CardDescription>
+            최근 사용량 변화를 한눈에 확인하세요
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {dailyUsage.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">차트를 표시할 데이터가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="h-80 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={[...dailyUsage].reverse()}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorTokens" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="colorCost" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis
+                    dataKey="date"
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+                    }}
+                    className="text-sm"
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    className="text-sm"
+                    tickFormatter={(value) => `${(value / 1000).toFixed(1)}K`}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    className="text-sm"
+                    tickFormatter={(value) => `$${value.toFixed(2)}`}
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-background border rounded-lg shadow-lg p-3">
+                            <p className="font-medium mb-2">
+                              {new Date(label).toLocaleDateString('ko-KR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'long'
+                              })}
+                            </p>
+                            <div className="space-y-1 text-sm">
+                              <p className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                                토큰: {data.totalTokens.toLocaleString()}개
+                              </p>
+                              <p className="flex items-center gap-2">
+                                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                                비용: {formatCost(data.totalCost)}
+                              </p>
+                              <p className="text-muted-foreground">
+                                요청 수: {data.requestCount}회
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="totalTokens"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    fillOpacity={0.6}
+                    fill="url(#colorTokens)"
+                  />
+                  <Area
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="totalCost"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                    fillOpacity={0.4}
+                    fill="url(#colorCost)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Usage Logs Accordion */}
       <Card>
         <CardHeader>
@@ -314,20 +435,33 @@ export default function UsageLogs({ accountId }: Props) {
                                 </TableCell>
                                 {isAdmin && (
                                   <TableCell className="text-sm">
-                                    <Badge variant="secondary" className="text-xs">
-                                      {log.account_id ? userNames[log.account_id] || `User ${log.account_id.slice(0, 8)}` : 'Unknown'}
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800"
+                                    >
+                                      {log.account_id ? userNames[log.account_id] || `User ${log.account_id.slice(0, 8)}` : '익명 사용자'}
                                     </Badge>
                                   </TableCell>
                                 )}
                                 <TableCell>
-                                  <Badge className="font-mono text-xs">
-                                    {log.content.model}
+                                  <Badge
+                                    variant="outline"
+                                    className="font-mono text-xs bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950
+                                               text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700
+                                               hover:from-purple-100 hover:to-indigo-100 dark:hover:from-purple-900 dark:hover:to-indigo-900"
+                                  >
+                                    {log.content.model.replace('claude-sonnet-4-', 'Claude Sonnet 4 ')}
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="text-right font-mono font-medium text-sm">
-                                  {log.content.usage.prompt_tokens.toLocaleString()}{' '}
-                                  -&gt;{' '}
-                                  {log.content.usage.completion_tokens.toLocaleString()}
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-green-600 dark:text-green-400 text-xs">
+                                      ↗ {log.content.usage.prompt_tokens.toLocaleString()} 입력
+                                    </span>
+                                    <span className="text-blue-600 dark:text-blue-400 text-xs">
+                                      ↙ {log.content.usage.completion_tokens.toLocaleString()} 출력
+                                    </span>
+                                  </div>
                                 </TableCell>
                                 <TableCell className="text-right font-mono font-medium text-sm">
                                   {formatCost(log.estimated_cost)}
