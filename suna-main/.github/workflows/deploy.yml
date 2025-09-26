@@ -1,9 +1,10 @@
 name: Deploy SUNA to AWS
 
-on:
-  push:
-    branches: [ develop ]
-  workflow_dispatch: # 수동 실행 가능
+# ECS 배포 비활성화 - EC2 배포 사용
+# on:
+#   push:
+#     branches: [ develop ]
+#   workflow_dispatch: # 수동 실행 가능
 
 env:
   AWS_REGION: ap-northeast-2
