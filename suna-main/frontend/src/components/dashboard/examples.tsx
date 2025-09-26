@@ -153,8 +153,8 @@ const allPrompts: PromptExample[] = [
 ## 필수 실행 순서 (반드시 순서대로 진행)
 
 ** STEP 1: 내부 문서 검색 (절대 필수 - 첫 번째 도구 호출)**
-🛑 경고: web_search가 아닌 search_internal_documents 도구만 사용하세요! 🛑
-🚫 web_search 도구는 절대 먼저 사용하지 마세요! 🚫
+ 경고: web_search가 아닌 search_internal_documents 도구만 사용하세요! 
+ web_search 도구는 절대 먼저 사용하지 마세요! 
 
 반드시 search_internal_documents 도구를 첫 번째로 호출하여:
 
@@ -169,7 +169,7 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
 - 검색이 실패한 경우: "내부 문서에서 관련 자료를 찾을 수 없습니다."
 
 ** STEP 2: 웹 검색 (두 번째 단계 - search_internal_documents 완료 후에만!)**
-⚠️ 중요: search_internal_documents 도구 사용과 결과 보고가 완전히 완료된 후에만 web_search 도구 사용 허용 ⚠️
+ 중요: search_internal_documents 도구 사용과 결과 보고가 완전히 완료된 후에만 web_search 도구 사용 허용 
 
 web_search 도구로 실시간 상황 분석:
 - 해당 지역 실시간 뉴스 및 SNS 반응 조사
@@ -468,12 +468,12 @@ web_search 도구로 실시간 상황 분석:
 
 
 {
-    title: '계약서 검토',
+    title: '계약 조항 분석기',
     category: 'ai-analysis',
     query: `검토할 계약서를 첨부하거나 내용을 입력하세요 :
 
   [예시]
-    - 공급계약서 검토하고 불리한 조항과 개선사항 정리해줘
+    - 내가 첨부한 공급계약서 검토하고 불리한 조항과 개선사항 정리해줘
 
 `,
     hiddenPrompt: `
