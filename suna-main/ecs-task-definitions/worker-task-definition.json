@@ -18,7 +18,7 @@
         },
         {
           "name": "REDIS_HOST",
-          "value": "REDIS_ENDPOINT_REPLACE_ME"
+          "value": "suna-redis-rti2u9.serverless.apn2.cache.amazonaws.com"
         },
         {
           "name": "REDIS_PORT",

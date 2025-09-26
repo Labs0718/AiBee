@@ -468,7 +468,7 @@ web_search 도구로 실시간 상황 분석:
 
 
 {
-    title: '계약 조항 분석기',
+    title: '계약 조항 분석 시스템',
     category: 'ai-analysis',
     query: `검토할 계약서를 첨부하거나 내용을 입력하세요 :
 
@@ -583,8 +583,8 @@ search_internal_documents 완료 후에만 진행!
 ## 필수 실행 순서 (반드시 순서대로 진행)
 
 ** STEP 1: 내부 문서 검색 (절대 필수 - 첫 번째 도구 호출)**
-🛑 경고: web_search가 아닌 search_internal_documents 도구만 사용하세요! 🛑
-🚫 web_search 도구는 절대 먼저 사용하지 마세요! 🚫
+ 경고: web_search가 아닌 search_internal_documents 도구만 사용하세요!
+ web_search 도구는 절대 먼저 사용하지 마세요! 
 
 반드시 search_internal_documents 도구를 첫 번째로 호출하여:
 
