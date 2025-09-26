@@ -384,6 +384,7 @@ export default function UsageLogs({ accountId }: Props) {
                             <TableRow>
                               <TableHead>Time</TableHead>
                               <TableHead>User</TableHead>
+                              <TableHead>Department</TableHead>
                               <TableHead>Model</TableHead>
                               <TableHead className="text-right">
                                 Tokens
@@ -409,6 +410,18 @@ export default function UsageLogs({ accountId }: Props) {
                                   >
                                     {log.user_name || log.user_email || (log.account_id ? `User ${log.account_id.slice(0, 8)}` : '익명 사용자')}
                                   </Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {log.department_name ? (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-orange-600 dark:text-orange-400 border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-orange-800"
+                                    >
+                                      {log.department_name}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">-</span>
+                                  )}
                                 </TableCell>
                                 <TableCell>
                                   <Badge
