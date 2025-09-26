@@ -50,8 +50,8 @@ echo "Ollama 서버 시작 대기 중..."
 sleep 30
 
 # 임베딩 모델 다운로드
-echo "bge-large 모델 다운로드 중..."
-docker exec ollama-server ollama pull bge-large
+echo "bge-m3 모델 다운로드 중..."
+docker exec ollama-server ollama pull bge-m3
 
 echo "nomic-embed-text 모델 다운로드 중 (백업)..."
 docker exec ollama-server ollama pull nomic-embed-text
@@ -80,7 +80,7 @@ else
     echo "$(date): Ollama 서버 오류 - 재시작 시도"
     docker restart ollama-server
     sleep 60
-    docker exec ollama-server ollama pull bge-large
+    docker exec ollama-server ollama pull bge-m3
 fi
 EOF
 

@@ -26,7 +26,7 @@ RecursiveCharacterTextSplitter(
 # Ollama API 호출
 POST http://localhost:11435/api/embeddings
 {
-    "model": "bge-large",
+    "model": "bge-m3",
     "prompt": chunk_text
 }
 # 결과: 1024차원 float 벡터
@@ -148,7 +148,7 @@ final_score = (
 graph TD
     A[PDF 업로드] --> B[텍스트 추출]
     B --> C[청킹 1200자/200자겹침]
-    C --> D[임베딩 생성 bge-large]
+    C --> D[임베딩 생성 bge-m3]
     D --> E[PostgreSQL+pgvector 저장]
 
     F[검색 쿼리] --> G[쿼리 임베딩 생성]
@@ -163,7 +163,7 @@ graph TD
 ## 4. 시스템 특징 및 장점
 
 ### 4.1 기술 스택
-- **임베딩 모델**: Ollama bge-large (1024차원)
+- **임베딩 모델**: Ollama bge-m3 (1024차원)
 - **벡터 DB**: PostgreSQL + pgvector
 - **청킹**: LangChain RecursiveCharacterTextSplitter
 - **키워드 검색**: BM25 알고리즘
