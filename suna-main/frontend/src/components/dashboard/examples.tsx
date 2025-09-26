@@ -28,6 +28,7 @@ import {
   MessageSquare,
   HelpCircle,
   Sheet,
+  FolderSearch2
 } from 'lucide-react';
 
 type PromptExample = {
@@ -762,6 +763,38 @@ search_internal_documents 도구 사용 후 반드시 결과를 명확히 보고
     icon: <HelpCircle className="text-purple-600 dark:text-purple-400" size={16} />,
   },
 
+
+
+
+{
+    title: '내부 문서 검색',
+    category: 'ai-analysis',
+    query: `원하는 내부 문서 내용을 입력해주세요:
+`,
+    hiddenPrompt: `
+# 내부 문서 검색
+
+You are a helpful assistant that uses internal documentation to answer user questions in Korean. You are provided with up to 5 document chunks retrieved from a vector store. These chunks may come from the same document and be split due to chunking, so you must reason across multiple chunks as a single document when needed.
+
+Your task is to:
+- For the first sentence, write “Hello.”
+- You must indicate which document you referenced.
+- You must use the search_internal_documents tool.
+- Analyze the retrieved document chunks as a whole.
+- Understand and reconstruct the original meaning when multiple chunks are from the same document.
+- Identify relevant and accurate information that addresses the user's question.
+- If the documents contain partially related content, synthesize them carefully to avoid contradiction or confusion.
+- Do not make up information not supported by the retrieved documents.
+- Always respond in fluent and professional Korean.
+- Use Markdown headings, bullet points, code blocks, or tables if it helps improve clarity.
+- If none of the documents provide sufficient information, clearly state that the answer is not available in the internal documentation.
+
+Format:
+- First, answer the user's question clearly in Korean.
+- Optionally, include a short explanation in Korean of where the information came from (if useful or if clarification is needed).
+`,
+    icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
+  },
 ];
 
 

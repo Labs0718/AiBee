@@ -16,10 +16,13 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 # -------------------- 로그 설정 --------------------
-LOG_FILE = os.path.join(os.path.dirname(__file__), "embedding_processor.log")
+LOG_FILE = "/app/logs/embedding_processor.log"
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
-logger = logging.getLogger(__name__)
+# 모듈/기능 전용 로거 이름을 지정
+logger = logging.getLogger("embedding_processor")
 logger.setLevel(logging.DEBUG)
+logger.propagate = False  # 루트 로거로 전달 차단 (중복 출력 방지)
 
 formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
@@ -29,14 +32,21 @@ console_handler.setLevel(logging.DEBUG)
 console_handler.setFormatter(formatter)
 
 # 파일 회전 핸들러 (자정마다 새 파일 생성, 7일 보관)
-file_handler = TimedRotatingFileHandler(LOG_FILE, when="midnight", interval=1, backupCount=7, encoding="utf-8")
+file_handler = TimedRotatingFileHandler(
+    LOG_FILE, when="midnight", interval=1, backupCount=7, encoding="utf-8"
+)
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(formatter)
 
-# 핸들러 등록
+# >>> 핸들러 등록을 반드시 해줘야 함 <<<
 if not logger.handlers:
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
+
+# 테스트 로그
+logger.debug("=== 파일 로그 테스트 (DEBUG) ===")
+logger.info("=== 파일 로그 테스트 (INFO) ===")
+
 # ---------------------------------------------------
 
 # Ollama API 설정 (로컬 환경 우선)
@@ -136,7 +146,7 @@ class OllamaEmbeddingProcessor:
             # 3. 텍스트를 청크로 분할
             chunks = self.text_splitter.split_text(text)
             logger.info(f"텍스트 분할 완료: {len(chunks)}개 청크")
-            chunks = [f"{file_name.replace('.pdf', '')}\n\n{chunk}" for chunk in chunks]
+            chunks = [f"{file_name.replace('.pdf', '')}{idx+1}\n\n{chunk}" for idx, chunk in enumerate(chunks)]
             
             # 4. 기존 임베딩 삭제
             delete_result = self.supabase.table('pdf_embeddings').delete().eq('document_id', document_id).execute()
@@ -270,6 +280,7 @@ class OllamaEmbeddingProcessor:
             # 4. 최종 결과 반환
             final_results = combined_results[:match_count]
             logger.info(f"최종 반환: {len(final_results)}개")
+            logger.info(f"{final_results}")
 
             return final_results
 
