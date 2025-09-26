@@ -55,7 +55,7 @@ jobs:
           OPENAI_API_KEY=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
           ANTHROPIC_API_KEY=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
           MODEL_TO_USE=ollama/deepseek-r1:32b
-          OLLAMA_HOST=http://172.31.4.124:11435
+          OLLAMA_HOST=http://localhost:11435
           KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a
           WEBHOOK_BASE_URL=https://suna.so
           TRIGGER_WEBHOOK_SECRET=d522ced715bbec24eda5ad1c6971ec383ee1a6780aefe122144e421d297905de

@@ -76,7 +76,7 @@ export async function GET(
       userProfile = accountProfile;
       isAdmin = accountProfile.user_role === 'admin' || accountProfile.user_role === 'operator';
       // departments 조인으로 부서명 가져오기
-      userDepartment = accountProfile.departments?.[0]?.display_name || accountProfile.departments?.[0]?.name;
+      userDepartment = accountProfile.display_name || accountProfile.name;
     }
 
     // 디버깅 로그
