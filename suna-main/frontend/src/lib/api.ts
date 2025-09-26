@@ -1674,6 +1674,8 @@ export interface UsageLogEntry {
   estimated_cost: number;
   project_id: string;
   account_id?: string; // Optional field for admin view
+  user_email?: string; // Optional user email for admin view
+  user_name?: string; // Optional user name for admin view
 }
 
 // Usage logs response interface
