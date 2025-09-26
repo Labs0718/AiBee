@@ -1,0 +1,131 @@
+name: Create Ollama EC2 Server
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  create-ollama-server:
+    name: Create Ollama Server
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Create Key Pair
+      run: |
+        echo "Creating SSH key pair..."
+        aws ec2 create-key-pair \
+          --key-name ollama-server-key \
+          --query "KeyMaterial" \
+          --output text > ollama-server-key.pem
+        chmod 400 ollama-server-key.pem
+        echo "✅ SSH key pair created: ollama-server-key"
+
+    - name: Create Security Group
+      run: |
+        echo "Creating security group..."
+        SECURITY_GROUP_ID=$(aws ec2 create-security-group \
+          --group-name ollama-server-sg \
+          --description "Security group for Ollama server" \
+          --vpc-id vpc-0617e35fc5b50324f \
+          --query "GroupId" --output text)
+
+        echo "Security Group ID: $SECURITY_GROUP_ID"
+        echo "SECURITY_GROUP_ID=$SECURITY_GROUP_ID" >> $GITHUB_ENV
+
+        # Allow SSH access
+        aws ec2 authorize-security-group-ingress \
+          --group-id $SECURITY_GROUP_ID \
+          --protocol tcp \
+          --port 22 \
+          --cidr 0.0.0.0/0
+
+        # Allow Ollama port
+        aws ec2 authorize-security-group-ingress \
+          --group-id $SECURITY_GROUP_ID \
+          --protocol tcp \
+          --port 11435 \
+          --cidr 10.0.0.0/16
+
+        echo "✅ Security group created and configured"
+
+    - name: Launch EC2 Instance
+      run: |
+        echo "Launching t3.2xlarge EC2 instance..."
+
+        # User data script for Ollama installation
+        cat > user-data.sh << 'EOF'
+        #!/bin/bash
+        yum update -y
+        yum install -y docker
+        systemctl start docker
+        systemctl enable docker
+        usermod -a -G docker ec2-user
+
+        # Install Ollama
+        curl -fsSL https://ollama.ai/install.sh | sh
+
+        # Start Ollama service
+        systemctl start ollama
+        systemctl enable ollama
+
+        # Pull bge-m3 embedding model
+        ollama pull bge-m3
+
+        # Configure Ollama to listen on all interfaces
+        echo 'OLLAMA_HOST=0.0.0.0:11435' >> /etc/environment
+        systemctl restart ollama
+
+        echo "Ollama server setup completed!"
+        EOF
+
+        INSTANCE_ID=$(aws ec2 run-instances \
+          --image-id ami-0c2d3e23e757b5d84 \
+          --instance-type t3.2xlarge \
+          --key-name ollama-server-key \
+          --security-group-ids $SECURITY_GROUP_ID \
+          --subnet-id subnet-0c7060adf8916ded0 \
+          --user-data file://user-data.sh \
+          --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Ollama-Server}]' \
+          --query "Instances[0].InstanceId" \
+          --output text)
+
+        echo "Instance ID: $INSTANCE_ID"
+        echo "INSTANCE_ID=$INSTANCE_ID" >> $GITHUB_ENV
+
+        echo "✅ EC2 instance launched: $INSTANCE_ID"
+
+    - name: Wait for Instance to be Ready
+      run: |
+        echo "Waiting for instance to be running..."
+        aws ec2 wait instance-running --instance-ids $INSTANCE_ID
+
+        # Get instance details
+        PRIVATE_IP=$(aws ec2 describe-instances \
+          --instance-ids $INSTANCE_ID \
+          --query "Reservations[0].Instances[0].PrivateIpAddress" \
+          --output text)
+
+        PUBLIC_IP=$(aws ec2 describe-instances \
+          --instance-ids $INSTANCE_ID \
+          --query "Reservations[0].Instances[0].PublicIpAddress" \
+          --output text)
+
+        echo "✅ Instance is ready!"
+        echo "Instance ID: $INSTANCE_ID"
+        echo "Private IP: $PRIVATE_IP"
+        echo "Public IP: $PUBLIC_IP"
+        echo ""
+        echo "🔧 Update your ECS task definitions with:"
+        echo "OLLAMA_HOST=http://$PRIVATE_IP:11435"
+        echo ""
+        echo "⏰ Ollama installation may take 5-10 minutes to complete."
+        echo "💰 Monthly cost: ~$288 for t3.2xlarge"
