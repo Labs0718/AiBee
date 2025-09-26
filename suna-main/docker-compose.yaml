@@ -89,10 +89,21 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_ENV_MODE=${NEXT_PUBLIC_ENV_MODE}
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+        - NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+        - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY}
+        - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+        - OPENAI_API_KEY=${OPENAI_API_KEY}
+        - KORTIX_ADMIN_API_KEY=${KORTIX_ADMIN_API_KEY}
     ports:
       - "3000:3000"
-    volumes:
-      - ./frontend/.env.local:/app/.env.local:ro
+    env_file:
+      - ./frontend/.env.local
     depends_on:
       - backend
 
