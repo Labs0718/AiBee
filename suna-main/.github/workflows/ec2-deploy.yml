@@ -96,7 +96,7 @@ jobs:
           docker-compose logs --tail=50
 
           echo "✅ SUNA deployment completed!"
-          echo "🌐 API should be available at: http://13.223.234.139:8000"
+          echo "🌐 API should be available at: http://13.223.234.139"
 
     - name: Deployment Success Notification
       run: |
