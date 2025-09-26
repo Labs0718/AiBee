@@ -1,9 +1,10 @@
 name: Deploy SUNA to EC2
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+# 윈도우 로컬 배포로 전환 - 비활성화
+# on:
+#   push:
+#     branches: [ main ]
+#   workflow_dispatch:
 
 jobs:
   deploy:
