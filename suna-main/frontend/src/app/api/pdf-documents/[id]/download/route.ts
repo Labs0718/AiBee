@@ -75,8 +75,17 @@ export async function GET(
     } else {
       userProfile = accountProfile;
       isAdmin = accountProfile.user_role === 'admin' || accountProfile.user_role === 'operator';
-      // departments 조인으로 부서명 가져오기
-      userDepartment = accountProfile.display_name || accountProfile.name;
+
+      // 부서 정보 별도 쿼리로 가져오기
+      if (accountProfile.department_id) {
+        const { data: deptData } = await supabase
+          .from('departments')
+          .select('name, display_name')
+          .eq('id', accountProfile.department_id)
+          .single();
+
+        userDepartment = deptData?.display_name || deptData?.name || null;
+      }
     }
 
     // 디버깅 로그
