@@ -23,25 +23,25 @@
 #         key: ${{ secrets.EC2_PRIVATE_KEY }}
 #         port: ${{ secrets.EC2_PORT || 22 }}
 #         script: |
-#           echo "🚀 Starting SUNA deployment..."
+#           echo " Starting SUNA deployment..."
 
 #           # 프로젝트 디렉토리로 이동 (없으면 생성)
 #           cd /home/ubuntu || cd /home/ec2-user
 
 #           # 기존 프로젝트가 있으면 업데이트, 없으면 클론
 #           if [ -d "suna-main" ]; then
-#             echo "📦 Updating existing repository..."
+#             echo " Updating existing repository..."
 #             cd suna-main
 #             git fetch origin
 #             git reset --hard origin/main
 #           else
-#             echo "📥 Cloning repository..."
+#             echo " Cloning repository..."
 #             git clone -b main https://github.com/yourusername/suna-main.git
 #             cd suna-main
 #           fi
 
 #           # 환경 변수 파일 생성
-#           echo "⚙️ Setting up environment files..."
+#           echo " Setting up environment files..."
 
 #           # Backend .env 생성
 #           cat > backend/.env << EOF
@@ -79,7 +79,7 @@
 #           EOF
 
 #           # Docker Compose로 배포
-#           echo "🐳 Building and starting containers..."
+#           echo " Building and starting containers..."
 #           cd backend
 
 #           # 기존 컨테이너 중지 및 제거
@@ -89,15 +89,15 @@
 #           docker-compose up -d --build
 
 #           # 컨테이너 상태 확인
-#           echo "📊 Container status:"
+#           echo " Container status:"
 #           docker-compose ps
 
 #           # 로그 확인
-#           echo "📝 Recent logs:"
+#           echo " Recent logs:"
 #           docker-compose logs --tail=50
 
-#           echo "✅ SUNA deployment completed!"
-#           echo "🌐 API should be available at: http://13.223.234.139"
+#           echo "SUNA deployment completed!"
+#           echo "API should be available at: http://13.223.234.139"
 
 #     - name: Deployment Success Notification
 #       run: |
