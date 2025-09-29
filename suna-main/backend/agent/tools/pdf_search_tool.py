@@ -78,9 +78,9 @@ class SandboxPdfSearchTool(SandboxToolsBase):
                 chunk_text = result.get("chunk_text", "")
                 department = result.get("department", "부서 정보 없음")
 
-                # 텍스트 길이 제한
-                if len(chunk_text) > 300:
-                    chunk_text = chunk_text[:300] + "..."
+                # # 텍스트 길이 제한
+                # if len(chunk_text) > 300:
+                #     chunk_text = chunk_text[:300] + "..."
 
                 formatted_content += f"**{i}. {document_title}** (유사도: {similarity})\n"
                 formatted_content += f"부서: {department}\n"

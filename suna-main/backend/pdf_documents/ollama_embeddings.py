@@ -1,3 +1,5 @@
+ollama_embeddings.py
+
 import os
 import io
 import json
@@ -15,29 +17,6 @@ import re
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-# -------------------- 로그 설정 --------------------
-LOG_FILE = os.path.join(os.path.dirname(__file__), "embedding_processor.log")
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-
-# 콘솔 출력 핸들러
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
-console_handler.setFormatter(formatter)
-
-# 파일 회전 핸들러 (자정마다 새 파일 생성, 7일 보관)
-file_handler = TimedRotatingFileHandler(LOG_FILE, when="midnight", interval=1, backupCount=7, encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(formatter)
-
-# 핸들러 등록
-if not logger.handlers:
-    logger.addHandler(console_handler)
-    logger.addHandler(file_handler)
-# ---------------------------------------------------
 
 # Ollama API 설정 (로컬 환경 우선)
 OLLAMA_API_URL = os.getenv("OLLAMA_HOST", "http://localhost:11435")
@@ -49,8 +28,8 @@ class OllamaEmbeddingProcessor:
         supabase_url = os.getenv("SUPABASE_URL")
         supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
         
-        logger.info(f"Supabase 연결: URL={supabase_url[:50]}..." if supabase_url else "URL=None")
-        logger.info(f"Supabase Key: {'설정됨' if supabase_key else '없음'}")
+        print(f"Supabase 연결: URL={supabase_url[:50]}..." if supabase_url else "URL=None")
+        print(f"Supabase Key: {'설정됨' if supabase_key else '없음'}")
         
         if not supabase_url or not supabase_key:
             raise Exception(f"Supabase 환경 변수 누락: URL={bool(supabase_url)}, Key={bool(supabase_key)}")
@@ -78,7 +57,7 @@ class OllamaEmbeddingProcessor:
     def get_ollama_embedding(self, text: str) -> List[float]:
         """Ollama를 사용하여 텍스트 임베딩 생성"""
         try:
-            logger.info(f"Ollama 임베딩 요청: URL={OLLAMA_API_URL}, 모델={EMBEDDING_MODEL}")
+            print(f"Ollama 임베딩 요청: URL={OLLAMA_API_URL}, 모델={EMBEDDING_MODEL}")
             response = requests.post(
                 f"{OLLAMA_API_URL}/api/embeddings",
                 json={
@@ -91,23 +70,23 @@ class OllamaEmbeddingProcessor:
             if response.status_code == 200:
                 result = response.json()
                 embedding = result.get("embedding", [])
-                logger.info(f"임베딩 성공: 차원 {len(embedding)}")
+                print(f"임베딩 성공: 차원 {len(embedding)}")
                 return embedding
             else:
-                logger.info(f"Ollama 임베딩 오류: {response.status_code}, 응답: {response.text}")
+                print(f"Ollama 임베딩 오류: {response.status_code}, 응답: {response.text}")
                 return None
         except requests.exceptions.ConnectionError as e:
-            logger.info(f"Ollama 서버 연결 실패: {str(e)}")
-            logger.info(f"Ollama URL 확인: {OLLAMA_API_URL}")
+            print(f"Ollama 서버 연결 실패: {str(e)}")
+            print(f"Ollama URL 확인: {OLLAMA_API_URL}")
             return None
         except Exception as e:
-            logger.info(f"Ollama 연결 오류: {str(e)}")
+            print(f"Ollama 연결 오류: {str(e)}")
             return None
     
     async def process_document(self, document_id: str, storage_path: str, file_name: str) -> Dict[str, Any]:
         """Supabase Storage에서 문서를 다운로드하고 임베딩 생성"""
         try:
-            logger.info(f"임베딩 처리 시작: document_id={document_id}, storage_path={storage_path}")
+            print(f"임베딩 처리 시작: document_id={document_id}, storage_path={storage_path}")
             
             # 1. Supabase Storage에서 PDF 파일 다운로드
             file_response = self.supabase.storage.from_('pdf-documents').download(storage_path)
@@ -123,7 +102,7 @@ class OllamaEmbeddingProcessor:
             if not pdf_bytes:
                 return {"success": False, "error": "PDF 파일이 비어있습니다."}
             
-            logger.info(f"PDF 파일 다운로드 완료: {len(pdf_bytes)} bytes")
+            print(f"PDF 파일 다운로드 완료: {len(pdf_bytes)} bytes")
             
             # 2. PDF에서 텍스트 추출
             text = self.extract_text_from_pdf(pdf_bytes)
@@ -131,21 +110,21 @@ class OllamaEmbeddingProcessor:
             if not text.strip():
                 return {"success": False, "error": "PDF에서 텍스트를 추출할 수 없습니다."}
             
-            logger.info(f"텍스트 추출 완료: {len(text)} 문자")
+            print(f"텍스트 추출 완료: {len(text)} 문자")
             
             # 3. 텍스트를 청크로 분할
             chunks = self.text_splitter.split_text(text)
-            logger.info(f"텍스트 분할 완료: {len(chunks)}개 청크")
-            chunks = [f"{file_name.replace('.pdf', '')}\n\n{chunk}" for chunk in chunks]
+            print(f"텍스트 분할 완료: {len(chunks)}개 청크")
+            chunks = [f"{file_name.replace('.pdf', '')}{idx+1}\n\n{chunk}" for idx, chunk in enumerate(chunks)]
             
             # 4. 기존 임베딩 삭제
             delete_result = self.supabase.table('pdf_embeddings').delete().eq('document_id', document_id).execute()
-            logger.info(f"기존 임베딩 삭제 완료")
+            print(f"기존 임베딩 삭제 완료")
             
             # 5. 각 청크에 대해 임베딩 생성 및 저장
             embeddings_data = []
             for i, chunk in enumerate(chunks):
-                logger.info(f"청크 {i+1}/{len(chunks)} 임베딩 생성 중...")
+                print(f"청크 {i+1}/{len(chunks)} 임베딩 생성 중...")
                 embedding = self.get_ollama_embedding(chunk)
                 
                 if embedding:
@@ -160,13 +139,13 @@ class OllamaEmbeddingProcessor:
                         }
                     }
                     embeddings_data.append(embedding_data)
-                    logger.info(f"청크 {i} 임베딩 생성 완료!")
+                    print(f"청크 {i} 임베딩 생성 완료!")
                 else:
-                    logger.info(f"청크 {i} 임베딩 생성 실패")
+                    print(f"청크 {i} 임베딩 생성 실패")
             
             # 6. 작은 배치로 나누어서 임베딩 저장 (대용량 데이터 처리)
             if embeddings_data:
-                logger.info(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
+                print(f"{len(embeddings_data)}개 임베딩 데이터베이스에 저장 중...")
                 
                 # 배치 크기 설정 (너무 크면 Supabase 저장 실패)
                 BATCH_SIZE = 10  # 한번에 10개씩 저장
@@ -174,21 +153,21 @@ class OllamaEmbeddingProcessor:
                 
                 for i in range(0, len(embeddings_data), BATCH_SIZE):
                     batch = embeddings_data[i:i + BATCH_SIZE]
-                    logger.info(f"배치 {i//BATCH_SIZE + 1}/{(len(embeddings_data) + BATCH_SIZE - 1)//BATCH_SIZE}: {len(batch)}개 저장 중...")
+                    print(f"배치 {i//BATCH_SIZE + 1}/{(len(embeddings_data) + BATCH_SIZE - 1)//BATCH_SIZE}: {len(batch)}개 저장 중...")
                     
                     try:
                         result = self.supabase.table('pdf_embeddings').insert(batch).execute()
                         
                         # 최신 Supabase Python 클라이언트 응답 처리
                         if hasattr(result, 'error') and result.error:
-                            logger.info(f"배치 저장 오류: {result.error}")
+                            print(f"배치 저장 오류: {result.error}")
                             return {"success": False, "error": f"임베딩 저장 실패: {result.error}"}
                         
                         saved_count += len(batch)
-                        logger.info(f"배치 저장 완료: {saved_count}/{len(embeddings_data)}")
+                        print(f"배치 저장 완료: {saved_count}/{len(embeddings_data)}")
                         
                     except Exception as batch_error:
-                        logger.info(f"배치 저장 중 예외 발생: {batch_error}")
+                        print(f"배치 저장 중 예외 발생: {batch_error}")
                         return {"success": False, "error": f"배치 저장 실패: {str(batch_error)}"}
                 
                 # 7. 문서 상태 업데이트
@@ -198,9 +177,9 @@ class OllamaEmbeddingProcessor:
                 }).eq('id', document_id).execute()
                 
                 if hasattr(update_result, 'error') and update_result.error:
-                    logger.info(f"문서 상태 업데이트 오류: {update_result.error}")
+                    print(f"문서 상태 업데이트 오류: {update_result.error}")
                 
-                logger.info(f"임베딩 처리 완료: {saved_count}개 임베딩 생성됨")
+                print(f"임베딩 처리 완료: {saved_count}개 임베딩 생성됨")
                 return {
                     "success": True,
                     "message": f"{saved_count}개의 임베딩이 생성되었습니다.",
@@ -210,7 +189,7 @@ class OllamaEmbeddingProcessor:
                 return {"success": False, "error": "임베딩을 생성할 수 없습니다."}
             
         except Exception as e:
-            logger.info(f"문서 처리 오류: {str(e)}")
+            print(f"문서 처리 오류: {str(e)}")
             
             # 오류 발생해도 저장된 청크가 있으면 completed로, 없으면 failed로 처리
             try:
@@ -220,7 +199,7 @@ class OllamaEmbeddingProcessor:
                 
                 if saved_count > 0:
                     # 저장된 청크가 있으면 completed로 처리
-                    logger.info(f"오류 발생했지만 {saved_count}개 청크가 저장되어 completed 처리")
+                    print(f"오류 발생했지만 {saved_count}개 청크가 저장되어 completed 처리")
                     self.supabase.table('pdf_documents').update({
                         'embedding_status': 'completed',
                         'total_chunks': saved_count
@@ -234,7 +213,7 @@ class OllamaEmbeddingProcessor:
                     }
                 else:
                     # 저장된 청크가 없으면 failed 처리
-                    logger.info(f"저장된 청크가 없어서 failed 처리")
+                    print(f"저장된 청크가 없어서 failed 처리")
                     self.supabase.table('pdf_documents').update({
                         'embedding_status': 'failed'
                     }).eq('id', document_id).execute()
@@ -242,7 +221,7 @@ class OllamaEmbeddingProcessor:
                     return {"success": False, "error": str(e)}
                     
             except Exception as update_error:
-                logger.info(f"오류 상태 업데이트 실패: {update_error}")
+                print(f"오류 상태 업데이트 실패: {update_error}")
                 return {"success": False, "error": f"처리 오류: {str(e)}, 상태 업데이트 오류: {str(update_error)}"}
     
     async def search_similar_documents(
@@ -253,28 +232,29 @@ class OllamaEmbeddingProcessor:
     ) -> List[Dict[str, Any]]:
         """하이브리드 검색 (벡터 + 키워드) - RPC 없이 직접 구현"""
         try:
-            logger.info(f"하이브리드 검색 시작: '{query}' (최대 {match_count}개)")
+            print(f"하이브리드 검색 시작: '{query}' (최대 {match_count}개)")
 
             # 1. 벡터 검색 실행
             vector_results = await self._vector_search(query, match_count * 2, filter_department)
-            logger.info(f"벡터 검색 결과: {len(vector_results)}개")
+            print(f"벡터 검색 결과: {len(vector_results)}개")
 
             # 2. 키워드 검색 실행
             keyword_results = await self._keyword_search(query, match_count * 2, filter_department)
-            logger.info(f"키워드 검색 결과: {len(keyword_results)}개")
+            print(f"키워드 검색 결과: {len(keyword_results)}개")
 
             # 3. 하이브리드 결합 (간단한 점수 기반)
             combined_results = self._combine_search_results(vector_results, keyword_results)
-            logger.info(f"결합 후 결과: {len(combined_results)}개")
+            print(f"결합 후 결과: {len(combined_results)}개")
 
             # 4. 최종 결과 반환
             final_results = combined_results[:match_count]
-            logger.info(f"최종 반환: {len(final_results)}개")
+            print(f"최종 반환: {len(final_results)}개")
+            print(f"{final_results}")
 
             return final_results
 
         except Exception as e:
-            logger.info(f"하이브리드 검색 오류: {str(e)}")
+            print(f"하이브리드 검색 오류: {str(e)}")
             # 오류시 키워드 검색만 실행
             return await self._keyword_search(query, match_count, filter_department)
 
@@ -328,7 +308,7 @@ class OllamaEmbeddingProcessor:
             return [r for r in scored_results[:match_count] if r['similarity'] > 0.2]
 
         except Exception as e:
-            logger.info(f"벡터 검색 오류: {str(e)}")
+            print(f"벡터 검색 오류: {str(e)}")
             return []
 
     def _combine_search_results(
@@ -405,7 +385,7 @@ class OllamaEmbeddingProcessor:
     async def _keyword_search(self, query: str, match_count: int, filter_department: str = None) -> List[Dict]:
         """BM25 기반 키워드 검색"""
         try:
-            logger.info(f"BM25 키워드 검색 시작: '{query}'")
+            print(f"BM25 키워드 검색 시작: '{query}'")
 
             # 모든 문서 조회 (BM25 계산을 위해)
             query_builder = self.supabase.table('pdf_embeddings').select(
@@ -420,7 +400,7 @@ class OllamaEmbeddingProcessor:
             if not result.data:
                 return []
 
-            logger.info(f"BM25 계산 대상: {len(result.data)}개 문서")
+            print(f"BM25 계산 대상: {len(result.data)}개 문서")
 
             # BM25 점수 계산
             bm25_scores = self._calculate_bm25_scores(query, result.data)
@@ -431,12 +411,12 @@ class OllamaEmbeddingProcessor:
             # 점수가 0인 결과 제거
             filtered_results = [r for r in ranked_results if r['bm25_score'] > 0]
 
-            logger.info(f"BM25 검색 완료: {len(filtered_results)}개 관련 문서")
+            print(f"BM25 검색 완료: {len(filtered_results)}개 관련 문서")
 
             return filtered_results[:match_count]
 
         except Exception as e:
-            logger.info(f"BM25 검색 오류: {str(e)}")
+            print(f"BM25 검색 오류: {str(e)}")
             return []
 
     def _calculate_bm25_scores(self, query: str, documents: List[Dict]) -> List[Dict]:
