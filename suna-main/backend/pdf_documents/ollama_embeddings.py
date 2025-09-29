@@ -1,4 +1,4 @@
-ollama_embeddings.py
+# Ollama Embeddings Processor
 
 import os
 import io
