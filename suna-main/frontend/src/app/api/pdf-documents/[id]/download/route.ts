@@ -38,19 +38,106 @@ export async function GET(
       return NextResponse.json({ error: '문서를 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    // RPC 함수를 사용하여 사용자 정보 조회
-    const { data: userProfile } = await supabase
-      .rpc('get_user_info', { user_uuid: user.id });
+    // 사용자 정보 조회 - accounts 테이블에서 직접 조회
+    let userProfile = null;
+    let isAdmin = false;
+    let userDepartment = null;
+
+    // basejump.accounts 스키마에서 사용자 정보 조회 (백엔드와 동일한 구조)
+    const { data: accountProfile, error: accountError } = await supabase
+      .schema('basejump')
+      .from('accounts')
+      .select('id, user_role, display_name, department_id, name')
+      .eq('primary_owner_user_id', user.id)
+      .single();
+
+    if (accountError) {
+      console.warn('Account query 오류:', accountError);
+
+      // 대체 방법: user_info 뷰가 있는지 확인
+      const { data: userInfoProfile, error: userInfoError } = await supabase
+        .from('user_info')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (userInfoError) {
+        console.warn('User_info query 오류:', userInfoError);
+        // 기본값으로 설정 - 적어도 인증된 사용자이므로 최소 권한 부여
+        userProfile = { id: user.id };
+        isAdmin = false;
+        userDepartment = null;
+      } else {
+        userProfile = userInfoProfile;
+        isAdmin = userInfoProfile.user_role === 'admin' || userInfoProfile.user_role === 'operator';
+        userDepartment = userInfoProfile.department_name || userInfoProfile.department;
+      }
+    } else {
+      userProfile = accountProfile;
+      isAdmin = accountProfile.user_role === 'admin' || accountProfile.user_role === 'operator';
+
+      // 부서 정보 별도 쿼리로 가져오기
+      if (accountProfile.department_id) {
+        const { data: deptData } = await supabase
+          .from('departments')
+          .select('name, display_name')
+          .eq('id', accountProfile.department_id)
+          .single();
+
+        userDepartment = deptData?.display_name || deptData?.name || null;
+      }
+    }
+
+    // 디버깅 로그
+    console.log('다운로드 권한 체크:', {
+      documentId,
+      userId: user.id,
+      documentAccountId: document.account_id,
+      isOwner: document.account_id === user.id,
+      documentType: document.document_type,
+      documentDepartment: document.department,
+      userDepartment: userDepartment,
+      isAdmin: isAdmin,
+      userProfile,
+      accountError,
+      accountProfile
+    });
 
     // 접근 권한 확인
-    const canAccess = 
-      document.account_id === user.id || // 업로드한 사용자
-      document.document_type === 'common' || // 전사 공통 문서
-      (document.document_type === 'dept' && document.department === userProfile?.department_name) || // 같은 부서
-      userProfile?.is_admin; // 관리자
+    const isOwner = document.account_id === user.id;
+    const isCommon = document.document_type === 'common';
+    const isSameDept = document.document_type === 'dept' && document.department === userDepartment;
+
+    const canAccess = isOwner || isCommon || isSameDept || isAdmin;
+
+    console.log('권한 체크 결과:', {
+      isOwner,
+      isCommon,
+      isSameDept,
+      isAdmin,
+      canAccess
+    });
 
     if (!canAccess) {
-      return NextResponse.json({ error: '이 문서에 대한 접근 권한이 없습니다.' }, { status: 403 });
+      const errorDetails = {
+        reason: '접근 권한 없음',
+        isOwner,
+        isCommon,
+        isSameDept,
+        isAdmin,
+        userDepartment,
+        documentDepartment: document.department,
+        documentType: document.document_type,
+        userId: user.id,
+        documentAccountId: document.account_id
+      };
+
+      console.error('접근 권한 거부:', errorDetails);
+
+      return NextResponse.json({
+        error: '이 문서에 대한 접근 권한이 없습니다.',
+        details: errorDetails
+      }, { status: 403 });
     }
 
     // storage_path가 없으면 오류

@@ -40,8 +40,14 @@ export async function signIn(prevState: any, formData: FormData) {
   const password = formData.get('password') as string;
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
-  // Construct full email address
-  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+  // Only allow @goability.co.kr domain
+  const email = emailInput.includes('@')
+    ? (emailInput.endsWith('@goability.co.kr') ? emailInput : '')
+    : `${emailInput}@goability.co.kr`;
+
+  if (!email) {
+    return { message: 'Only @goability.co.kr email addresses are allowed' };
+  }
 
   if (!emailInput) {
     return { message: 'Please enter your username' };
@@ -76,8 +82,14 @@ export async function signUp(prevState: any, formData: FormData) {
   const departmentId = departmentIdStr ? parseInt(departmentIdStr, 10) : null;  // Convert to integer!
   const returnUrl = formData.get('returnUrl') as string | undefined;
 
-  // Construct full email address
-  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+  // Only allow @goability.co.kr domain
+  const email = emailInput.includes('@')
+    ? (emailInput.endsWith('@goability.co.kr') ? emailInput : '')
+    : `${emailInput}@goability.co.kr`;
+
+  if (!email) {
+    return { message: 'Only @goability.co.kr email addresses are allowed' };
+  }
 
   if (!emailInput) {
     return { message: 'Please enter your username' };
@@ -184,8 +196,14 @@ export async function forgotPassword(prevState: any, formData: FormData) {
   const emailInput = formData.get('email') as string;
   const origin = formData.get('origin') as string;
 
-  // Construct full email address
-  const email = emailInput.includes('@') ? emailInput : `${emailInput}@goability.co.kr`;
+  // Only allow @goability.co.kr domain
+  const email = emailInput.includes('@')
+    ? (emailInput.endsWith('@goability.co.kr') ? emailInput : '')
+    : `${emailInput}@goability.co.kr`;
+
+  if (!email) {
+    return { message: 'Only @goability.co.kr email addresses are allowed' };
+  }
 
   if (!emailInput) {
     return { message: 'Please enter your username' };

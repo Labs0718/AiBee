@@ -398,17 +398,34 @@ async def calculate_monthly_count(client, user_id: str) -> int:
     return total_count
 
 
-async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: int = 1000, is_admin: bool = False) -> Dict:
+async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: int = 1000, is_admin: bool = False,
+                        start_date: Optional[str] = None, end_date: Optional[str] = None,
+                        filter_user_id: Optional[str] = None, department_id: Optional[str] = None,
+                        model_filter: Optional[str] = None) -> Dict:
     """Get detailed usage logs for a user with pagination."""
-    # Get start of current month in UTC
-    now = datetime.now(timezone.utc)
-    start_of_month = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+    logger.info(f"get_usage_logs called with: user_id={user_id}, page={page}, is_admin={is_admin}, start_date={start_date}, end_date={end_date}, filter_user_id={filter_user_id}, department_id={department_id}, model_filter={model_filter}")
+
+    # Determine date range for filtering
+    if start_date:
+        # Parse the provided start date
+        filter_start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+    else:
+        # Default to start of current month in UTC
+        now = datetime.now(timezone.utc)
+        filter_start_date = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+
+    if end_date:
+        # Parse the provided end date and set to end of day
+        filter_end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
+    else:
+        # Default to current time
+        filter_end_date = datetime.now(timezone.utc)
 
     # Use fixed cutoff date: June 26, 2025 midnight UTC
     # Ignore all token counts before this date
     cutoff_date = datetime(2025, 6, 30, 9, 0, 0, tzinfo=timezone.utc)
 
-    start_of_month = max(start_of_month, cutoff_date)
+    filter_start_date = max(filter_start_date, cutoff_date)
 
     # First get threads based on user role
     batch_size = 1000
@@ -418,17 +435,32 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
     while True:
         if is_admin:
             # Admin can see all threads
-            threads_batch = await client.table('threads') \
-                .select('thread_id, account_id, agent_runs(thread_id)') \
-                .gte('agent_runs.created_at', start_of_month.isoformat()) \
-                .range(offset, offset + batch_size - 1) \
-                .execute()
+            if department_id:
+                # If department filtering is requested, join with user_profiles
+                query = client.table('threads') \
+                    .select('thread_id, account_id, agent_runs(thread_id), user_profiles!threads_account_id_fkey(department_id)') \
+                    .gte('agent_runs.created_at', filter_start_date.isoformat()) \
+                    .lte('agent_runs.created_at', filter_end_date.isoformat()) \
+                    .eq('user_profiles.department_id', department_id)
+            else:
+                # No department filtering
+                query = client.table('threads') \
+                    .select('thread_id, account_id, agent_runs(thread_id)') \
+                    .gte('agent_runs.created_at', filter_start_date.isoformat()) \
+                    .lte('agent_runs.created_at', filter_end_date.isoformat())
+
+            # Add user filtering if specified
+            if filter_user_id:
+                query = query.eq('account_id', filter_user_id)
+
+            threads_batch = await query.range(offset, offset + batch_size - 1).execute()
         else:
-            # Regular user can only see their own threads
+            # Regular user can only see their own threads (ignore filter_user_id for non-admins)
             threads_batch = await client.table('threads') \
                 .select('thread_id, agent_runs(thread_id)') \
                 .eq('account_id', user_id) \
-                .gte('agent_runs.created_at', start_of_month.isoformat()) \
+                .gte('agent_runs.created_at', filter_start_date.isoformat()) \
+                .lte('agent_runs.created_at', filter_end_date.isoformat()) \
                 .range(offset, offset + batch_size - 1) \
                 .execute()
 
@@ -457,7 +489,8 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
         ) \
         .in_('thread_id', thread_ids) \
         .eq('type', 'assistant_response_end') \
-        .gte('created_at', start_of_month.isoformat()) \
+        .gte('created_at', filter_start_date.isoformat()) \
+        .lte('created_at', filter_end_date.isoformat()) \
         .order('created_at', desc=True) \
         .range(page * items_per_page, (page + 1) * items_per_page - 1) \
         .execute()
@@ -527,6 +560,10 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
             completion_tokens = usage.get('completion_tokens', 0)
             model = content.get('model', 'unknown')
 
+            # Apply model filtering if specified
+            if model_filter and model_filter.lower() not in model.lower():
+                continue
+
             # Safely calculate total tokens
             total_tokens = (prompt_tokens or 0) + (completion_tokens or 0)
 
@@ -582,14 +619,59 @@ async def get_usage_logs(client, user_id: str, page: int = 0, items_per_page: in
         except Exception as e:
             logger.warning(f"Error processing usage log entry for message {message.get('message_id', 'unknown')}: {str(e)}")
             continue
-    
+
     # Check if there are more results
     has_more = len(processed_logs) == items_per_page
-    
-    return {
+
+    # Prepare filter data for admin users
+    available_users = []
+    available_departments = []
+    available_models = []
+
+    if is_admin:
+        # Get available users from user_info_map
+        for user_id, user_info in user_info_map.items():
+            available_users.append({
+                'id': user_id,
+                'name': user_info['name'],
+                'email': user_info['email']
+            })
+
+        # Get available departments from profiles
+        try:
+            departments_result = await client.table('departments').select('id, display_name').execute()
+            if departments_result.data:
+                for dept in departments_result.data:
+                    available_departments.append({
+                        'id': dept['id'],
+                        'display_name': dept['display_name']
+                    })
+        except Exception as e:
+            logger.warning(f"Failed to fetch departments for filter: {str(e)}")
+
+    # Get available models from processed logs
+    models_set = set()
+    for log in processed_logs:
+        model = log.get('content', {}).get('model', 'unknown')
+        if model and model != 'unknown':
+            models_set.add(model)
+    available_models = sorted(list(models_set))
+
+    response = {
         "logs": processed_logs,
         "has_more": has_more
     }
+
+    # Add filter data for admin users
+    if is_admin:
+        response["available_users"] = available_users
+        response["available_departments"] = available_departments
+
+    # Always include available models
+    if available_models:
+        response["available_models"] = available_models
+
+    return response
 
 
 def calculate_token_cost(prompt_tokens: int, completion_tokens: int, model: str) -> float:
@@ -1705,6 +1787,11 @@ async def get_available_models(
 async def get_usage_logs_endpoint(
     page: int = 0,
     items_per_page: int = 1000,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user_id: Optional[str] = None,
+    department_id: Optional[str] = None,
+    model: Optional[str] = None,
     current_user_id: str = Depends(get_current_user_id_from_jwt)
 ):
     """Get detailed usage logs for a user with pagination."""
@@ -1731,7 +1818,18 @@ async def get_usage_logs_endpoint(
             is_admin = False
 
         # Get usage logs
-        result = await get_usage_logs(client, current_user_id, page, items_per_page, is_admin)
+        result = await get_usage_logs(
+            client,
+            current_user_id,
+            page,
+            items_per_page,
+            is_admin,
+            start_date=start_date,
+            end_date=end_date,
+            filter_user_id=user_id,
+            department_id=department_id,
+            model_filter=model
+        )
 
         return result
         

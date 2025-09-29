@@ -16,7 +16,8 @@ import {
   AvailableModelsResponse,
   BillingStatusResponse,
   BillingError,
-  UsageLogsResponse
+  UsageLogsResponse,
+  UsageLogsFilters
 } from './api';
 
 export * from './api';
@@ -432,9 +433,21 @@ export const billingApi = {
     return result.data || null;
   },
 
-  async getUsageLogs(page: number = 0, itemsPerPage: number = 1000): Promise<UsageLogsResponse | null> {
+  async getUsageLogs(page: number = 0, itemsPerPage: number = 1000, filters?: UsageLogsFilters): Promise<UsageLogsResponse | null> {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      items_per_page: itemsPerPage.toString(),
+    });
+
+    // Add filter parameters if provided
+    if (filters?.start_date) queryParams.set('start_date', filters.start_date);
+    if (filters?.end_date) queryParams.set('end_date', filters.end_date);
+    if (filters?.user_id) queryParams.set('user_id', filters.user_id);
+    if (filters?.department_id) queryParams.set('department_id', filters.department_id);
+    if (filters?.model) queryParams.set('model', filters.model);
+
     const result = await backendApi.get(
-      `/billing/usage-logs?page=${page}&items_per_page=${itemsPerPage}`,
+      `/billing/usage-logs?${queryParams.toString()}`,
       {
         errorContext: { operation: 'load usage logs', resource: 'usage history' },
       }

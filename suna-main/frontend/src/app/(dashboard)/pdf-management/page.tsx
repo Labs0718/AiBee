@@ -446,7 +446,7 @@ export default function PDFManagement() {
     try {
       // API 엔드포인트로 fetch 요청
       const downloadUrl = `/api/pdf-documents/${documentId}/download`;
-      
+
       const response = await fetch(downloadUrl, {
         method: 'GET',
         headers: {
@@ -456,29 +456,48 @@ export default function PDFManagement() {
       });
 
       if (!response.ok) {
-        throw new Error('다운로드 실패');
+        // 상세한 에러 메시지 확인
+        const errorText = await response.text();
+        let errorMessage = '다운로드 실패';
+
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+
+        console.error('다운로드 오류 상세:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          documentId,
+          fileName
+        });
+
+        throw new Error(errorMessage);
       }
 
       // Blob으로 변환
       const blob = await response.blob();
-      
+
       // Blob URL 생성
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       // 다운로드 링크 생성 및 클릭
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = fileName;
       document.body.appendChild(link);
       link.click();
-      
+
       // 정리
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-      
+
     } catch (error) {
       console.error('다운로드 오류:', error);
-      alert('파일 다운로드 중 오류가 발생했습니다.');
+      alert(`파일 다운로드 중 오류가 발생했습니다: ${error.message}`);
     }
   };
 
@@ -1167,14 +1186,9 @@ export default function PDFManagement() {
               formData.append('fileName', fileName);
               formData.append('documentId', newDocument.id);
               
-              const { data: { session } } = await supabase.auth.getSession();
-              const token = session?.access_token;
               
-              const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/pdf-documents/upload`, {
+              const response = await fetch(`/api/pdf-documents/upload`, {
                 method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                },
                 body: formData
               });
               

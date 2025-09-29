@@ -139,6 +139,7 @@ allow_origin_regex = None
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.LOCAL:
     allowed_origins.append("http://localhost:3000")
+    allowed_origins.append("http://172.17.0.130")
 
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.STAGING:
@@ -253,11 +254,12 @@ if __name__ == "__main__":
     
     workers = 4
     
-    logger.info(f"Starting server on 0.0.0.0:8000 with {workers} workers")
+    port = int(os.getenv("PORT", 8000))
+    logger.info(f"Starting server on 0.0.0.0:{port} with {workers} workers")
     uvicorn.run(
-        "api:app", 
-        host="0.0.0.0", 
-        port=8000,
+        "api:app",
+        host="0.0.0.0",
+        port=port,
         workers=workers,
         loop="asyncio"
     )
