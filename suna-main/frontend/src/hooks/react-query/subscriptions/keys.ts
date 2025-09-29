@@ -17,5 +17,5 @@ export const modelKeys = createQueryKeys({
 
 export const usageKeys = createQueryKeys({
   all: usageKeysBase,
-  logs: (page?: number, itemsPerPage?: number) => [...usageKeysBase, 'logs', { page, itemsPerPage }] as const,
+  logs: (page?: number, itemsPerPage?: number, filters?: any) => [...usageKeysBase, 'logs', { page, itemsPerPage, filters }] as const,
 });

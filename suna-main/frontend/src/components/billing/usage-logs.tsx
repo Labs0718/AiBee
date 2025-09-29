@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -25,11 +25,24 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ExternalLink, Loader2, Filter, X, ChevronDown, Calendar, Users, Building, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { OpenInNewWindowIcon } from '@radix-ui/react-icons';
 import { useUsageLogs } from '@/hooks/react-query/subscriptions/use-billing';
-import { UsageLogEntry } from '@/lib/api';
+import { UsageLogEntry, UsageLogsFilters } from '@/lib/api';
 import { useUserProfile } from '@/hooks/react-query/user/use-user-profile';
 import {
   BarChart,
@@ -64,14 +77,19 @@ export default function UsageLogs({ accountId }: Props) {
   const [page, setPage] = useState(0);
   const [allLogs, setAllLogs] = useState<UsageLogEntry[]>([]);
   const [hasMore, setHasMore] = useState(true);
+  const [filters, setFilters] = useState<UsageLogsFilters>({});
+  const [error, setError] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 1000;
 
   // Get current user profile to check admin status
   const { data: currentUserProfile } = useUserProfile();
   const isAdmin = currentUserProfile?.user_role === 'admin' || currentUserProfile?.user_role === 'operator';
 
-  // Use React Query hook for the current page
-  const { data: currentPageData, isLoading, error, refetch } = useUsageLogs(page, ITEMS_PER_PAGE);
+  // Memoize filters to prevent unnecessary re-renders
+  const memoizedFilters = useMemo(() => filters, [JSON.stringify(filters)]);
+
+  // Use React Query hook for the current page with filters
+  const { data: currentPageData, isLoading, error: queryError, refetch } = useUsageLogs(page, ITEMS_PER_PAGE, memoizedFilters);
 
   // Update accumulated logs when new data arrives
   useEffect(() => {
@@ -91,6 +109,32 @@ export default function UsageLogs({ accountId }: Props) {
     const nextPage = page + 1;
     setPage(nextPage);
   };
+
+  // Debounced filter application to avoid too many API calls
+  const applyFilters = useCallback((newFilters: UsageLogsFilters) => {
+    try {
+      setFilters(newFilters);
+      setPage(0); // Reset to first page when applying filters
+      setAllLogs([]); // Clear existing logs
+      setError(null);
+    } catch (err) {
+      setError('Failed to apply filters');
+      console.error('Error applying filters:', err);
+    }
+  }, []);
+
+  const clearFilters = () => {
+    try {
+      setFilters({});
+      setPage(0);
+      setAllLogs([]);
+      setError(null);
+    } catch (err) {
+      setError('Failed to clear filters');
+      console.error('Error clearing filters:', err);
+    }
+  };
+
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
@@ -175,7 +219,7 @@ export default function UsageLogs({ accountId }: Props) {
     );
   }
 
-  if (error) {
+  if (queryError || error) {
     return (
       <Card>
         <CardHeader>
@@ -184,7 +228,7 @@ export default function UsageLogs({ accountId }: Props) {
         <CardContent>
           <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
             <p className="text-sm text-destructive">
-              Error: {error.message || 'Failed to load usage logs'}
+              Error: {queryError?.message || error || 'Failed to load usage logs'}
             </p>
           </div>
         </CardContent>
@@ -217,14 +261,54 @@ export default function UsageLogs({ accountId }: Props) {
     0,
   );
 
+  // Generate dynamic chart title based on active filters
+  const getChartTitle = () => {
+    const hasActiveFilters = Object.keys(filters).some(key => filters[key as keyof UsageLogsFilters]);
+    if (!hasActiveFilters) {
+      return "일별 사용량 추이";
+    }
+
+    const filterDescriptions = [];
+    if (filters.start_date || filters.end_date) {
+      if (filters.start_date && filters.end_date) {
+        filterDescriptions.push(`${filters.start_date} ~ ${filters.end_date}`);
+      } else if (filters.start_date) {
+        filterDescriptions.push(`${filters.start_date} 이후`);
+      } else if (filters.end_date) {
+        filterDescriptions.push(`${filters.end_date} 이전`);
+      }
+    }
+    if (filters.department_id && currentPageData?.available_departments) {
+      const dept = currentPageData.available_departments.find(d => d.id === filters.department_id);
+      if (dept) filterDescriptions.push(`${dept.display_name} 부서`);
+    }
+    if (filters.user_id && currentPageData?.available_users) {
+      const user = currentPageData.available_users.find(u => u.id === filters.user_id);
+      if (user) filterDescriptions.push(`${user.name}`);
+    }
+    if (filters.model) {
+      filterDescriptions.push(`${filters.model.replace('claude-sonnet-4-', 'Claude Sonnet 4 ')}`);
+    }
+
+    return `일별 사용량 추이 (${filterDescriptions.join(', ')})`;
+  };
+
+  const getChartDescription = () => {
+    const hasActiveFilters = Object.keys(filters).some(key => filters[key as keyof UsageLogsFilters]);
+    if (!hasActiveFilters) {
+      return "최근 사용량 변화를 한눈에 확인하세요";
+    }
+    return `필터가 적용된 사용량 데이터입니다. 총 ${allLogs.length}개의 기록이 표시됩니다.`;
+  };
+
   return (
     <div className="space-y-6">
       {/* Daily Usage Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>일별 사용량 추이</CardTitle>
+          <CardTitle>{getChartTitle()}</CardTitle>
           <CardDescription>
-            최근 사용량 변화를 한눈에 확인하세요
+            {getChartDescription()}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -326,6 +410,221 @@ export default function UsageLogs({ accountId }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Compact Filters Section */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-muted/30 rounded-lg border">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <span className="text-sm font-medium">필터:</span>
+          </div>
+
+          {/* Date Range Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-8">
+                <Calendar className="h-3 w-3 mr-1" />
+                {filters.start_date || filters.end_date ? '날짜 설정됨' : '날짜 선택'}
+                <ChevronDown className="h-3 w-3 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80 p-3">
+              <DropdownMenuLabel>날짜 범위 설정</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label htmlFor="start-date" className="text-xs">시작일</Label>
+                    <Input
+                      id="start-date"
+                      type="date"
+                      value={filters.start_date || ''}
+                      onChange={(e) => applyFilters({ ...filters, start_date: e.target.value || undefined })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end-date" className="text-xs">종료일</Label>
+                    <Input
+                      id="end-date"
+                      type="date"
+                      value={filters.end_date || ''}
+                      onChange={(e) => applyFilters({ ...filters, end_date: e.target.value || undefined })}
+                      className="h-8 text-xs"
+                    />
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <div className="grid grid-cols-3 gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const today = new Date();
+                      const sevenDaysAgo = new Date(today);
+                      sevenDaysAgo.setDate(today.getDate() - 7);
+                      applyFilters({
+                        ...filters,
+                        start_date: sevenDaysAgo.toISOString().split('T')[0],
+                        end_date: today.toISOString().split('T')[0]
+                      });
+                    }}
+                  >
+                    최근 7일
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const today = new Date();
+                      const thirtyDaysAgo = new Date(today);
+                      thirtyDaysAgo.setDate(today.getDate() - 30);
+                      applyFilters({
+                        ...filters,
+                        start_date: thirtyDaysAgo.toISOString().split('T')[0],
+                        end_date: today.toISOString().split('T')[0]
+                      });
+                    }}
+                  >
+                    최근 30일
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      const today = new Date();
+                      const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                      applyFilters({
+                        ...filters,
+                        start_date: firstDayOfMonth.toISOString().split('T')[0],
+                        end_date: today.toISOString().split('T')[0]
+                      });
+                    }}
+                  >
+                    이번 달
+                  </Button>
+                </div>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Department Filter */}
+          {currentPageData?.available_departments && Array.isArray(currentPageData.available_departments) && currentPageData.available_departments.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Building className="h-3 w-3 mr-1" />
+                  {filters.department_id
+                    ? currentPageData.available_departments.find(d => d.id === filters.department_id)?.display_name || '부서 선택됨'
+                    : '부서'
+                  }
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>부서 선택</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => applyFilters({ ...filters, department_id: undefined })}>
+                  모든 부서
+                </DropdownMenuItem>
+                {currentPageData.available_departments.map((dept) => (
+                  <DropdownMenuItem
+                    key={dept?.id || ''}
+                    onClick={() => applyFilters({ ...filters, department_id: dept?.id || undefined })}
+                  >
+                    {dept?.display_name || 'Unknown Department'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* User Filter (Admin Only) */}
+          {isAdmin && currentPageData?.available_users && Array.isArray(currentPageData.available_users) && currentPageData.available_users.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Users className="h-3 w-3 mr-1" />
+                  {filters.user_id
+                    ? currentPageData.available_users.find(u => u.id === filters.user_id)?.name || '사용자 선택됨'
+                    : '사용자'
+                  }
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>사용자 선택</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => applyFilters({ ...filters, user_id: undefined })}>
+                  모든 사용자
+                </DropdownMenuItem>
+                {currentPageData.available_users.map((user) => (
+                  <DropdownMenuItem
+                    key={user?.id || ''}
+                    onClick={() => applyFilters({ ...filters, user_id: user?.id || undefined })}
+                  >
+                    {user?.name || 'Unknown'} ({user?.email || 'No email'})
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Model Filter */}
+          {currentPageData?.available_models && Array.isArray(currentPageData.available_models) && currentPageData.available_models.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-8">
+                  <Bot className="h-3 w-3 mr-1" />
+                  {filters.model
+                    ? filters.model.replace('claude-sonnet-4-', 'Claude Sonnet 4 ')
+                    : '모델'
+                  }
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>모델 선택</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => applyFilters({ ...filters, model: undefined })}>
+                  모든 모델
+                </DropdownMenuItem>
+                {currentPageData.available_models.map((model) => (
+                  <DropdownMenuItem
+                    key={model || ''}
+                    onClick={() => applyFilters({ ...filters, model: model || undefined })}
+                  >
+                    {model ? model.replace('claude-sonnet-4-', 'Claude Sonnet 4 ') : 'Unknown Model'}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+
+        {/* Active Filters and Clear Button */}
+        <div className="flex items-center gap-2">
+          {Object.keys(filters).some(key => filters[key as keyof UsageLogsFilters]) && (
+            <>
+              <div className="text-xs text-muted-foreground">
+                {Object.keys(filters).filter(key => filters[key as keyof UsageLogsFilters]).length}개 필터 적용됨
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="h-8 text-xs"
+              >
+                <X className="h-3 w-3 mr-1" />
+                초기화
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Usage Logs Accordion */}
       <Card>

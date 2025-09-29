@@ -5,7 +5,8 @@ import {
   createCheckoutSession,
   checkBillingStatus,
   getAvailableModels,
-  CreateCheckoutSessionRequest
+  CreateCheckoutSessionRequest,
+  UsageLogsFilters
 } from '@/lib/api';
 import { billingApi } from '@/lib/api-enhanced';
 import { modelKeys, usageKeys } from './keys';
@@ -43,10 +44,10 @@ export const useCreateCheckoutSession = createMutationHook(
   }
 );
 
-export const useUsageLogs = (page: number = 0, itemsPerPage: number = 1000) => 
+export const useUsageLogs = (page: number = 0, itemsPerPage: number = 1000, filters?: UsageLogsFilters) =>
   createQueryHook(
-    usageKeys.logs(page, itemsPerPage),
-    () => billingApi.getUsageLogs(page, itemsPerPage),
+    usageKeys.logs(page, itemsPerPage, filters),
+    () => billingApi.getUsageLogs(page, itemsPerPage, filters),
     {
       staleTime: 30 * 1000, // 30 seconds
       refetchOnMount: true,

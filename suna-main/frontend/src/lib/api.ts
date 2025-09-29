@@ -1680,11 +1680,23 @@ export interface UsageLogEntry {
   department_id?: string; // Optional department ID for admin/user view
 }
 
+// Usage logs filter parameters
+export interface UsageLogsFilters {
+  start_date?: string; // YYYY-MM-DD format
+  end_date?: string; // YYYY-MM-DD format
+  user_id?: string;
+  department_id?: string;
+  model?: string;
+}
+
 // Usage logs response interface
 export interface UsageLogsResponse {
   logs: UsageLogEntry[];
   has_more: boolean;
   message?: string;
+  available_users?: Array<{id: string, name: string, email: string}>;
+  available_departments?: Array<{id: string, display_name: string}>;
+  available_models?: string[];
 }
 
 export interface BillingStatusResponse {
