@@ -721,9 +721,13 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# MCP 자동화 작업 가이드')[0].trim();
                                                 }
 
-                                                 if (fullContent.includes('# 내부 문서 검색')) {
+                                                if (fullContent.includes('# 내부 문서 검색')) {
                                                     return fullContent.split('# 내부 문서 검색')[0].trim();
+                                                } 
+                                                if (fullContent.includes('# 계약 조항 분석 시스템')) {
+                                                    return fullContent.split('# 계약 조항 분석 시스템')[0].trim();
                                                 }                                               
+                                              
 
                                                 return fullContent;
                                             } catch {
