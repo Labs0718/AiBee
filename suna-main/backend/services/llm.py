@@ -81,7 +81,7 @@ def get_openrouter_fallback(model_name: str) -> Optional[str]:
         "gemini/gemini-2.5-pro": "openrouter/google/gemini-2.5-pro",
     }
     
-    # Check for exact match first
+    # Check for exact match first 
     if model_name in fallback_mapping:
         return fallback_mapping[model_name]
     
