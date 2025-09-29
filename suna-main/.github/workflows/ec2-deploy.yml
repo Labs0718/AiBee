@@ -101,5 +101,5 @@
 
 #     - name: Deployment Success Notification
 #       run: |
-#         echo "🎉 SUNA EC2 배포 완료!"
+#         echo "SUNA EC2 배포 완료!"
 #         echo "서버가 정상적으로 시작되었는지 확인하세요."
