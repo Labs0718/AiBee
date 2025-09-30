@@ -693,11 +693,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('## 내 연차 찾기 자동화 가이드')[0].trim();
                                                 }
                                                 
-                                                if (fullContent.includes('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')) {
-                                                    return fullContent.split('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')[0].trim();
-                                                }
-                                              
-
                         
                                                 if (fullContent.includes('# 문서 비교·요약·정리')) {
                                                     return fullContent.split('# 문서 비교·요약·정리')[0].trim();
