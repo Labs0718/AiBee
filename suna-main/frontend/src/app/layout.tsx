@@ -66,9 +66,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'AiBee - AI worker',
+    title: 'AiBee - AI Agent',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+      'AiBee는 어빌리티시스템즈 회사에서 개발한 AI 에이전트입니다.',
     url: siteConfig.url,
     siteName: 'Suna',
     images: [
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'AiBee - AI worker',
+        alt: 'AiBee - AI Agent',
         type: 'image/png',
       },
     ],
@@ -85,9 +85,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AiBee - AI worker',
+    title: 'AiBee - AI Agent',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+      'AiBee는 어빌리티시스템즈 회사에서 개발한 AI 에이전트입니다.',
     creator: '@kortixai',
     site: '@kortixai',
     images: [
@@ -95,7 +95,7 @@ export const metadata: Metadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'AiBee - AI worker',
+        alt: 'AiBee - AI Agent',
       },
     ],
   },
