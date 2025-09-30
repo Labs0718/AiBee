@@ -29,9 +29,14 @@ export async function middleware(request: NextRequest) {
 
   // IMPORTANT: DO NOT REMOVE auth.getUser()
   // This refreshes the Auth token and is required for server-side auth
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch (error) {
+    // Handle invalid/missing refresh token gracefully
+    console.log('Auth error in middleware:', error)
+  }
 
   // Define protected routes
   const protectedRoutes = ['/dashboard', '/agents', '/projects', '/settings', '/invitation']
