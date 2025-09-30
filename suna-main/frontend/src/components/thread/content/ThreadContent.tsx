@@ -697,14 +697,8 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# AI 민원 위기 대응 솔루션 - 긴급 대응 프로토콜')[0].trim();
                                                 }
                                               
-                                                if (fullContent.includes('# 정책 홍보 콘텐츠 초안 자동 생성')) {
-                                                    return fullContent.split('# 정책 홍보 콘텐츠 초안 자동 생성')[0].trim();
-                                                }
 
-                                                if (fullContent.includes('# 민원 처리 AI 어시스턴트')) {
-                                                    return fullContent.split('# 민원 처리 AI 어시스턴트')[0].trim();
-                                                }
-
+                        
                                                 if (fullContent.includes('# 문서 비교·요약·정리')) {
                                                     return fullContent.split('# 문서 비교·요약·정리')[0].trim();
                                                 }
