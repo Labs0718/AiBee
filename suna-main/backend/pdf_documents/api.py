@@ -295,27 +295,95 @@ async def get_embedding_status(
     try:
         # JWT에서 사용자 ID 추출
         user_id = await get_current_user_id_from_jwt(request)
-        
+
         # 데이터베이스 연결
         db = DBConnection()
         await db.initialize()
         client = await db.client
-        
+
         # 문서 상태 조회
         document_response = await client.table('pdf_documents').select(
             'embedding_status, total_chunks'
         ).eq('id', document_id).eq('account_id', user_id).is_('deleted_at', 'null').execute()
-        
+
         if not document_response.data:
             raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
-        
+
         document = document_response.data[0]
-        
+
         return {
             "document_id": document_id,
             "embedding_status": document.get('embedding_status'),
             "total_chunks": document.get('total_chunks', 0)
         }
-        
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"상태 조회 실패: {str(e)}")
+
+@router.delete("/{document_id}")
+async def delete_pdf_document(
+    document_id: str,
+    request: Request
+):
+    """PDF 문서 완전 삭제 (파일 + 임베딩 + 메타데이터)"""
+    try:
+        # JWT에서 사용자 ID 추출
+        user_id = await get_current_user_id_from_jwt(request)
+
+        # 데이터베이스 연결
+        db = DBConnection()
+        await db.initialize()
+        client = await db.client
+
+        # 문서 정보 조회
+        document_response = await client.table('pdf_documents').select(
+            'id, storage_path, account_id'
+        ).eq('id', document_id).is_('deleted_at', 'null').execute()
+
+        if not document_response.data:
+            raise HTTPException(status_code=404, detail="문서를 찾을 수 없습니다.")
+
+        document = document_response.data[0]
+
+        # 권한 확인 (본인 문서만 삭제 가능)
+        if document['account_id'] != user_id:
+            raise HTTPException(status_code=403, detail="삭제 권한이 없습니다.")
+
+        storage_path = document.get('storage_path')
+
+        # 1. Supabase Storage에서 파일 삭제
+        if storage_path:
+            try:
+                await client.storage.from_('pdf-documents').remove([storage_path])
+                print(f"Storage 파일 삭제 성공: {storage_path}")
+            except Exception as e:
+                print(f"Storage 파일 삭제 중 오류 (무시): {e}")
+
+        # 2. pdf_embeddings 테이블에서 임베딩 데이터 삭제
+        try:
+            embeddings_response = await client.table('pdf_embeddings').delete().eq('document_id', document_id).execute()
+            print(f"임베딩 데이터 삭제 성공: {len(embeddings_response.data) if embeddings_response.data else 0}개")
+        except Exception as e:
+            print(f"임베딩 삭제 중 오류 (무시): {e}")
+
+        # 3. pdf_documents 테이블에서 소프트 삭제
+        delete_response = await client.table('pdf_documents').update({
+            'deleted_at': time.strftime('%Y-%m-%dT%H:%M:%S')
+        }).eq('id', document_id).execute()
+
+        if not delete_response.data:
+            raise HTTPException(status_code=500, detail="문서 삭제에 실패했습니다.")
+
+        return {
+            "success": True,
+            "message": "문서가 성공적으로 삭제되었습니다.",
+            "document_id": document_id
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"문서 삭제 오류 상세: {error_details}")
+        raise HTTPException(status_code=500, detail=f"문서 삭제 실패: {str(e)}")

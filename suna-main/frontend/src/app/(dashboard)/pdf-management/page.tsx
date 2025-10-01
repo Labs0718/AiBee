@@ -403,39 +403,38 @@ export default function PDFManagement() {
   const handleDocumentDelete = async (documentId: string) => {
     // 삭제할 문서 정보 찾기
     const docToDelete = pdfList.find(pdf => pdf.id === documentId);
-    
+
     // 전사공통 문서는 관리자만 삭제 가능
     if (docToDelete?.docType === '전사공통' && !userInfo?.is_admin) {
       alert('전사공통 문서는 관리자만 삭제할 수 있습니다.');
       return;
     }
-    
-    if (!confirm('정말로 이 문서를 삭제하시겠습니까?')) {
+
+    if (!confirm('정말로 이 문서를 삭제하시겠습니까? ')) {
       return;
     }
-    if (!supabase) return;
 
     setIsLoading(true);
-    
-    try {
-      // 소프트 삭제 (deleted_at 필드 설정)
-      const { error } = await supabase
-        .from('pdf_documents')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', documentId);
 
-      if (error) {
-        console.error('문서 삭제 오류:', error);
-        setError('문서 삭제에 실패했습니다.');
-      } else {
-        // 로컬 상태에서 제거
-        setPdfList(prev => prev.filter(pdf => pdf.id !== documentId));
-        setUploadStatus('success');
-        setTimeout(() => setUploadStatus(null), 3000);
+    try {
+      // 백엔드 API를 통한 완전 삭제 (파일 + 임베딩 + 메타데이터)
+      const response = await fetch(`/api/pdf-documents/${documentId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || '문서 삭제에 실패했습니다.');
       }
+
+      // 로컬 상태에서 제거
+      setPdfList(prev => prev.filter(pdf => pdf.id !== documentId));
+      setUploadStatus('success');
+      setTimeout(() => setUploadStatus(null), 3000);
     } catch (error) {
       console.error('문서 삭제 중 오류:', error);
-      setError('문서 삭제 중 오류가 발생했습니다.');
+      setError(error instanceof Error ? error.message : '문서 삭제 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -518,38 +517,43 @@ export default function PDFManagement() {
       alert('삭제할 문서를 선택해주세요.');
       return;
     }
-    if (!supabase) return;
 
-    const confirmMessage = selectedFiles.length === 1 
-      ? '선택한 문서를 삭제하시겠습니까?' 
-      : `선택한 ${selectedFiles.length}개의 문서를 삭제하시겠습니까?`;
-    
+    const confirmMessage = selectedFiles.length === 1
+      ? '선택한 문서를 삭제하시겠습니까? '
+      : `선택한 ${selectedFiles.length}개의 문서를 삭제하시겠습니까? `;
+
     if (!confirm(confirmMessage)) {
       return;
     }
 
     setIsLoading(true);
-    
-    try {
-      // 선택된 문서들 소프트 삭제
-      const { error } = await supabase
-        .from('pdf_documents')
-        .update({ deleted_at: new Date().toISOString() })
-        .in('id', selectedFiles);
 
-      if (error) {
-        console.error('문서 삭제 오류:', error);
-        setError('문서 삭제에 실패했습니다.');
-      } else {
-        // UI에서 제거
-        setPdfList(prev => prev.filter(pdf => !selectedFiles.includes(pdf.id)));
-        setSelectedFiles([]);
-        setUploadStatus('success');
-        setTimeout(() => setUploadStatus(null), 3000);
-      }
+    try {
+      // 각 문서를 백엔드 API를 통해 완전 삭제
+      const deletePromises = selectedFiles.map(documentId =>
+        fetch(`/api/pdf-documents/${documentId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        }).then(response => {
+          if (!response.ok) {
+            return response.json().then(errorData => {
+              throw new Error(errorData.detail || `문서 ${documentId} 삭제 실패`);
+            });
+          }
+          return response.json();
+        })
+      );
+
+      await Promise.all(deletePromises);
+
+      // UI에서 제거
+      setPdfList(prev => prev.filter(pdf => !selectedFiles.includes(pdf.id)));
+      setSelectedFiles([]);
+      setUploadStatus('success');
+      setTimeout(() => setUploadStatus(null), 3000);
     } catch (error) {
       console.error('문서 삭제 중 오류:', error);
-      setError('문서 삭제 중 오류가 발생했습니다.');
+      setError(error instanceof Error ? error.message : '일부 문서 삭제 중 오류가 발생했습니다.');
     } finally {
       setIsLoading(false);
     }
