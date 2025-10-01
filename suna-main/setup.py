@@ -1216,6 +1216,7 @@ class SetupWizard:
             "NEXT_PUBLIC_SUPABASE_ANON_KEY": self.env_vars["supabase"][
                 "SUPABASE_ANON_KEY"
             ],
+            "SUPABASE_SERVICE_ROLE_KEY": self.env_vars["supabase"]["SUPABASE_SERVICE_ROLE_KEY"],
             "NEXT_PUBLIC_BACKEND_URL": f"http://localhost:{os.getenv('HOST_PORT', '8000')}/api",
             "NEXT_PUBLIC_URL": "http://localhost:3000",
             "NEXT_PUBLIC_ENV_MODE": "LOCAL",
