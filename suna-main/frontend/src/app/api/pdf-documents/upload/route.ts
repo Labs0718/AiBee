@@ -38,11 +38,22 @@ export async function POST(request: NextRequest) {
     // 파일을 Buffer로 변환
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    
+
     // Supabase Storage에 업로드 (Service Role 클라이언트 사용)
     // 사용자별 폴더 구조: {user_id}/{document_id}/{filename}
-    const storagePath = `${user.id}/${documentId}/${fileName}`;
+    // Supabase Storage는 한글 및 특수문자를 지원하지 않으므로
+    // 파일 확장자를 유지하고 document ID를 파일명으로 사용
+    const fileExtension = fileName.split('.').pop() || 'pdf';
+    const safeFileName = `${documentId}.${fileExtension}`;
+
+    const storagePath = `${user.id}/${documentId}/${safeFileName}`;
     const serviceRoleSupabase = await createServiceRoleClient();
+
+    console.log('Storage 업로드 시작:', {
+      originalFileName: fileName,
+      safeFileName,
+      storagePath
+    });
     
     const { data: uploadData, error: uploadError } = await serviceRoleSupabase.storage
       .from('pdf-documents')
@@ -76,11 +87,11 @@ export async function POST(request: NextRequest) {
 
     // Ollama 임베딩 처리를 위한 백그라운드 작업 트리거
     // 백엔드 API 호출 (비동기로 처리)
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-    const embeddingUrl = `${backendUrl}/api/pdf-documents/${documentId}/process-embeddings`;
-    
+    // Docker 컨테이너 간 통신에는 서비스명(backend) 사용
+    const embeddingUrl = `http://backend:8000/api/pdf-documents/${documentId}/process-embeddings`;
+
     console.log('임베딩 처리 요청:', { embeddingUrl, jwt: jwt ? '토큰있음' : '토큰없음' });
-    
+
     fetch(embeddingUrl, {
       method: 'POST',
       headers: {
