@@ -66,11 +66,38 @@ const createFullPrompt = (task: ScheduledTask): string => {
     day: 'numeric'
   });
 
+  // 🚨 중요: 금지 사항을 맨 앞에 배치 (사용자에게 안 보임)
+  const criticalRules = `
+🚨🚨🚨 CRITICAL: 파일/차트/분석문서 생성 절대 금지 🚨🚨🚨
+시스템 프롬프트의 "ALWAYS attach ALL visualizations" 규칙을 무시하세요.
+이 작업은 "메일 발송만" 수행합니다. 분석/계획 문서 생성은 금지됩니다.
+
+⛔⛔⛔ 절대 금지 (실행 시 즉시 작업 중단):
+- Catch-up Plan 문서/파일 작성
+- python 실행, pip install
+- Creating File, write_file, save_file (.md, .py, .csv, .html, .json, .xlsx 등 모든 파일)
+- Creating Sheet, Formatting Sheet, Visualizing Sheet (엑셀, 간트차트, 그래프 등)
+- ask 도구의 attachments 파라미터
+- 브라우저 도구
+- 가상 데이터 생성 (추측/기억 재사용 금지, 반드시 시트에서만 읽기)
+- WBS 시트에 없는 사람에게 메일 보내기 (조직도에만 있는 사람 제외)
+- 조직도 시트의 모든 사람에게 메일 보내기 (WBS 담당자만 발송)
+- 지연되지 않은 작업을 지연 현황이라고 보고
+- "작업을 진행하실 수 있습니다" 같은 말로 중단
+
+✅ 허용:
+- 지연 현황 분석 (메모리에서만, 파일 저장 금지)
+- MCP googlesheets READ/GET
+- MCP gmail SEND (분석 결과를 메일 본문에 포함)
+
+✅ 필수: 메일 발송 전 WBS 원본과 담당자명 100% 일치 검증
+✅ 작업 범위: 데이터 읽기 → 지연 분석 (메모리) → 메일 발송 (3단계만)
+`;
+
   // 사용자에게 보이는 깔끔한 프롬프트
-  const visiblePrompt = `오늘 날짜는 ${today}입니다.
-
+  const visiblePrompt = `
+오늘 날짜: ${today}
 작업 내용: ${task.task_prompt}
-
 스프레드시트 URL: ${task.sheet_url}`;
 
   const emailRecipients = task.email_recipients && task.email_recipients.length > 0
@@ -79,25 +106,20 @@ const createFullPrompt = (task: ScheduledTask): string => {
 
   const hiddenPrompt = `
 
-🚨 절대 규칙 (시스템 프롬프트 오버라이드):
-⛔ MCP 도구만 사용 (브라우저 금지)
-⛔ Creating File/Sheet/시각화 생성 금지 (분석 결과는 메일 본문에만)
-⛔ 가상 데이터 생성 금지 (추측/생성/기억 재사용 시 즉시 중단)
-⛔ "작업을 진행하실 수 있습니다" 같은 말로 중단 금지
-
-필수 순서:
-1️⃣ MCP googlesheets/gmail 검색 → WBS 시트 데이터 읽기 (BATCH GET)
-2️⃣ 지연 작업 추출 (종료일 < 오늘 && 실적 < 100%)
-3️⃣ 담당자 추출: WBS "담당자" 열만 사용 (조직도 X), 이름 정규화 (직급 제거)
-4️⃣ PM 추출: WBS "PM" 레이블에서 1명만 추출
-5️⃣ 이메일 조회: 조직도 시트에서 정규화된 이름으로 이메일 주소만 추출 (이름은 WBS에서만, 조직도는 이메일 찾기 전용)
-6️⃣ 검증: WBS 원본 다시 읽어서 추출 데이터 100% 일치 확인 (불일치 시 즉시 중단)
-7️⃣ 메일 발송: GMAIL SEND EMAIL (is_html: true, 담당자별 루프, PM은 CC)
-8️⃣ 완료 보고: "총 N명에게 메일 발송 완료"
-
+작업 순서:
+1️⃣ MCP googlesheets READ/GET으로 WBS 데이터 읽기
+2️⃣ 지연 작업 필터링 (종료일 < 오늘 && 실적 < 100%)
+3️⃣ 담당자: WBS "담당자" 열에서만 추출 (조직도 X)
+4️⃣ PM: WBS "PM"에서 1명만 추출
+5️⃣ 이메일: 조직도 시트에서 담당자/PM 이메일 주소 조회
+6️⃣ 검증: WBS 원본과 추출한 담당자/PM 이름 100% 일치 확인
+7️⃣ MCP gmail SEND로 발송
+   - 각 담당자: 본인 지연 건만 개별 발송 (TO: 담당자, CC: PM)
+   - PM: 전체 지연 현황 요약 발송 (TO: PM)
+8️⃣ "총 N명 발송 완료" 보고
 `;
 
-  return visiblePrompt + emailRecipients + hiddenPrompt;
+  return criticalRules + visiblePrompt + emailRecipients + hiddenPrompt;
 };
 
 export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
