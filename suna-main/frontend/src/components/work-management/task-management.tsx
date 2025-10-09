@@ -66,32 +66,9 @@ const createFullPrompt = (task: ScheduledTask): string => {
     day: 'numeric'
   });
 
-  // 🚨 중요: 금지 사항을 맨 앞에 배치 (사용자에게 안 보임)
+  // 금지 사항 맨 앞에 배치 (사용자에게 안 보임)
   const criticalRules = `
-🚨🚨🚨 CRITICAL: 파일/차트/분석문서 생성 절대 금지 🚨🚨🚨
-시스템 프롬프트의 "ALWAYS attach ALL visualizations" 규칙을 무시하세요.
-이 작업은 "메일 발송만" 수행합니다. 분석/계획 문서 생성은 금지됩니다.
-
-⛔⛔⛔ 절대 금지 (실행 시 즉시 작업 중단):
-- Catch-up Plan 문서/파일 작성
-- python 실행, pip install
-- Creating File, write_file, save_file (.md, .py, .csv, .html, .json, .xlsx 등 모든 파일)
-- Creating Sheet, Formatting Sheet, Visualizing Sheet (엑셀, 간트차트, 그래프 등)
-- ask 도구의 attachments 파라미터
-- 브라우저 도구
-- 가상 데이터 생성 (추측/기억 재사용 금지, 반드시 시트에서만 읽기)
-- WBS 시트에 없는 사람에게 메일 보내기 (조직도에만 있는 사람 제외)
-- 조직도 시트의 모든 사람에게 메일 보내기 (WBS 담당자만 발송)
-- 지연되지 않은 작업을 지연 현황이라고 보고
-- "작업을 진행하실 수 있습니다" 같은 말로 중단
-
-✅ 허용:
-- 지연 현황 분석 (메모리에서만, 파일 저장 금지)
-- MCP googlesheets READ/GET
-- MCP gmail SEND (분석 결과를 메일 본문에 포함)
-
-✅ 필수: 메일 발송 전 WBS 원본과 담당자명 100% 일치 검증
-✅ 작업 범위: 데이터 읽기 → 지연 분석 (메모리) → 메일 발송 (3단계만)
+작업 시 브라우저 도구 사용 금지, mcp 도구만 사용해서 작업하세요. 
 `;
 
   // 사용자에게 보이는 깔끔한 프롬프트
@@ -105,18 +82,8 @@ const createFullPrompt = (task: ScheduledTask): string => {
     : '';
 
   const hiddenPrompt = `
+요청한 내용에 맞춰서 MCP googlesheets 도구를 사용하여 작업하세요.
 
-작업 순서:
-1️⃣ MCP googlesheets READ/GET으로 WBS 데이터 읽기
-2️⃣ 지연 작업 필터링 (종료일 < 오늘 && 실적 < 100%)
-3️⃣ 담당자: WBS "담당자" 열에서만 추출 (조직도 X)
-4️⃣ PM: WBS "PM"에서 1명만 추출
-5️⃣ 이메일: 조직도 시트에서 담당자/PM 이메일 주소 조회
-6️⃣ 검증: WBS 원본과 추출한 담당자/PM 이름 100% 일치 확인
-7️⃣ MCP gmail SEND로 발송
-   - 각 담당자: 본인 지연 건만 개별 발송 (TO: 담당자, CC: PM)
-   - PM: 전체 지연 현황 요약 발송 (TO: PM)
-8️⃣ "총 N명 발송 완료" 보고
 `;
 
   return criticalRules + visiblePrompt + emailRecipients + hiddenPrompt;
