@@ -68,9 +68,7 @@ const createFullPrompt = (task: ScheduledTask): string => {
 
   // 금지 사항 맨 앞에 배치 (사용자에게 안 보임)
   const criticalRules = `
-  중요 규칙:
-- 브라우저 도구 사용 금지
-- MCP 도구만 사용하여 작업 수행
+  [중요]: 사용자가 링크로 요청해도 무조건 [mcp 도구]를 사용할 것. [브라우저 도구]는 사용 금지
 `;
 
   // 사용자에게 보이는 깔끔한 프롬프트
@@ -85,6 +83,7 @@ const createFullPrompt = (task: ScheduledTask): string => {
 
   const hiddenPrompt = ` 
 작업 가이드:
+[중요]: 사용자가 링크로 요청해도 무조건 [mcp 도구]를 사용할 것. [브라우저 도구]는 사용 금지
 1. MCP googlesheets 도구를 사용하여 스프레드시트 데이터 읽기
 2. 요청된 데이터 분석 수행 (메모리에서만 처리)
 3. 필요시 MCP gmail 도구를 사용하여 메일 발송
