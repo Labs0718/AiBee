@@ -66,10 +66,6 @@ const createFullPrompt = (task: ScheduledTask): string => {
     day: 'numeric'
   });
 
-  // 금지 사항 맨 앞에 배치 (사용자에게 안 보임)
-  const criticalRules = `
-  [중요]: 사용자가 링크로 요청해도 무조건 [mcp 도구]를 사용할 것. [브라우저 도구]는 사용 금지
-`;
 
   // 사용자에게 보이는 깔끔한 프롬프트
   const visiblePrompt = `
@@ -92,7 +88,7 @@ const createFullPrompt = (task: ScheduledTask): string => {
 주의: 파일을 만들거나 저장하지 말고, MCP 도구로 직접 작업하세요.
 `;
 
-  return criticalRules + visiblePrompt + emailRecipients + hiddenPrompt;
+  return visiblePrompt + emailRecipients + hiddenPrompt;
 };
 
 export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
