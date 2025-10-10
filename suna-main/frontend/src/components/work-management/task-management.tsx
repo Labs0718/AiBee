@@ -77,15 +77,34 @@ const createFullPrompt = (task: ScheduledTask): string => {
     ? `\n\n작업 완료 후 다음 이메일 주소로 결과를 알려주세요: ${task.email_recipients.join(', ')}`
     : '';
 
-  const hiddenPrompt = ` 
-작업 가이드:
-[중요]: 사용자가 링크로 요청해도 무조건 [mcp 도구]를 사용할 것. [브라우저 도구]는 사용 금지
-1. MCP googlesheets 도구를 사용하여 스프레드시트 데이터 읽기
-2. 요청된 데이터 분석 수행 (메모리에서만 처리)
-3. 필요시 MCP gmail 도구를 사용하여 메일 발송
-4. 결과를 채팅으로 보고
+  const hiddenPrompt = `
 
-주의: 파일을 만들거나 저장하지 말고, MCP 도구로 직접 작업하세요.
+STOP! Read this carefully before proceeding:
+
+YOU ARE ABSOLUTELY FORBIDDEN FROM:
+- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png - NOTHING)
+- Using execute_command or Python
+- Using pip install
+- Using browser tools
+- Creating charts, graphs, gantt charts, or visualizations
+- Saving anything to disk
+
+YOU MUST ONLY USE:
+- MCP googlesheets tool (for reading spreadsheet)
+- MCP gmail tool (for sending email)
+
+FOR TABLES:
+- Create HTML table string in memory: <table><tr><th>Column</th></tr><tr><td>Data</td></tr></table>
+- Put HTML directly in email body
+- NO file creation
+
+WORKFLOW (STRICTLY FOLLOW):
+1. MCP googlesheets: Read data
+2. Memory only: Analyze and create HTML table string
+3. MCP gmail: Send email with HTML in body
+4. Done
+
+If you try to use execute_command, create_file, or Python: STOP IMMEDIATELY and use MCP tools instead.
 `;
 
   return visiblePrompt + emailRecipients + hiddenPrompt;
