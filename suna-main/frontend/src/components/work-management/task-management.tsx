@@ -79,32 +79,30 @@ const createFullPrompt = (task: ScheduledTask): string => {
 
   const hiddenPrompt = `
 
-STOP! Read this carefully before proceeding:
+CRITICAL RULES - READ CAREFULLY:
 
-YOU ARE ABSOLUTELY FORBIDDEN FROM:
-- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png - NOTHING)
-- Using execute_command or Python
-- Using pip install
+[ABSOLUTELY FORBIDDEN]:
+- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png)
+- Using execute_command, Python, pip install
 - Using browser tools
-- Creating charts, graphs, gantt charts, or visualizations
-- Saving anything to disk
+- Creating charts, graphs, gantt charts, visualizations
 
-YOU MUST ONLY USE:
-- MCP googlesheets tool (for reading spreadsheet)
-- MCP gmail tool (for sending email)
+[CRITICAL - DATA INTEGRITY]:
+- Use ONLY data that actually exists in the spreadsheet
+- DO NOT invent, guess, or make up ANY data (names, emails, numbers, dates)
+- DO NOT create fake email addresses
+- When sending emails: Use ONLY email addresses found in the spreadsheet
+- If required data is missing: SKIP that item, do NOT fabricate data
 
-FOR TABLES:
-- Create HTML table string in memory: <table><tr><th>Column</th></tr><tr><td>Data</td></tr></table>
-- Put HTML directly in email body
+[ALLOWED TOOLS ONLY]:
+- MCP googlesheets (read spreadsheet data)
+- MCP gmail (send email to verified addresses only)
+
+[TABLE FORMAT]:
+- Create HTML table in email body: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
 - NO file creation
 
-WORKFLOW (STRICTLY FOLLOW):
-1. MCP googlesheets: Read data
-2. Memory only: Analyze and create HTML table string
-3. MCP gmail: Send email with HTML in body
-4. Done
-
-If you try to use execute_command, create_file, or Python: STOP IMMEDIATELY and use MCP tools instead.
+IMPORTANT: Only work with real data from spreadsheet. Never generate fake data.
 `;
 
   return visiblePrompt + emailRecipients + hiddenPrompt;
