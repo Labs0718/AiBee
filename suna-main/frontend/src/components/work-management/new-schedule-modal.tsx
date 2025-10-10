@@ -251,14 +251,14 @@ export function NewScheduleModal({ open, onOpenChange, editingTask }: NewSchedul
                 placeholder="예: WBS에서 종료일이 내일인 작업들을 찾아서 담당자별로 정리해주세요. 각 작업의 진행상태도 함께 확인해주세요."
                 className="resize-none"
                 rows={4}
-                maxLength={500}
+                maxLength={800}
                 value={formData.task_prompt}
                 onChange={(e) => handleInputChange('task_prompt', e.target.value)}
               />
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>에이전트가 수행할 작업을 구체적으로 설명해주세요</span>
-                <span className={formData.task_prompt.length > 450 ? 'text-orange-500' : ''}>
-                  {formData.task_prompt.length}/500자
+                <span className={formData.task_prompt.length > 750 ? 'text-orange-500' : ''}>
+                  {formData.task_prompt.length}/800자
                 </span>
               </div>
             </div>

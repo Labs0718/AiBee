@@ -31,7 +31,7 @@ class ScheduledTaskCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     sheet_url: str = Field(..., min_length=1)
-    task_prompt: str = Field(..., min_length=10, max_length=500)
+    task_prompt: str = Field(..., min_length=10, max_length=800)
     schedule_config: Dict[str, Any] = Field(...)  # type, time, day 등
     email_recipients: Optional[List[str]] = Field(default=[])
     is_active: bool = Field(default=True)
@@ -40,7 +40,7 @@ class ScheduledTaskUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=255)
     description: Optional[str] = Field(None, max_length=1000)
     sheet_url: Optional[str] = Field(None, min_length=1)
-    task_prompt: Optional[str] = Field(None, min_length=10, max_length=500)
+    task_prompt: Optional[str] = Field(None, min_length=10, max_length=800)
     schedule_config: Optional[Dict[str, Any]] = Field(None)
     email_recipients: Optional[List[str]] = Field(None)
     is_active: Optional[bool] = Field(None)
@@ -270,7 +270,7 @@ async def get_scheduled_tasks(
             email_recipients = []
 
             # 작업 내용 추출 (여러 줄 지원)
-            task_match = re.search(r'작업 내용: (.+?)(?=\n\n|스프레드시트 URL:|$)', agent_prompt, re.DOTALL)
+            task_match = re.search(r'작업 내용: (.+?)(?=스프레드시트 URL:|$)', agent_prompt, re.DOTALL)
             if task_match:
                 task_prompt = task_match.group(1).strip()
 
