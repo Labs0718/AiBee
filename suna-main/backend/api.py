@@ -140,7 +140,7 @@ allow_origin_regex = None
 if config.ENV_MODE == EnvMode.LOCAL:
     allowed_origins.append("http://localhost:3000")
     allowed_origins.append("http://172.17.0.130")
-    allowed_origins.append("http://44.222.82.89")
+    allowed_origins.append("http://3.238.248.218")
 
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.STAGING:
