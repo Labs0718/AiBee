@@ -14,7 +14,11 @@
       "Bash(docker volume prune:*)",
       "Bash(docker:*)",
       "Bash(curl:*)",
-      "Bash(timeout 5 docker-compose logs:*)"
+      "Bash(timeout 5 docker-compose logs:*)",
+      "Bash(cat:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
