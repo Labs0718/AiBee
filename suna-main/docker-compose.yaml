@@ -96,7 +96,6 @@ services:
         # ----- 로컬 개발용 설정 -----
         # - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
         # - NEXT_PUBLIC_URL=http://localhost:3000
-        - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
         # ----- AWS 배포용 설정 -----
         - NEXT_PUBLIC_BACKEND_URL=http://3.238.248.218:8000/api
         - NEXT_PUBLIC_URL=http://3.238.248.218
