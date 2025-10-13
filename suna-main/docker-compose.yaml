@@ -98,8 +98,8 @@ services:
         # - NEXT_PUBLIC_URL=http://localhost:3000
         - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000/api
         # ----- AWS 배포용 설정 -----
-        - NEXT_PUBLIC_BACKEND_URL=http://44.222.82.89:8000/api
-        - NEXT_PUBLIC_URL=http://44.222.82.89
+        - NEXT_PUBLIC_BACKEND_URL=http://3.238.248.218:8000/api
+        - NEXT_PUBLIC_URL=http://3.238.248.218
         - KORTIX_ADMIN_API_KEY=8b652c6283dd9810ea7af45731dda5c754a0bde66ccfd977a3bfec3d039e8e2a
     ports:
       # ----- 로컬 개발용 포트 -----
