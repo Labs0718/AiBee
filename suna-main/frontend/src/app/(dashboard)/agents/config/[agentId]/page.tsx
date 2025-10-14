@@ -2,16 +2,14 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Loader2, Save, Eye } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUpdateAgent } from '@/hooks/react-query/agents/use-agents';
 import { useCreateAgentVersion, useActivateAgentVersion } from '@/hooks/react-query/agents/use-agent-versions';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { AgentPreview } from '../../../../../components/agents/agent-preview';
 
 import { useAgentVersionData } from '../../../../../hooks/use-agent-version-data';
 import { useSearchParams } from 'next/navigation';
@@ -66,7 +64,6 @@ export default function AgentConfigurationPage() {
   });
 
   const [originalData, setOriginalData] = useState<FormData>(formData);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const initialTab = tabParam === 'agent-builder' ? 'agent-builder' : 'configuration';
   const [activeTab, setActiveTab] = useState(initialTab);
 
@@ -494,22 +491,15 @@ export default function AgentConfigurationPage() {
     profile_image_url: agent?.profile_image_url || '',
   } : formData;
 
-
-  const previewAgent = {
-    ...agent,
-    ...displayData,
-    agent_id: agentId,
-  };
-
   return (
     <div className="h-screen flex flex-col bg-background">
       <div className="flex-1 flex overflow-hidden">
-        <div className="hidden lg:grid lg:grid-cols-2 w-full h-full">
-          <div className="bg-background h-full flex flex-col border-r border-border/40 overflow-hidden">
+        <div className="hidden lg:flex w-full h-full">
+          <div className="bg-background h-full flex flex-col w-full overflow-hidden">
             <div className="flex-shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="pt-4">
 
-                
+
                 {isViewingOldVersion && (
                   <div className="mb-4 px-8">
                     <VersionAlert
@@ -519,7 +509,7 @@ export default function AgentConfigurationPage() {
                     />
                   </div>
                 )}
-                
+
                 <AgentHeader
                   agentId={agentId}
                   displayData={displayData}
@@ -587,11 +577,6 @@ export default function AgentConfigurationPage() {
                   </TabsContent>
                 </Tabs>
               )}
-            </div>
-          </div>
-          <div className="bg-muted/30 h-full overflow-hidden">
-            <div className="h-full overflow-y-auto">
-              {previewAgent && <AgentPreview agent={previewAgent} agentMetadata={agent?.metadata} />}
             </div>
           </div>
         </div>
@@ -678,24 +663,6 @@ export default function AgentConfigurationPage() {
               )}
             </div>
           </div>
-          <Drawer open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-            <DrawerTrigger asChild>
-              <Button 
-                className="fixed bottom-6 right-6 rounded-full shadow-lg h-14 w-14 bg-primary hover:bg-primary/90 z-50"
-                size="icon"
-              >
-                <Eye className="h-5 w-5" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="h-[85vh]">
-              <DrawerHeader className="border-b">
-                <DrawerTitle>Agent Preview</DrawerTitle>
-              </DrawerHeader>
-              <div className="flex-1 overflow-y-auto p-4">
-                {previewAgent && <AgentPreview agent={previewAgent} agentMetadata={agent?.metadata} />}
-              </div>
-            </DrawerContent>
-          </Drawer>
         </div>
       </div>
     </div>
