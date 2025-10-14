@@ -694,8 +694,8 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 }
                                                 
                         
-                                                if (fullContent.includes('# 문서 비교·요약·정리')) {
-                                                    return fullContent.split('# 문서 비교·요약·정리')[0].trim();
+                                                if (fullContent.includes('# 문서 비교·검토')) {
+                                                    return fullContent.split('# 문서 비교·검토')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# 분석 보고서 생성')) {
