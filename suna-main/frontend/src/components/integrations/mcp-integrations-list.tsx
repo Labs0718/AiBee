@@ -82,7 +82,7 @@ export const MCPIntegrationsList: React.FC = () => {
           You haven't configured any MCP integrations yet. Create an agent and add integrations to get started.
         </p>
         <Button onClick={() => router.push('/agents')}>
-          Go to Agents
+          Add MCP Integration
         </Button>
       </div>
     );
