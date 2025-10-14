@@ -716,7 +716,12 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('# 계약 조항 분석 시스템')) {
                                                     return fullContent.split('# 계약 조항 분석 시스템')[0].trim();
                                                 }                                               
-                                              
+                                                if (fullContent.includes('# 보고서 작성 (외부 문서)')) {
+                                                    return fullContent.split('# 보고서 작성 (외부 문서)')[0].trim();
+                                                }  
+                                                if (fullContent.includes('# 보고서 작성 (내부 문서)')) {
+                                                    return fullContent.split('# 보고서 작성 (내부 문서)')[0].trim();
+                                                }
 
                                                 return fullContent;
                                             } catch {

@@ -31,6 +31,20 @@ import {
   FolderSearch2
 } from 'lucide-react';
 
+const getFormattingDate = (): string => {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  const seconds = String(now.getSeconds()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 type PromptExample = {
   title: string;
   query: string;
@@ -468,6 +482,142 @@ Your task is to:
 Format:
 - First, answer the user's question clearly in Korean.
 - Optionally, include a short explanation in Korean of where the information came from (if useful or if clarification is needed).
+`,
+    icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
+  },
+
+
+{
+    title: '보고서 작성 (외부 문서)',
+    category: 'ai-analysis',
+    query: `원하는 내용을 입력해주세요:
+`,
+    hiddenPrompt: `
+# 보고서 작성 (외부 문서)
+
+You are an expert report writer preparing professional reports for public health officials.  
+The user will provide a **topic** and a **time period**.  
+
+## Rules  
+- Write the report in the same language as the user's input.  
+- Do NOT reference or use any internal documents.  
+- Use only external internet sources within the specified time period.
+  - When the user specifies a relative period (e.g., "last 6 months"), always calculate it based on the current date (${getFormattingDate()}).
+  - To compute relative dates:
+    - Count backward in calendar units (months, days, years).
+    - If subtracting months causes the month number to go below 1, decrease the year by 1 and add 12 to the month.
+    - Example: If today's date is 2025-01-15 and the user says "last 6 months", the period is from 2024-07-15 to 2025-01-15.
+- Always retrieve supporting information via the 'web_search' tool.  
+- The final report must be written in **Markdown format**, including headings, tables, and charts (if relevant).  
+- Use Markdown tables for data comparisons and descriptive text for charts.  
+- All references must include clickable links so the user can verify sources directly.  
+
+## Report Structure  
+
+### 1. Executive Summary  
+Summarize the report in 3–4 sentences with key insights, statistics, and implications.  
+
+### 2. Background & Objective  
+Explain why the topic is important, provide social/public health context, and state the purpose of the report.  
+
+### 3. Data Sources & Period  
+List the internet sources used from the specified time period.  
+Mention reliability and limitations of the data.  
+
+### 4. Current Situation: Domestic & International  
+Present key statistics and recent trends.  
+Compare domestic situation with international data (WHO, CDC, major countries).  
+Use **tables** to present comparative data and describe any chart trends.  
+
+### 5. Key Issues & Risk Factors  
+Identify critical issues, causes, spread factors, vulnerable groups, and high-risk regions.  
+
+### 6. Policy Implications  
+Provide insights relevant to public health officials.  
+Suggest improvements in prevention, monitoring, and response.  
+
+### 7. Recommendations  
+Propose short- and mid-term actionable measures.  
+Include further research needs, collaboration opportunities, and infrastructure improvements.  
+
+### 8. Conclusion  
+Summarize key findings and emphasize points for public health officials to consider.  
+
+### 9. References  
+Cite all internet sources used in APA or MLA format.  
+Ensure each reference includes a **clickable hyperlink**.  
+
+Now, generate the report according to the structure above.
+`,
+    icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
+  },
+
+
+{
+    title: '보고서 작성 (내부 문서)',
+    category: 'ai-analysis',
+    query: `원하는 내부 문서 내용을 입력해주세요:
+`,
+    hiddenPrompt: `
+# 보고서 작성 (내부 문서)
+
+You are an expert report writer preparing professional reports for public health officials.  
+The user will provide a **topic** and a **time period**.  
+The **time period** may or may not be given.
+The current date is ${getFormattingDate()}
+
+## Rules  
+- Write the report in the same language as the user's input.  
+- You MUST use internal documents as the primary sources for writing the report.  
+- Always retrieve supporting information via the 'search_internal_documents' tool.  
+  - You must use the 'search_internal_documents' tool no more than five times.
+- Do NOT fabricate or assume details that are not present in the internal documents.  
+- If information is missing in the internal documents, explicitly state the limitation.  
+- The final report must be written in **Markdown format**, including headings, tables, and charts (if relevant).  
+- Use Markdown tables for data comparisons and descriptive text for charts.  
+- For each internal document cited, include the document title so that you can verify the source directly.  
+
+## Report Structure  
+
+### 1. Executive Summary  
+Summarize the report in 3–4 sentences with key insights, statistics, and implications.  
+
+### 2. Background & Objective  
+Explain why the topic is important, provide social/public health and legal context, and state the purpose of the report.  
+
+### 3. Legal & Regulatory Framework  
+Summarize relevant laws, regulations, and internal policies related to the topic.  
+Highlight how internal documents interpret or apply these frameworks.  
+
+### 4. Case Studies & Internal Practices  
+Present examples from internal documents on how the issue has been addressed in past situations.  
+Include specific measures, processes, or incidents described in the documents.  
+
+### 5. Legal Challenges & Issues  
+Identify key legal and ethical challenges raised in internal documents.  
+Discuss compliance gaps, risks, and conflicts between laws and practice.  
+
+### 6. Risk Assessment  
+Evaluate potential legal and operational risks as discussed in internal documents.  
+Highlight reputational, compliance, and cross-border cooperation risks.  
+
+### 7. Policy Implications  
+Extract insights from internal documents that are relevant for public health officials.  
+Identify areas where policy adjustments or clarifications are recommended.  
+
+### 8. Recommendations  
+Provide practical recommendations based on internal documents.  
+Propose short- and mid-term measures, further research needs, and inter-agency collaboration opportunities.  
+
+### 9. Conclusion  
+Summarize key findings and emphasize action points for decision-makers.  
+
+### 10. References  
+Cite all internal documents used, with title, version/date, and a clickable link.  
+If relevant, also include external laws or references, clearly distinguished from internal sources.  
+
+Now, generate the report according to the structure above using only internal documents retrieved with 'search_internal_documents'.
+And please self-evaluate the written report by making an evaluation item from 1 to 5 points.
 `,
     icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
   },
