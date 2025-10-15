@@ -100,8 +100,16 @@ export const metadata: Metadata = {
     ],
   },
   icons: {
-    icon: [{ url: '/logo2.png', sizes: 'any' }],
-    shortcut: '/logo2.png',
+    icon: [
+      { url: '/favicon-bee.png', sizes: '48x48', type: 'image/png' },
+      { url: '/favicon-bee.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon-bee.png', sizes: '128x128', type: 'image/png' },
+      { url: '/favicon-bee.png', sizes: '256x256', type: 'image/png' },
+    ],
+    shortcut: '/favicon-bee.png',
+    apple: [
+      { url: '/favicon-bee.png', sizes: '180x180', type: 'image/png' }
+    ],
   },
   // manifest: "/manifest.json",
   alternates: {

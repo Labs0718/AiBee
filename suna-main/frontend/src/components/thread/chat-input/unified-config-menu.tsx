@@ -211,7 +211,7 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
     // combinedModels defined earlier
 
     const renderAgentIcon = (agent: any) => {
-        return <AgentAvatar agentId={agent?.agent_id} size={16} className="h-4 w-4" fallbackName={agent?.name} />;
+        return <AgentAvatar agentId={agent?.agent_id} size={40} className="h-6 w-6" fallbackName={agent?.name} />;
     };
 
     const displayAgent = useMemo(() => {
@@ -232,14 +232,14 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
                         aria-label="Config menu"
                     >
                         {onAgentSelect ? (
-                            <div className="flex items-center gap-2 max-w-[140px]">
-                                <div className="flex-shrink-0">
+                            <div className="flex items-center gap-0 max-w-[140px]">
+                                <div className="flex-shrink-0 -mr-1">
                                     {renderAgentIcon(displayAgent)}
                                 </div>
                                 <span className="truncate text-sm">
                                     {displayAgent?.name || 'AiBee'}
                                 </span>
-                                <ChevronDown size={12} className="opacity-60" />
+                                <ChevronDown size={12} className="opacity-60 ml-0.5" />
                             </div>
                         ) : (
                             <div className="flex items-center gap-1.5">
@@ -290,8 +290,10 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
                                             className="text-sm px-3 py-2 mx-0 my-0.5 flex items-center justify-between cursor-pointer rounded-lg"
                                             onClick={() => handleAgentClick(agent.agent_id)}
                                         >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                {renderAgentIcon(agent)}
+                                            <div className="flex items-center gap-0 min-w-0">
+                                                <div className="-mr-1">
+                                                    {renderAgentIcon(agent)}
+                                                </div>
                                                 <span className="truncate">{agent.name}</span>
                                             </div>
                                             {selectedAgentId === agent.agent_id && (

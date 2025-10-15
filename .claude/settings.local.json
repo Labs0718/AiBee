@@ -19,7 +19,9 @@
       "Bash(git check-ignore:*)",
       "Bash(git add:*)",
       "Bash(git log:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Read(//c/Users/jjuun/Desktop/**)",
+      "Bash(copy:*)"
     ],
     "deny": [],
     "ask": []
