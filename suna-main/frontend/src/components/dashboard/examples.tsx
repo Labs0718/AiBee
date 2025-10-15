@@ -21,6 +21,9 @@ import {
   Heart,
   Briefcase,
   Building,
+  NotebookPen,
+  ScrollText,
+  Scroll,
   Search,
   Zap,
   BookOpen,
@@ -125,7 +128,7 @@ const allPrompts: PromptExample[] = [
     icon: <Calendar className="text-green-600 dark:text-green-400" size={16} />,
   },
   
-  
+
   {
     title: '내 연차 찾기',
     category: 'automation',
@@ -176,8 +179,7 @@ const allPrompts: PromptExample[] = [
   - 회의명: 명시된 회의명 또는 안건 기반 생성
   - 일시: 스크립트에서 추출 (형식 :YYYY-MM-DD, 없으면 오늘날짜)
   - 장소: 추출 (없으면 "회의실")
-  - 작성일: 항상 오늘 날짜 (YYYY-MM-DD 형식)
-    ⛔ 절대 금지: 10월을 01로 쓰지 마세요! (오늘이 10월 14일이면 2025-10-14)
+  - 작성일: 항상 오늘 날짜 ${getFormattingDate().split(' ')[0]} (YYYY-MM-DD 형식)
   - 참석자: 이름(직책은 괄호 가능), 콤마로 구분.
   - 회의안건: 논의된 주제들 (콤마 구분)
   - 요약내용: 번호로 구조화 (1. 2. 3...), 각 주제별 하위 내용은 "- "로 시작
@@ -218,7 +220,7 @@ const allPrompts: PromptExample[] = [
   - 헤더 영역 수정 금지 (A1:B4)
 
 `,
-    icon: <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />,
+    icon: <NotebookPen className="text-amber-500 dark:text-amber-400" size={16} />,
   },
 
 
@@ -416,7 +418,7 @@ Ensure each reference includes a **clickable hyperlink**.
 
 Now, generate the report according to the structure above.
 `,
-    icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
+    icon: <Scroll className="text-teal-600 dark:text-teal-400" size={16} />,
   },
 
 
@@ -486,7 +488,7 @@ If relevant, also include external laws or references, clearly distinguished fro
 Now, generate the report according to the structure above using only internal documents retrieved with 'search_internal_documents'.
 And please self-evaluate the written report by making an evaluation item from 1 to 5 points.
 `,
-    icon: <FolderSearch2 className="text-purple-600 dark:text-purple-400" size={16} />,
+    icon: <ScrollText className="text-indigo-600 dark:text-indigo-400" size={16} />,
   },
 ];
 
