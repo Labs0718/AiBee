@@ -53,7 +53,7 @@ type PromptExample = {
   query: string;
   icon: React.ReactNode;
   hiddenPrompt?: string; // 숨겨진 가이드 프롬프트
-  category: 'automation' | 'ai-analysis'; // 카테고리 수정
+  category: 'automation' | 'ai-analysis' | 'hidden'; // 카테고리 수정
 };
 
 const allPrompts: PromptExample[] = [
@@ -502,7 +502,7 @@ And please self-evaluate the written report by making an evaluation item from 1 
   // 스프레드시트 자동화용 히든 프롬프트 (UI에는 표시하지 않음)
   {
     title: '스프레드시트 자동화',
-    category: 'hidden' as any, // UI에 표시하지 않음
+    category: 'hidden', // UI에 표시하지 않음
     query: '',
     hiddenPrompt: `
 
@@ -550,7 +550,7 @@ export const Examples = ({
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'automation' | 'ai-analysis'>('all');
 
   const filteredPrompts = selectedCategory === 'all'
-    ? allPrompts
+    ? allPrompts.filter(prompt => prompt.category !== 'hidden')
     : allPrompts.filter(prompt => prompt.category === selectedCategory);
 
   return (
