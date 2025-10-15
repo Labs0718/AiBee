@@ -698,10 +698,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 문서 비교·검토')[0].trim();
                                                 }
 
-                                                if (fullContent.includes('# 분석 보고서 생성')) {
-                                                    return fullContent.split('# 분석 보고서 생성')[0].trim();
-                                                }
-
                                                 if (fullContent.includes('# 회의록 자동 생성기')) {
                                                     return fullContent.split('# 회의록 자동 생성기')[0].trim();
                                                 }
@@ -713,9 +709,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('# 내부 문서 검색')) {
                                                     return fullContent.split('# 내부 문서 검색')[0].trim();
                                                 } 
-                                                if (fullContent.includes('# 계약 조항 분석 시스템')) {
-                                                    return fullContent.split('# 계약 조항 분석 시스템')[0].trim();
-                                                }                                               
+                                                                                     
                                                 if (fullContent.includes('# 보고서 작성 (외부 문서)')) {
                                                     return fullContent.split('# 보고서 작성 (외부 문서)')[0].trim();
                                                 }  
