@@ -143,7 +143,7 @@ def schedule_config_to_cron(schedule_config: Dict[str, Any]) -> str:
         return f"{utc_minute} {utc_hour} * * *"
 
 def create_agent_prompt(task_prompt: str, sheet_url: str, email_recipients: List[str]) -> str:
-    """에이전트 프롬프트 생성"""
+    """에이전트 프롬프트 생성 (히든 프롬프트 포함)"""
     prompt = f"""작업 내용: {task_prompt}
 
 스프레드시트 URL: {sheet_url}
@@ -153,7 +153,36 @@ def create_agent_prompt(task_prompt: str, sheet_url: str, email_recipients: List
     if email_recipients:
         prompt += f"\n\n작업 완료 후 다음 이메일 주소로 결과를 알려주세요: {', '.join(email_recipients)}"
 
-    return prompt
+    # 히든 프롬프트 추가 (examples.tsx와 동일한 규칙)
+    hidden_prompt = """
+
+CRITICAL RULES - READ CAREFULLY:
+
+[ABSOLUTELY FORBIDDEN]:
+- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png)
+- Using execute_command, Python, pip install
+- Using browser tools
+- Creating charts, graphs, gantt charts, visualizations
+
+[CRITICAL - DATA INTEGRITY]:
+- Use ONLY data that actually exists in the spreadsheet
+- DO NOT invent, guess, or make up ANY data (names, emails, numbers, dates)
+- DO NOT create fake email addresses
+- When sending emails: Use ONLY email addresses found in the spreadsheet
+- If required data is missing: SKIP that item, do NOT fabricate data
+
+[ALLOWED TOOLS ONLY]:
+- MCP googlesheets (read spreadsheet data)
+- MCP gmail (send email to verified addresses only)
+
+[TABLE FORMAT]:
+- Create HTML table in email body: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
+- NO file creation
+
+IMPORTANT: Only work with real data from spreadsheet. Never generate fake data.
+"""
+
+    return prompt + hidden_prompt
 
 @router.post("/scheduled-tasks", response_model=Dict[str, Any])
 async def create_scheduled_task(
