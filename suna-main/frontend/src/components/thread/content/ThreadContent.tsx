@@ -703,9 +703,9 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 }
 
                                                 // 스프레드시트 자동화 히든 프롬프트 제거
-                                                if (fullContent.includes('CRITICAL RULES - READ CAREFULLY:')) {
-                                                    return fullContent.split('CRITICAL RULES - READ CAREFULLY:')[0].trim();
-                                                }
+                                                // if (fullContent.includes('CRITICAL RULES - READ CAREFULLY:')) {
+                                                //     return fullContent.split('CRITICAL RULES - READ CAREFULLY:')[0].trim();
+                                                // }
 
                                                 if (fullContent.includes('# MCP 자동화 작업 가이드')) {
                                                     return fullContent.split('# MCP 자동화 작업 가이드')[0].trim();

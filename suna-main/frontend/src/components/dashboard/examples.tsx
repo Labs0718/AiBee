@@ -498,10 +498,10 @@ And please self-evaluate the written report by making an evaluation item from 1 
     icon: <ScrollText className="text-indigo-600 dark:text-indigo-400" size={16} />,
   },
 
-  // 스프레드시트 자동화용 히든 프롬프트
+  // 스프레드시트 자동화용 히든 프롬프트 (UI에는 표시하지 않음)
   {
     title: '스프레드시트 자동화',
-    category: 'automation',
+    category: 'hidden' as any, // UI에 표시하지 않음
     query: '',
     hiddenPrompt: `
 
