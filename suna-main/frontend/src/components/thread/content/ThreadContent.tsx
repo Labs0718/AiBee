@@ -702,7 +702,6 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                     return fullContent.split('# 회의록 자동 생성기')[0].trim();
                                                 }
 
-                                                // 스프레드시트 자동화 히든 프롬프트 제거
                                                 if (fullContent.includes('CRITICAL RULES - READ CAREFULLY:')) {
                                                     return fullContent.split('CRITICAL RULES - READ CAREFULLY:')[0].trim();
                                                 }

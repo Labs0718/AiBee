@@ -125,11 +125,11 @@ export function ConfigurationTab({
         <div className="px-8 py-0 space-y-3">
           {isSunaAgent && (
             <div className="p-4 bg-primary/10 border border-primary-200 rounded-xl">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="text-primary-600">
-                  <KortixLogo size={20} />
+              <div className="flex items-center gap-1 mb-2">
+                <div className="text-primary-600 flex-shrink-0">
+                  <img src="/favicon.png" alt="Suna" className="w-8 h-8" />
                 </div>
-                <span className="font-semibold text-primary-800">Suna Default Agent</span>
+                <span className="font-semibold text-primary-800">AiBee Default Agent</span>
               </div>
               <p className="text-sm text-primary-700">
                 This is Suna's default agent with centrally managed system prompt and tools.
