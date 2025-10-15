@@ -246,7 +246,7 @@ const allPrompts: PromptExample[] = [
 - WebSearch 도구 사용 금지
 - 한 문서만 분석/요약 금지
 - 각 문서를 따로 분석 금지
-
+- Viewing Image 도구로 PDF 읽기 금지 
 ---
 
 ## 작업 방법
@@ -262,6 +262,7 @@ const allPrompts: PromptExample[] = [
    - **Read 도구**로 첨부 파일 읽기
    - ✅ **이 내용을 문서2로 사용**
    - ⚠️ PDF는 Read 도구로 읽으세요 (Viewing Image 아님)
+   - ⛔ Viewing Image 도구로 PDF 읽지 마세요
 
 **Step 3. 즉시 "출력 형식"에 따라 비교표 작성**
    - Step 1, 2에서 얻은 텍스트를 **지금 당장** 비교
@@ -288,9 +289,13 @@ const allPrompts: PromptExample[] = [
 **변경 요약 예시:**
 - "1,000만원 → 1,500만원 (50% 증가)"
 - "중소기업만 → 중소·중견기업으로 확대"
-- "신규 추가" / "삭제됨" / "동일"
+- "신규 추가" / "삭제됨"
 
 ## 3) 브리핑
+
+**📌 사업 기본 정보 (변경 없음):**
+• [항목1]: [동일한 내용]
+• [항목2]: [동일한 내용]
 
 **📌 전체 방향:**
 [문서2의 전반적 변화를 한 문장으로]
@@ -309,6 +314,7 @@ const allPrompts: PromptExample[] = [
 ---
 
 **최종 보고:** "문서 비교 분석을 완료했습니다."
+- 위 비교 분석 결과 전체 내용을 파일로 생성
 
 ---
 
@@ -321,6 +327,7 @@ const allPrompts: PromptExample[] = [
 `,
     icon: <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />,
   },
+
 
 
 
