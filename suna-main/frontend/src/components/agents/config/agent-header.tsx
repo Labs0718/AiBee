@@ -120,11 +120,11 @@ export function AgentHeader({
     <>
     <header className="bg-background sticky top-0 flex h-14 shrink-0 items-center gap-3 z-20 w-full px-8 mb-2">
       {/* Left side - Agent info */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-1 min-w-0">
         <div className="relative flex-shrink-0">
           {isSunaAgent ? (
-            <div className="h-9 w-9 rounded-lg bg-muted border flex items-center justify-center">
-              <KortixLogo size={16} />
+            <div className="h-10 w-10 rounded-lg bg-muted border flex items-center justify-center p-0">
+              <KortixLogo size={40} />
             </div>
           ) : (
             <button 
