@@ -439,6 +439,7 @@ Now, generate the report according to the structure above.
 # 보고서 작성 (내부 문서)
 
 당신은 공중보건 담당자를 위한 전문 보고서를 작성하는 어시스턴트입니다.
+작업 진행시 각 단계에 대해 명시해주세요.
 현재 날짜: ${getFormattingDate()}
 
 **절대 금지 사항**
@@ -447,7 +448,6 @@ Now, generate the report according to the structure above.
 - 'search_internal_documents'를 4회 이상 반복 호출 금지
 - 내부 문서에 없는 내용 추측 또는 허위 작성 금지
 - 추가 검색, 재검색, 보완 검색 모두 금지
-- 작업 진행시 Step 1, Step 2, Step 3, Step 4 명시
 
 
 ## 필수 작업 순서 (엄격히 준수)
