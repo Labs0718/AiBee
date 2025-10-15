@@ -428,8 +428,8 @@ export function StreamingDemo() {
           animate={{ opacity: 1 }}
           className="flex items-center gap-3 mb-4"
         >
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <img src="/new-logo.png" alt="AiBee" className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <img src="/new-logo.png" alt="AiBee" className="w-10 h-10" />
           </div>
           {currentTyping === message.id ? <TypingIndicator /> : (
             <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
@@ -462,8 +462,8 @@ export function StreamingDemo() {
           animate={{ opacity: 1 }}
           className="flex items-start gap-3 mb-4"
         >
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <img src="/new-logo.png" alt="AiBee" className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <img src="/new-logo.png" alt="AiBee" className="w-10 h-10" />
           </div>
           <div className="flex-1 max-w-[80%]">
             <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
@@ -488,8 +488,8 @@ export function StreamingDemo() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-start gap-3 mb-4"
         >
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-            <img src="/new-logo.png" alt="AiBee" className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+            <img src="/new-logo.png" alt="AiBee" className="w-10 h-10" />
           </div>
           <div className="flex-1 max-w-[80%]">
             <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-md shadow-sm overflow-hidden">
@@ -583,7 +583,7 @@ export function StreamingDemo() {
     <div ref={demoRef} className="w-full px-32 lg:px-48 xl:px-56">
       <div className="text-center mb-12">
         <div className="flex items-center justify-center gap-4 mb-4">
-          <img src="/logo2.png" alt="AiBee Logo" className="w-12 h-12" />
+          <img src="/new-logo.png" alt="AiBee Logo" className="w-24 h-24" />
           <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">
             AiBee in Action
           </h2>
@@ -597,8 +597,8 @@ export function StreamingDemo() {
         {/* Header */}
         <div className="bg-white px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <img src="/new-logo.png" alt="AiBee" className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+              <img src="/new-logo.png" alt="AiBee" className="w-10 h-10" />
             </div>
             <div>
               <h3 className="text-gray-900 font-medium text-base">AiBee</h3>
