@@ -560,7 +560,7 @@ export function StreamingDemo() {
                 <input
                   type="text"
                   value={typedText}
-                  placeholder="어떤 도움이 필요하신지 설명해주세요..."
+                  placeholder="어떤 도움이 필요하신지 설명해주세요."
                   className="w-full px-6 py-5 text-base border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition-colors"
                   readOnly
                 />

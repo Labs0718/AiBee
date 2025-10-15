@@ -337,7 +337,7 @@ export function DashboardContent() {
                 ref={chatInputRef}
                 onSubmit={handleSubmit}
                 loading={isSubmitting}
-                placeholder="어떤 도움이 필요하신지 설명해 주세요..."
+                placeholder="어떤 도움이 필요하신지 설명해 주세요."
                 value={inputValue}
                 onChange={(value) => {
                   setInputValue(value);
