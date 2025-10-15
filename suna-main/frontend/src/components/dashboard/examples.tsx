@@ -438,8 +438,7 @@ The current date is ${getFormattingDate()}
 ## Rules  
 - Write the report in the same language as the user's input.  
 - You MUST use internal documents as the primary sources for writing the report.  
-- Always retrieve supporting information via the 'search_internal_documents' tool.  
-  - You must use the 'search_internal_documents' tool no more than five times.
+- Always retrieve supporting information via the 'search_internal_documents' tool.
 - Do NOT fabricate or assume details that are not present in the internal documents.  
 - If information is missing in the internal documents, explicitly state the limitation.  
 - The final report must be written in **Markdown format**, including headings, tables, and charts (if relevant).  
