@@ -21,7 +21,8 @@
       "Bash(git log:*)",
       "Bash(grep:*)",
       "Read(//c/Users/jjuun/Desktop/**)",
-      "Bash(copy:*)"
+      "Bash(copy:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
