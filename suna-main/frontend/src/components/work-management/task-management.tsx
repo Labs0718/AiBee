@@ -34,6 +34,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { NewScheduleModal } from './new-schedule-modal';
+import { SPREADSHEET_AUTOMATION_HIDDEN_PROMPT } from '@/components/dashboard/examples';
 
 interface ScheduledTask {
   id: string;
@@ -66,7 +67,6 @@ const createFullPrompt = (task: ScheduledTask): string => {
     day: 'numeric'
   });
 
-
   // 사용자에게 보이는 깔끔한 프롬프트
   const visiblePrompt = `
 오늘 날짜: ${today}
@@ -77,35 +77,8 @@ const createFullPrompt = (task: ScheduledTask): string => {
     ? `\n\n작업 완료 후 다음 이메일 주소로 결과를 알려주세요: ${task.email_recipients.join(', ')}`
     : '';
 
-  const hiddenPrompt = `
-
-CRITICAL RULES - READ CAREFULLY:
-
-[ABSOLUTELY FORBIDDEN]:
-- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png)
-- Using execute_command, Python, pip install
-- Using browser tools
-- Creating charts, graphs, gantt charts, visualizations
-
-[CRITICAL - DATA INTEGRITY]:
-- Use ONLY data that actually exists in the spreadsheet
-- DO NOT invent, guess, or make up ANY data (names, emails, numbers, dates)
-- DO NOT create fake email addresses
-- When sending emails: Use ONLY email addresses found in the spreadsheet
-- If required data is missing: SKIP that item, do NOT fabricate data
-
-[ALLOWED TOOLS ONLY]:
-- MCP googlesheets (read spreadsheet data)
-- MCP gmail (send email to verified addresses only)
-
-[TABLE FORMAT]:
-- Create HTML table in email body: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
-- NO file creation
-
-IMPORTANT: Only work with real data from spreadsheet. Never generate fake data.
-`;
-
-  return visiblePrompt + emailRecipients + hiddenPrompt;
+  // examples.tsx에서 관리하는 히든 프롬프트 사용
+  return visiblePrompt + emailRecipients + SPREADSHEET_AUTOMATION_HIDDEN_PROMPT;
 };
 
 export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
@@ -241,40 +214,45 @@ export function TaskManagement({ open, onOpenChange }: TaskManagementProps) {
         return;
       }
 
-      // 1. 새 스레드 생성
-      const threadResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/threads`,
+      // initiateAgent로 스레드 생성 + 에이전트 시작 (dashboard-content.tsx와 동일)
+      const fullPrompt = createFullPrompt(task);
+
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('prompt', fullPrompt);
+      formData.append('enable_thinking', 'false');
+      formData.append('reasoning_effort', 'low');
+      formData.append('stream', 'true');
+      formData.append('enable_context_manager', 'false');
+      formData.append('is_simple_mode', 'false');
+
+      // initiateAgent API 호출
+      const initiateResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent/initiate`,
         {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${session.session.access_token}`,
-            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: new URLSearchParams({
-            name: `MCP 자동화: ${task.name}`
-          }),
+          body: formData,
         }
       );
 
-      if (!threadResponse.ok) {
-        toast.error('채팅방 생성에 실패했습니다');
+      if (!initiateResponse.ok) {
+        toast.error('작업 실행에 실패했습니다');
         return;
       }
 
-      const threadData = await threadResponse.json();
-      const threadId = threadData.thread_id;
+      const result = await initiateResponse.json();
 
-      // 2. 기존 채팅 페이지로 이동하면서 자동 전송할 질문을 전달
-      const fullPrompt = createFullPrompt(task);
-      const encodedPrompt = encodeURIComponent(fullPrompt);
-
-      if (threadData.project_id) {
-        window.location.href = `/projects/${threadData.project_id}/thread/${threadId}?autoSend=${encodedPrompt}`;
+      // 생성된 스레드로 이동
+      if (result.project_id) {
+        window.location.href = `/projects/${result.project_id}/thread/${result.thread_id}`;
       } else {
         window.location.href = '/dashboard';
       }
 
-      toast.success('새 채팅방으로 이동하여 자동으로 질문을 전송합니다');
+      toast.success('작업을 시작했습니다');
 
     } catch (error) {
       console.error('Error running task:', error);

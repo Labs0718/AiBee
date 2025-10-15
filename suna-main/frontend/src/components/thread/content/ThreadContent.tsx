@@ -687,19 +687,23 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
                                                 if (fullContent.includes('## 연차 신청 자동화 가이드')) {
                                                     return fullContent.split('## 연차 신청 자동화 가이드')[0].trim();
                                                 }
-                                                
-                                                
+
+
                                                 if (fullContent.includes('## 내 연차 찾기 자동화 가이드')) {
                                                     return fullContent.split('## 내 연차 찾기 자동화 가이드')[0].trim();
                                                 }
-                                                
-                        
+
+
                                                 if (fullContent.includes('# 문서 비교·검토')) {
                                                     return fullContent.split('# 문서 비교·검토')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# 회의록 자동 생성기')) {
                                                     return fullContent.split('# 회의록 자동 생성기')[0].trim();
+                                                }
+
+                                                if (fullContent.includes('CRITICAL RULES - READ CAREFULLY:')) {
+                                                    return fullContent.split('CRITICAL RULES - READ CAREFULLY:')[0].trim();
                                                 }
 
                                                 if (fullContent.includes('# MCP 자동화 작업 가이드')) {

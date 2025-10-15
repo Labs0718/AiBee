@@ -53,7 +53,7 @@ type PromptExample = {
   query: string;
   icon: React.ReactNode;
   hiddenPrompt?: string; // 숨겨진 가이드 프롬프트
-  category: 'automation' | 'ai-analysis'; // 카테고리 수정
+  category: 'automation' | 'ai-analysis' | 'hidden'; // 카테고리 수정
 };
 
 const allPrompts: PromptExample[] = [
@@ -239,6 +239,7 @@ const allPrompts: PromptExample[] = [
 
 당신은 두 문서를 비교하여 차이점을 체계적으로 분석하는 전문 어시스턴트입니다.
 ⛔⛔⛔ 경고: 이 작업은 "비교"입니다. 각 문서를 따로 분석하면 실패입니다. TodoWrite 사용하지 마세요. ⛔⛔⛔
+⛔⛔⛔ 중요: PDF는 Read 도구로 직접 읽으세요. Viewing Image 시도하지 마세요 (실패하면 메모리 손실). ⛔⛔⛔
 
 
 ⛔ **절대 금지**
@@ -246,22 +247,23 @@ const allPrompts: PromptExample[] = [
 - WebSearch 도구 사용 금지
 - 한 문서만 분석/요약 금지
 - 각 문서를 따로 분석 금지
-
+- WebFetch / Scraping Website (PDF는 로컬 파일임)
+- Viewing Image 도구로 PDF 읽기 금지 
 ---
 
 ## 작업 방법
 
 **작업 순서 (엄격히 준수):**
 
-1. **내부 문서 검색 (우선 사용)**
+**Step 1. 내부 문서 검색 (우선 사용)**
    - search_internal_documents 실행
    - ✅ **검색 결과의 "내용:" 필드에 문서 전체 텍스트가 있음**
    - ✅ **이 텍스트를 문서1로 사용** (파일 찾지 마세요)
 
-**Step 2. 첨부 문서 읽기**
-   - **Read 도구**로 첨부 파일 읽기
+**Step 2. 첨부 문서 읽기(반드시 Read 도구만 사용)**
+   - **Read 도구로 첨부 PDF 파일 읽기** (PDF 직접 읽기 가능)
    - ✅ **이 내용을 문서2로 사용**
-   - ⚠️ PDF는 Read 도구로 읽으세요 (Viewing Image 아님)
+   - ⛔ Viewing Image 절대 시도 금지(실패하면 Step1 내용 손실됨)
 
 **Step 3. 즉시 "출력 형식"에 따라 비교표 작성**
    - Step 1, 2에서 얻은 텍스트를 **지금 당장** 비교
@@ -288,9 +290,13 @@ const allPrompts: PromptExample[] = [
 **변경 요약 예시:**
 - "1,000만원 → 1,500만원 (50% 증가)"
 - "중소기업만 → 중소·중견기업으로 확대"
-- "신규 추가" / "삭제됨" / "동일"
+- "신규 추가" / "삭제됨"
 
 ## 3) 브리핑
+
+**📌 사업 기본 정보 (변경 없음):**
+• [항목1]: [동일한 내용]
+• [항목2]: [동일한 내용]
 
 **📌 전체 방향:**
 [문서2의 전반적 변화를 한 문장으로]
@@ -309,6 +315,7 @@ const allPrompts: PromptExample[] = [
 ---
 
 **최종 보고:** "문서 비교 분석을 완료했습니다."
+- 위 비교 분석 결과 전체 내용을 파일로 생성
 
 ---
 
@@ -321,6 +328,7 @@ const allPrompts: PromptExample[] = [
 `,
     icon: <BarChart3 className="text-blue-600 dark:text-blue-400" size={16} />,
   },
+
 
 
 
@@ -490,8 +498,47 @@ And please self-evaluate the written report by making an evaluation item from 1 
 `,
     icon: <ScrollText className="text-indigo-600 dark:text-indigo-400" size={16} />,
   },
+
+  // 스프레드시트 자동화용 히든 프롬프트 (UI에는 표시하지 않음)
+  {
+    title: '스프레드시트 자동화',
+    category: 'hidden', // UI에 표시하지 않음
+    query: '',
+    hiddenPrompt: `
+
+CRITICAL RULES - READ CAREFULLY:
+
+[ABSOLUTELY FORBIDDEN]:
+- Creating ANY files (NO .py, .md, .csv, .xlsx, .html, .txt, .png)
+- Using execute_command, Python, pip install
+- Using browser tools
+- Creating charts, graphs, gantt charts, visualizations
+
+[CRITICAL - DATA INTEGRITY]:
+- Use ONLY data that actually exists in the spreadsheet
+- DO NOT invent, guess, or make up ANY data (names, emails, numbers, dates)
+- DO NOT create fake email addresses
+- When sending emails: Use ONLY email addresses found in the spreadsheet
+- If required data is missing: SKIP that item, do NOT fabricate data
+
+[ALLOWED TOOLS ONLY]:
+- MCP googlesheets (read spreadsheet data)
+- MCP gmail (send email to verified addresses only)
+
+[TABLE FORMAT]:
+- Create HTML table in email body: <table><tr><th>Header</th></tr><tr><td>Data</td></tr></table>
+- NO file creation
+
+IMPORTANT: Only work with real data from spreadsheet. Never generate fake data.
+`,
+    icon: <Sheet className="text-emerald-600 dark:text-emerald-400" size={16} />,
+  },
 ];
 
+// Export for task-management.tsx
+export const SPREADSHEET_AUTOMATION_HIDDEN_PROMPT = allPrompts.find(
+  p => p.title === '스프레드시트 자동화'
+)?.hiddenPrompt || '';
 
 export const Examples = ({
   onSelectPrompt,
@@ -503,7 +550,7 @@ export const Examples = ({
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'automation' | 'ai-analysis'>('all');
 
   const filteredPrompts = selectedCategory === 'all'
-    ? allPrompts
+    ? allPrompts.filter(prompt => prompt.category !== 'hidden')
     : allPrompts.filter(prompt => prompt.category === selectedCategory);
 
   return (
